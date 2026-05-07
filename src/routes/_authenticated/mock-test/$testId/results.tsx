@@ -229,7 +229,7 @@ function ResultsPage() {
 
           {/* Score math */}
           <div className="mt-5 grid gap-2 rounded-lg border border-border bg-background p-4 text-sm sm:grid-cols-3">
-            <Math label="Raw score" value={`${data.score} × ${marksPerQ} = ${rawScore}`} />
+            <MathRow label="Raw score" value={`${data.score} × ${marksPerQ} = ${rawScore}`} />
             <Math
               label="Deduction"
               value={
@@ -237,7 +237,7 @@ function ResultsPage() {
               }
               negative={neg !== 0 && deduction > 0}
             />
-            <Math label="Final" value={`${finalScore}`} bold />
+            <MathRow label="Final" value={`${finalScore}`} bold />
           </div>
 
           <div className={`mt-4 text-sm font-medium ${grade.color}`}>{grade.label}</div>
@@ -384,7 +384,7 @@ function Stat({
   );
 }
 
-function Math({
+function MathRow({
   label,
   value,
   negative,
