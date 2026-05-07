@@ -30,7 +30,7 @@ import { toast } from "sonner";
 const NAV = [
   { title: "Dashboard", url: "/dashboard", icon: LayoutDashboard, ready: true },
   { title: "AI Doubt Solver", url: "/doubt-solver", icon: MessageCircleQuestion, ready: true },
-  { title: "Mock Tests", url: "/mock-test", icon: Brain, ready: false },
+  { title: "Mock Tests", url: "/mock-test", icon: Brain, ready: true },
   { title: "Notes Generator", url: "/notes", icon: FileText, ready: false },
   { title: "Notes Analyser", url: "/analyser", icon: ScanSearch, ready: false },
   { title: "Study Planner", url: "/planner", icon: CalendarRange, ready: false },
