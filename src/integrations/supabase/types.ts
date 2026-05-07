@@ -65,8 +65,10 @@ export type Database = {
       mock_attempts: {
         Row: {
           answers: Json
+          breakdown: Json | null
           completed_at: string
           id: string
+          marked_for_review: Json | null
           score: number
           test_id: string
           time_taken_seconds: number
@@ -75,8 +77,10 @@ export type Database = {
         }
         Insert: {
           answers: Json
+          breakdown?: Json | null
           completed_at?: string
           id?: string
+          marked_for_review?: Json | null
           score: number
           test_id: string
           time_taken_seconds?: number
@@ -85,8 +89,10 @@ export type Database = {
         }
         Update: {
           answers?: Json
+          breakdown?: Json | null
           completed_at?: string
           id?: string
+          marked_for_review?: Json | null
           score?: number
           test_id?: string
           time_taken_seconds?: number
@@ -111,6 +117,7 @@ export type Database = {
           id: string
           language: string
           num_questions: number
+          pattern: Json | null
           questions: Json
           subject: string
           title: string
@@ -123,6 +130,7 @@ export type Database = {
           id?: string
           language?: string
           num_questions: number
+          pattern?: Json | null
           questions: Json
           subject: string
           title: string
@@ -135,6 +143,7 @@ export type Database = {
           id?: string
           language?: string
           num_questions?: number
+          pattern?: Json | null
           questions?: Json
           subject?: string
           title?: string
