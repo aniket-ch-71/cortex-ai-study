@@ -62,6 +62,86 @@ export type Database = {
         }
         Relationships: []
       }
+      mock_attempts: {
+        Row: {
+          answers: Json
+          completed_at: string
+          id: string
+          score: number
+          test_id: string
+          time_taken_seconds: number
+          total: number
+          user_id: string
+        }
+        Insert: {
+          answers: Json
+          completed_at?: string
+          id?: string
+          score: number
+          test_id: string
+          time_taken_seconds?: number
+          total: number
+          user_id: string
+        }
+        Update: {
+          answers?: Json
+          completed_at?: string
+          id?: string
+          score?: number
+          test_id?: string
+          time_taken_seconds?: number
+          total?: number
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "mock_attempts_test_id_fkey"
+            columns: ["test_id"]
+            isOneToOne: false
+            referencedRelation: "mock_tests"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      mock_tests: {
+        Row: {
+          created_at: string
+          difficulty: string
+          exam: string | null
+          id: string
+          language: string
+          num_questions: number
+          questions: Json
+          subject: string
+          title: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          difficulty?: string
+          exam?: string | null
+          id?: string
+          language?: string
+          num_questions: number
+          questions: Json
+          subject: string
+          title: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          difficulty?: string
+          exam?: string | null
+          id?: string
+          language?: string
+          num_questions?: number
+          questions?: Json
+          subject?: string
+          title?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           created_at: string
