@@ -1,6 +1,6 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
-import { Brain, Loader2, Plus, Trash2, Trophy, ArrowRight } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
+import { Brain, Loader2, Plus, Trash2, Trophy, ArrowRight, Info } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -13,7 +13,16 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { EXAMS, SUBJECTS, LANGUAGES } from "@/lib/cortex-data";
+import { LANGUAGES } from "@/lib/cortex-data";
+import {
+  EXAM_CATEGORIES,
+  SUB_EXAMS,
+  SUB_EXAM_SUBJECTS,
+  QUESTION_COUNT_OPTIONS,
+  getPattern,
+  isAllSections,
+  type ExamCategory,
+} from "@/lib/exam-patterns";
 
 export const Route = createFileRoute("/_authenticated/mock-test/")({
   head: () => ({ meta: [{ title: "Mock Tests — CORTEX" }] }),
@@ -45,13 +54,38 @@ function MockTestIndex() {
   const [loading, setLoading] = useState(true);
   const [generating, setGenerating] = useState(false);
 
-  // form state
-  const [subject, setSubject] = useState<string>(SUBJECTS[0]);
-  const [exam, setExam] = useState<string>("JEE");
+  // form state — cascading
+  const [category, setCategory] = useState<ExamCategory>("SSC");
+  const [subExam, setSubExam] = useState<string>(SUB_EXAMS["SSC"][0]);
+  const subjectsForExam = useMemo(
+    () => SUB_EXAM_SUBJECTS[subExam] ?? ["All"],
+    [subExam],
+  );
+  const [subject, setSubject] = useState<string>(subjectsForExam[0]);
   const [difficulty, setDifficulty] = useState("medium");
   const [language, setLanguage] = useState("en");
   const [topic, setTopic] = useState("");
-  const [numQuestions, setNumQuestions] = useState(10);
+  const [numQuestions, setNumQuestions] = useState<number>(25);
+
+  const pattern = useMemo(() => getPattern(subExam), [subExam]);
+  const allSections = isAllSections(subject);
+
+  // When category changes, reset sub-exam and subject
+  useEffect(() => {
+    const firstSub = SUB_EXAMS[category][0];
+    setSubExam(firstSub);
+  }, [category]);
+
+  // When sub-exam changes, reset subject to first option
+  useEffect(() => {
+    const subs = SUB_EXAM_SUBJECTS[subExam] ?? ["All"];
+    setSubject(subs[0]);
+  }, [subExam]);
+
+  // When "All Sections" picked, lock to real total
+  useEffect(() => {
+    if (allSections) setNumQuestions(pattern.totalQuestions);
+  }, [allSections, pattern.totalQuestions]);
 
   const load = async () => {
     const [{ data: t }, { data: a }] = await Promise.all([
@@ -68,7 +102,6 @@ function MockTestIndex() {
     setTests((t as TestRow[]) ?? []);
     const map: Record<string, AttemptRow> = {};
     for (const at of (a as AttemptRow[]) ?? []) {
-      // keep latest only
       if (!map[at.test_id]) map[at.test_id] = at;
     }
     setAttempts(map);
@@ -87,33 +120,83 @@ function MockTestIndex() {
         toast.error("Please sign in");
         return;
       }
-      const res = await fetch(
-        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/generate-test`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+
+      // Build per-section requests for All Sections, else one request
+      const sectionsToGenerate = allSections
+        ? pattern.sections
+        : [
+            {
+              name: subject,
+              questions: numQuestions,
+              marks:
+                pattern.sections.find((s) => s.name === subject)?.marks ??
+                pattern.sections[0]?.marks ??
+                1,
+            },
+          ];
+
+      const allQuestions: Array<{
+        question: string;
+        options: string[];
+        correct_index: number;
+        explanation: string;
+        section: string;
+        marks: number;
+      }> = [];
+
+      let title = "";
+      for (const sec of sectionsToGenerate) {
+        const res = await fetch(
+          `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/generate-test`,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+            },
+            body: JSON.stringify({
+              subject: sec.name,
+              exam: subExam,
+              difficulty,
+              numQuestions: sec.questions,
+              language,
+              topic,
+              marksPerQuestion: sec.marks,
+              negativeMarking: pattern.negativeMarking,
+            }),
           },
-          body: JSON.stringify({ subject, exam, difficulty, numQuestions, language, topic }),
-        },
-      );
-      if (!res.ok) {
-        const j = await res.json().catch(() => ({}));
-        throw new Error(j.error || `HTTP ${res.status}`);
+        );
+        if (!res.ok) {
+          const j = await res.json().catch(() => ({}));
+          throw new Error(j.error || `HTTP ${res.status}`);
+        }
+        const payload = await res.json();
+        if (!title) title = payload.title || `${subExam} Mock Test`;
+        for (const q of payload.questions) {
+          allQuestions.push({ ...q, section: sec.name, marks: sec.marks });
+        }
       }
-      const payload = await res.json();
+
       const { data: inserted, error } = await supabase
         .from("mock_tests")
         .insert({
           user_id: u.user.id,
-          title: payload.title || `${subject} Test`,
+          title,
           subject,
-          exam,
+          exam: subExam,
           difficulty,
           language,
-          num_questions: payload.questions.length,
-          questions: payload.questions,
+          num_questions: allQuestions.length,
+          questions: allQuestions,
+          pattern: {
+            subExam,
+            category,
+            timeMinutes: pattern.timeMinutes,
+            negativeMarking: pattern.negativeMarking,
+            sections: sectionsToGenerate,
+            cutoffPct: pattern.cutoffPct,
+            allSections,
+          },
         })
         .select("id")
         .single();
@@ -143,7 +226,7 @@ function MockTestIndex() {
         <div>
           <h1 className="font-display text-2xl font-bold md:text-3xl">AI Mock Tests</h1>
           <p className="text-sm text-muted-foreground">
-            Generate exam-style MCQ tests in seconds.
+            Real exam patterns. Real timer. Real negative marking.
           </p>
         </div>
       </div>
@@ -152,19 +235,53 @@ function MockTestIndex() {
       <section className="mt-8 rounded-xl border border-border bg-card p-6">
         <h2 className="font-display text-lg font-semibold">Create a new test</h2>
         <div className="mt-5 grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          <Field label="Subject">
-            <Select value={subject} onValueChange={setSubject}>
+          <Field label="Step 1 · Exam category">
+            <Select value={category} onValueChange={(v) => setCategory(v as ExamCategory)}>
               <SelectTrigger><SelectValue /></SelectTrigger>
               <SelectContent>
-                {SUBJECTS.map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}
+                {EXAM_CATEGORIES.map((c) => (
+                  <SelectItem key={c} value={c}>{c}</SelectItem>
+                ))}
               </SelectContent>
             </Select>
           </Field>
-          <Field label="Exam">
-            <Select value={exam} onValueChange={setExam}>
+          <Field label="Step 2 · Sub-exam">
+            <Select value={subExam} onValueChange={setSubExam}>
               <SelectTrigger><SelectValue /></SelectTrigger>
               <SelectContent>
-                {EXAMS.map((e) => <SelectItem key={e} value={e}>{e}</SelectItem>)}
+                {SUB_EXAMS[category].map((s) => (
+                  <SelectItem key={s} value={s}>{s}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </Field>
+          <Field label="Step 3 · Subject / Section">
+            <Select value={subject} onValueChange={setSubject}>
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent>
+                {subjectsForExam.map((s) => (
+                  <SelectItem key={s} value={s}>{s}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </Field>
+          <Field label="Step 4 · Number of questions">
+            <Select
+              value={String(numQuestions)}
+              onValueChange={(v) => setNumQuestions(Number(v))}
+              disabled={allSections}
+            >
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent>
+                {allSections ? (
+                  <SelectItem value={String(pattern.totalQuestions)}>
+                    {pattern.totalQuestions} (full exam)
+                  </SelectItem>
+                ) : (
+                  QUESTION_COUNT_OPTIONS.map((n) => (
+                    <SelectItem key={n} value={String(n)}>{n}</SelectItem>
+                  ))
+                )}
               </SelectContent>
             </Select>
           </Field>
@@ -182,19 +299,8 @@ function MockTestIndex() {
             <Select value={language} onValueChange={setLanguage}>
               <SelectTrigger><SelectValue /></SelectTrigger>
               <SelectContent>
-                {LANGUAGES.map((l) => <SelectItem key={l.value} value={l.value}>{l.label}</SelectItem>)}
-              </SelectContent>
-            </Select>
-          </Field>
-          <Field label="Number of questions">
-            <Select
-              value={String(numQuestions)}
-              onValueChange={(v) => setNumQuestions(Number(v))}
-            >
-              <SelectTrigger><SelectValue /></SelectTrigger>
-              <SelectContent>
-                {[5, 10, 15, 20, 25].map((n) => (
-                  <SelectItem key={n} value={String(n)}>{n}</SelectItem>
+                {LANGUAGES.map((l) => (
+                  <SelectItem key={l.value} value={l.value}>{l.label}</SelectItem>
                 ))}
               </SelectContent>
             </Select>
@@ -207,12 +313,28 @@ function MockTestIndex() {
             />
           </Field>
         </div>
-        <Button
-          onClick={onGenerate}
-          disabled={generating}
-          className="mt-6"
-          size="lg"
-        >
+
+        {/* Pattern info card */}
+        <div className="mt-5 flex items-start gap-3 rounded-lg border border-primary/20 bg-primary/5 p-4">
+          <Info className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
+          <div className="text-sm">
+            <p className="font-medium text-foreground">{subExam} Pattern</p>
+            <p className="mt-0.5 text-muted-foreground">
+              {pattern.totalQuestions} Questions · {pattern.timeMinutes} Minutes ·{" "}
+              {pattern.negativeMarking !== 0
+                ? `${pattern.negativeMarking} Negative Marking`
+                : "No Negative Marking"}{" "}
+              · {pattern.sections.length} Section{pattern.sections.length > 1 ? "s" : ""}
+            </p>
+            {allSections && (
+              <p className="mt-1 text-xs text-muted-foreground">
+                Sections: {pattern.sections.map((s) => `${s.name} (${s.questions})`).join(" · ")}
+              </p>
+            )}
+          </div>
+        </div>
+
+        <Button onClick={onGenerate} disabled={generating} className="mt-6" size="lg">
           {generating ? (
             <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Generating…</>
           ) : (
@@ -266,9 +388,7 @@ function MockTestIndex() {
                       {a ? (
                         <span className="inline-flex items-center gap-1.5 text-sm">
                           <Trophy className="h-4 w-4 text-amber" />
-                          <span className="font-medium">
-                            {a.score}/{a.total}
-                          </span>
+                          <span className="font-medium">{a.score}/{a.total}</span>
                           <span className="text-xs text-muted-foreground">
                             ({Math.round((a.score / a.total) * 100)}%)
                           </span>

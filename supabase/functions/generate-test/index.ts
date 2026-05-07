@@ -24,20 +24,30 @@ serve(async (req) => {
       numQuestions = 10,
       language = "en",
       topic = "",
+      marksPerQuestion = 1,
+      negativeMarking = 0,
     } = await req.json();
 
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
 
     const lang = LANG_LABEL[language] ?? LANG_LABEL.en;
-    const n = Math.max(5, Math.min(25, Number(numQuestions) || 10));
+    // Allow larger counts for full-section exams (up to 100 per call).
+    const n = Math.max(5, Math.min(100, Number(numQuestions) || 10));
+
+    const negInfo =
+      Number(negativeMarking) !== 0
+        ? `This exam uses negative marking of ${negativeMarking} per wrong answer, so make distractors plausible (no obvious throwaways).`
+        : `This exam has no negative marking.`;
 
     const systemPrompt =
       `You are Cortex AI, an expert exam-question setter for Indian competitive exams. ` +
-      `Generate exactly ${n} high-quality multiple-choice questions for ${exam || "general study"} ` +
-      `on the subject "${subject}"${topic ? ` (topic: ${topic})` : ""} at ${difficulty} difficulty. ` +
+      `Generate exactly ${n} high-quality multiple-choice questions for the "${exam || "general study"}" exam ` +
+      `from the section "${subject}"${topic ? ` (topic focus: ${topic})` : ""} at ${difficulty} difficulty. ` +
+      `Each question is worth ${marksPerQuestion} marks. ${negInfo} ` +
+      `Match the real syllabus, style, and difficulty pattern of ${exam || "the exam"} for the ${subject} section. ` +
       `Each question must have exactly 4 options and one correct answer. ` +
-      `Provide a brief explanation for each correct answer. ` +
+      `Provide a concise explanation for each correct answer. ` +
       `Write all content in ${lang}. ` +
       `Use the submit_test tool to return the questions.`;
 

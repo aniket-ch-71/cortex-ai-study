@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { z } from "zod";
 import {
   ArrowLeft,
@@ -10,6 +10,7 @@ import {
   FileDown,
   Loader2,
   RotateCcw,
+  Target,
 } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -26,6 +27,34 @@ type Question = {
   options: string[];
   correct_index: number;
   explanation: string;
+  section?: string;
+  marks?: number;
+};
+
+type Pattern = {
+  subExam?: string;
+  timeMinutes: number;
+  negativeMarking: number;
+  sections: { name: string; questions: number; marks: number }[];
+  cutoffPct?: number;
+};
+
+type SectionStat = {
+  correct: number;
+  wrong: number;
+  attempted: number;
+  total: number;
+  marks: number;
+  deduction: number;
+};
+
+type Breakdown = {
+  sections: Record<string, SectionStat>;
+  rawScore: number;
+  deduction: number;
+  finalScore: number;
+  correct: number;
+  wrong: number;
 };
 
 function ResultsPage() {
@@ -41,6 +70,8 @@ function ResultsPage() {
     score: number;
     total: number;
     time: number;
+    pattern: Pattern | null;
+    breakdown: Breakdown | null;
   } | null>(null);
   const printableRef = useRef<HTMLDivElement>(null);
 
@@ -49,12 +80,12 @@ function ResultsPage() {
       const [{ data: t }, { data: a }] = await Promise.all([
         supabase
           .from("mock_tests")
-          .select("title, subject, questions")
+          .select("title, subject, questions, pattern")
           .eq("id", testId)
           .maybeSingle(),
         supabase
           .from("mock_attempts")
-          .select("answers, score, total, time_taken_seconds")
+          .select("answers, score, total, time_taken_seconds, breakdown")
           .eq("id", attemptId)
           .maybeSingle(),
       ]);
@@ -70,10 +101,18 @@ function ResultsPage() {
         score: a.score,
         total: a.total,
         time: a.time_taken_seconds,
+        pattern: (t.pattern as unknown as Pattern) ?? null,
+        breakdown: (a.breakdown as unknown as Breakdown) ?? null,
       });
       setLoading(false);
     })();
   }, [testId, attemptId]);
+
+  // Derive max possible marks
+  const maxMarks = useMemo(() => {
+    if (!data) return 0;
+    return data.questions.reduce((s, q) => s + (q.marks ?? 1), 0);
+  }, [data]);
 
   const exportPdf = async () => {
     if (!printableRef.current || !data) return;
@@ -119,12 +158,28 @@ function ResultsPage() {
     );
   }
 
-  const pct = Math.round((data.score / data.total) * 100);
+  const neg = data.pattern?.negativeMarking ?? 0;
+  const marksPerQ = data.questions[0]?.marks ?? 1;
+  const rawScore = data.breakdown?.rawScore ?? data.score * marksPerQ;
+  const deduction = data.breakdown?.deduction ?? 0;
+  const finalScore = data.breakdown?.finalScore ?? rawScore - deduction;
+  const wrong = data.breakdown?.wrong ?? 0;
+
+  const pct = maxMarks > 0 ? Math.round((finalScore / maxMarks) * 100) : 0;
+  const cutoffPct = data.pattern?.cutoffPct;
+  const cutoffMarks = cutoffPct ? Math.round((cutoffPct / 100) * maxMarks) : null;
+  const passed = cutoffPct ? pct >= cutoffPct : pct >= 50;
+
   const grade =
-    pct >= 80 ? { label: "Excellent", color: "text-teal" } :
-    pct >= 60 ? { label: "Good", color: "text-primary" } :
-    pct >= 40 ? { label: "Keep practicing", color: "text-amber" } :
-    { label: "Needs work", color: "text-coral" };
+    pct >= 80
+      ? { label: "Excellent", color: "text-teal" }
+      : pct >= 60
+        ? { label: "Good", color: "text-primary" }
+        : pct >= 40
+          ? { label: "Keep practicing", color: "text-amber" }
+          : { label: "Needs work", color: "text-coral" };
+
+  const sectionStats = data.breakdown?.sections ?? {};
 
   return (
     <div className="mx-auto max-w-4xl px-4 py-8 md:px-8">
@@ -160,16 +215,83 @@ function ResultsPage() {
             </span>
             <div>
               <h1 className="font-display text-xl font-bold">{data.title}</h1>
-              <p className="text-sm text-muted-foreground">{data.subject}</p>
+              <p className="text-sm text-muted-foreground">
+                {data.pattern?.subExam ?? data.subject}
+              </p>
             </div>
           </div>
-          <div className="mt-6 grid gap-4 sm:grid-cols-3">
-            <Stat label="Score" value={`${data.score}/${data.total}`} />
+          <div className="mt-6 grid gap-4 sm:grid-cols-4">
+            <Stat label="Final score" value={`${finalScore}/${maxMarks}`} accent={grade.color} />
             <Stat label="Percentage" value={`${pct}%`} accent={grade.color} />
+            <Stat label="Correct / Wrong" value={`${data.score} / ${wrong}`} />
             <Stat label="Time" value={formatTime(data.time)} icon={Clock} />
           </div>
+
+          {/* Score math */}
+          <div className="mt-5 grid gap-2 rounded-lg border border-border bg-background p-4 text-sm sm:grid-cols-3">
+            <MathRow label="Raw score" value={`${data.score} × ${marksPerQ} = ${rawScore}`} />
+            <MathRow
+              label="Deduction"
+              value={
+                neg !== 0 ? `${wrong} × ${neg} = -${deduction}` : "No negative marking"
+              }
+              negative={neg !== 0 && deduction > 0}
+            />
+            <MathRow label="Final" value={`${finalScore}`} bold />
+          </div>
+
           <div className={`mt-4 text-sm font-medium ${grade.color}`}>{grade.label}</div>
+
+          {/* Cutoff */}
+          {cutoffMarks !== null && (
+            <div className="mt-4 flex items-center gap-3 rounded-lg border border-border bg-background p-4">
+              <Target className={`h-5 w-5 ${passed ? "text-teal" : "text-coral"}`} />
+              <div className="text-sm">
+                <p className="font-medium">
+                  Typical cutoff for {data.pattern?.subExam}: ~{cutoffMarks} marks ({cutoffPct}%)
+                </p>
+                <p className={passed ? "text-teal" : "text-coral"}>
+                  {passed
+                    ? `You're above cutoff by ${finalScore - cutoffMarks} marks 🎯`
+                    : `You're ${cutoffMarks - finalScore} marks below cutoff`}
+                </p>
+              </div>
+            </div>
+          )}
         </div>
+
+        {/* Section breakdown */}
+        {Object.keys(sectionStats).length > 1 && (
+          <div className="rounded-xl border border-border bg-card p-6">
+            <h2 className="font-display text-lg font-semibold">Section-wise breakdown</h2>
+            <div className="mt-4 space-y-3">
+              {Object.entries(sectionStats).map(([name, s]) => {
+                const net = s.marks - s.deduction;
+                const max = s.total * (data.pattern?.sections.find((p) => p.name === name)?.marks ?? marksPerQ);
+                const secPct = max > 0 ? Math.round((net / max) * 100) : 0;
+                return (
+                  <div key={name} className="rounded-lg border border-border bg-background p-4">
+                    <div className="flex items-center justify-between gap-3">
+                      <p className="font-medium">{name}</p>
+                      <span className="text-sm font-medium">
+                        {net}/{max} <span className="text-muted-foreground">({secPct}%)</span>
+                      </span>
+                    </div>
+                    <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-secondary">
+                      <div
+                        className="h-full bg-primary"
+                        style={{ width: `${Math.max(0, Math.min(100, secPct))}%` }}
+                      />
+                    </div>
+                    <p className="mt-2 text-xs text-muted-foreground">
+                      {s.correct} correct · {s.wrong} wrong · {s.total - s.attempted} unattempted
+                    </p>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
 
         {/* Review */}
         <h2 className="font-display text-lg font-semibold">Review</h2>
@@ -177,24 +299,28 @@ function ResultsPage() {
           {data.questions.map((q, i) => {
             const userIdx = data.answers[i];
             const correct = userIdx === q.correct_index;
+            const unattempted = userIdx === undefined;
             return (
               <li key={i} className="rounded-xl border border-border bg-card p-5">
                 <div className="flex items-start gap-3">
                   <span
                     className={`grid h-7 w-7 shrink-0 place-items-center rounded-full ${
-                      correct ? "bg-teal/15 text-teal" : "bg-coral/15 text-coral"
+                      unattempted
+                        ? "bg-secondary text-muted-foreground"
+                        : correct
+                          ? "bg-teal/15 text-teal"
+                          : "bg-coral/15 text-coral"
                     }`}
                   >
-                    {correct ? (
-                      <CheckCircle2 className="h-4 w-4" />
-                    ) : (
-                      <XCircle className="h-4 w-4" />
-                    )}
+                    {unattempted ? "—" : correct ? <CheckCircle2 className="h-4 w-4" /> : <XCircle className="h-4 w-4" />}
                   </span>
                   <div className="min-w-0 flex-1">
                     <p className="font-medium">
                       <span className="text-muted-foreground">Q{i + 1}.</span> {q.question}
                     </p>
+                    {q.section && (
+                      <p className="mt-1 text-xs text-muted-foreground">{q.section}</p>
+                    )}
                     <ul className="mt-3 space-y-1.5 text-sm">
                       {q.options.map((opt, oi) => {
                         const isUser = oi === userIdx;
@@ -254,6 +380,31 @@ function Stat({
         {Icon && <Icon className="h-3 w-3" />} {label}
       </div>
       <div className={`mt-1 font-display text-2xl font-bold ${accent ?? ""}`}>{value}</div>
+    </div>
+  );
+}
+
+function MathRow({
+  label,
+  value,
+  negative,
+  bold,
+}: {
+  label: string;
+  value: string;
+  negative?: boolean;
+  bold?: boolean;
+}) {
+  return (
+    <div>
+      <p className="text-xs uppercase tracking-wider text-muted-foreground">{label}</p>
+      <p
+        className={`mt-0.5 tabular-nums ${bold ? "font-display text-lg font-bold" : ""} ${
+          negative ? "text-coral" : ""
+        }`}
+      >
+        {value}
+      </p>
     </div>
   );
 }
