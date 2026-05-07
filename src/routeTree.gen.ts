@@ -14,6 +14,9 @@ import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedDoubtSolverRouteImport } from './routes/_authenticated/doubt-solver'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
+import { Route as AuthenticatedMockTestIndexRouteImport } from './routes/_authenticated/mock-test/index'
+import { Route as AuthenticatedMockTestTestIdIndexRouteImport } from './routes/_authenticated/mock-test/$testId/index'
+import { Route as AuthenticatedMockTestTestIdResultsRouteImport } from './routes/_authenticated/mock-test/$testId/results'
 
 const AuthRoute = AuthRouteImport.update({
   id: '/auth',
@@ -40,18 +43,42 @@ const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
   path: '/dashboard',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
+const AuthenticatedMockTestIndexRoute =
+  AuthenticatedMockTestIndexRouteImport.update({
+    id: '/mock-test/',
+    path: '/mock-test/',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
+const AuthenticatedMockTestTestIdIndexRoute =
+  AuthenticatedMockTestTestIdIndexRouteImport.update({
+    id: '/mock-test/$testId/',
+    path: '/mock-test/$testId/',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
+const AuthenticatedMockTestTestIdResultsRoute =
+  AuthenticatedMockTestTestIdResultsRouteImport.update({
+    id: '/mock-test/$testId/results',
+    path: '/mock-test/$testId/results',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/doubt-solver': typeof AuthenticatedDoubtSolverRoute
+  '/mock-test/': typeof AuthenticatedMockTestIndexRoute
+  '/mock-test/$testId/results': typeof AuthenticatedMockTestTestIdResultsRoute
+  '/mock-test/$testId/': typeof AuthenticatedMockTestTestIdIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/doubt-solver': typeof AuthenticatedDoubtSolverRoute
+  '/mock-test': typeof AuthenticatedMockTestIndexRoute
+  '/mock-test/$testId/results': typeof AuthenticatedMockTestTestIdResultsRoute
+  '/mock-test/$testId': typeof AuthenticatedMockTestTestIdIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -60,12 +87,29 @@ export interface FileRoutesById {
   '/auth': typeof AuthRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/_authenticated/doubt-solver': typeof AuthenticatedDoubtSolverRoute
+  '/_authenticated/mock-test/': typeof AuthenticatedMockTestIndexRoute
+  '/_authenticated/mock-test/$testId/results': typeof AuthenticatedMockTestTestIdResultsRoute
+  '/_authenticated/mock-test/$testId/': typeof AuthenticatedMockTestTestIdIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/auth' | '/dashboard' | '/doubt-solver'
+  fullPaths:
+    | '/'
+    | '/auth'
+    | '/dashboard'
+    | '/doubt-solver'
+    | '/mock-test/'
+    | '/mock-test/$testId/results'
+    | '/mock-test/$testId/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/auth' | '/dashboard' | '/doubt-solver'
+  to:
+    | '/'
+    | '/auth'
+    | '/dashboard'
+    | '/doubt-solver'
+    | '/mock-test'
+    | '/mock-test/$testId/results'
+    | '/mock-test/$testId'
   id:
     | '__root__'
     | '/'
@@ -73,6 +117,9 @@ export interface FileRouteTypes {
     | '/auth'
     | '/_authenticated/dashboard'
     | '/_authenticated/doubt-solver'
+    | '/_authenticated/mock-test/'
+    | '/_authenticated/mock-test/$testId/results'
+    | '/_authenticated/mock-test/$testId/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -118,17 +165,45 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedDashboardRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/mock-test/': {
+      id: '/_authenticated/mock-test/'
+      path: '/mock-test'
+      fullPath: '/mock-test/'
+      preLoaderRoute: typeof AuthenticatedMockTestIndexRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/mock-test/$testId/': {
+      id: '/_authenticated/mock-test/$testId/'
+      path: '/mock-test/$testId'
+      fullPath: '/mock-test/$testId/'
+      preLoaderRoute: typeof AuthenticatedMockTestTestIdIndexRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/mock-test/$testId/results': {
+      id: '/_authenticated/mock-test/$testId/results'
+      path: '/mock-test/$testId/results'
+      fullPath: '/mock-test/$testId/results'
+      preLoaderRoute: typeof AuthenticatedMockTestTestIdResultsRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
   }
 }
 
 interface AuthenticatedRouteChildren {
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
   AuthenticatedDoubtSolverRoute: typeof AuthenticatedDoubtSolverRoute
+  AuthenticatedMockTestIndexRoute: typeof AuthenticatedMockTestIndexRoute
+  AuthenticatedMockTestTestIdResultsRoute: typeof AuthenticatedMockTestTestIdResultsRoute
+  AuthenticatedMockTestTestIdIndexRoute: typeof AuthenticatedMockTestTestIdIndexRoute
 }
 
 const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
   AuthenticatedDoubtSolverRoute: AuthenticatedDoubtSolverRoute,
+  AuthenticatedMockTestIndexRoute: AuthenticatedMockTestIndexRoute,
+  AuthenticatedMockTestTestIdResultsRoute:
+    AuthenticatedMockTestTestIdResultsRoute,
+  AuthenticatedMockTestTestIdIndexRoute: AuthenticatedMockTestTestIdIndexRoute,
 }
 
 const AuthenticatedRouteWithChildren = AuthenticatedRoute._addFileChildren(
