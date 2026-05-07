@@ -230,7 +230,7 @@ function ResultsPage() {
           {/* Score math */}
           <div className="mt-5 grid gap-2 rounded-lg border border-border bg-background p-4 text-sm sm:grid-cols-3">
             <MathRow label="Raw score" value={`${data.score} × ${marksPerQ} = ${rawScore}`} />
-            <Math
+            <MathRow
               label="Deduction"
               value={
                 neg !== 0 ? `${wrong} × ${neg} = -${deduction}` : "No negative marking"
