@@ -31,9 +31,9 @@ const NAV = [
   { title: "Dashboard", url: "/dashboard", icon: LayoutDashboard, ready: true },
   { title: "AI Doubt Solver", url: "/doubt-solver", icon: MessageCircleQuestion, ready: true },
   { title: "Mock Tests", url: "/mock-test", icon: Brain, ready: true },
-  { title: "Notes Generator", url: "/notes", icon: FileText, ready: false },
-  { title: "Notes Analyser", url: "/analyser", icon: ScanSearch, ready: false },
-  { title: "Study Planner", url: "/planner", icon: CalendarRange, ready: false },
+  { title: "Notes Generator", url: "/notes", icon: FileText, ready: true },
+  { title: "Notes Analyser", url: "/analyser", icon: ScanSearch, ready: true },
+  { title: "Study Planner", url: "/planner", icon: CalendarRange, ready: true },
   { title: "My Performance", url: "/performance", icon: TrendingUp, ready: false },
   { title: "Settings", url: "/settings", icon: Settings, ready: false },
 ];
