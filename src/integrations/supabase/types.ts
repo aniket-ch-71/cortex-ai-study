@@ -151,6 +151,81 @@ export type Database = {
         }
         Relationships: []
       }
+      note_analyses: {
+        Row: {
+          created_at: string
+          feedback: Json
+          id: string
+          input_text: string
+          score: number
+          subject: string | null
+          topic: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          feedback: Json
+          id?: string
+          input_text: string
+          score: number
+          subject?: string | null
+          topic: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          feedback?: Json
+          id?: string
+          input_text?: string
+          score?: number
+          subject?: string | null
+          topic?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      notes: {
+        Row: {
+          content: string
+          created_at: string
+          exam: string | null
+          flashcards: Json
+          id: string
+          language: string
+          style: string
+          subject: string
+          title: string
+          topic: string
+          user_id: string
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          exam?: string | null
+          flashcards?: Json
+          id?: string
+          language?: string
+          style?: string
+          subject: string
+          title: string
+          topic: string
+          user_id: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          exam?: string | null
+          flashcards?: Json
+          id?: string
+          language?: string
+          style?: string
+          subject?: string
+          title?: string
+          topic?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           created_at: string
@@ -181,6 +256,42 @@ export type Database = {
           streak?: number
           target_exam?: string | null
           updated_at?: string
+        }
+        Relationships: []
+      }
+      study_plans: {
+        Row: {
+          created_at: string
+          exam: string
+          exam_date: string | null
+          hours_per_day: number
+          id: string
+          plan: Json
+          subjects: Json
+          title: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          exam: string
+          exam_date?: string | null
+          hours_per_day?: number
+          id?: string
+          plan: Json
+          subjects?: Json
+          title: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          exam?: string
+          exam_date?: string | null
+          hours_per_day?: number
+          id?: string
+          plan?: Json
+          subjects?: Json
+          title?: string
+          user_id?: string
         }
         Relationships: []
       }
