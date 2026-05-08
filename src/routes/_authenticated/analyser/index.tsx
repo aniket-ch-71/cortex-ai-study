@@ -87,7 +87,7 @@ function AnalyserPage() {
           subject,
           input_text: text,
           score: a.score,
-          feedback: fb as unknown as object,
+          feedback: fb as any,
         })
         .select("id, topic, subject, score, feedback, created_at")
         .single();

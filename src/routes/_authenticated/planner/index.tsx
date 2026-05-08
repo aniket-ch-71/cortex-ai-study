@@ -75,7 +75,7 @@ function PlannerPage() {
           exam_date: examDate || null,
           hours_per_day: hoursPerDay,
           subjects,
-          plan: plan as unknown as object,
+          plan: plan as any,
         })
         .select("id, title, exam, exam_date, hours_per_day, plan, created_at")
         .single();
