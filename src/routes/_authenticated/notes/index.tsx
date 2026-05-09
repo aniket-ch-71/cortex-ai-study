@@ -133,18 +133,7 @@ function NotesIndex() {
           <Field label="Topic">
             <Input value={topic} onChange={(e) => setTopic(e.target.value)} placeholder="e.g. Newton's Laws" />
           </Field>
-          <Field label="Subject">
-            <Select value={subject} onValueChange={setSubject}>
-              <SelectTrigger><SelectValue /></SelectTrigger>
-              <SelectContent>{SUBJECTS.map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent>
-            </Select>
-          </Field>
-          <Field label="Exam">
-            <Select value={exam} onValueChange={setExam}>
-              <SelectTrigger><SelectValue /></SelectTrigger>
-              <SelectContent>{EXAMS.map((e) => <SelectItem key={e} value={e}>{e}</SelectItem>)}</SelectContent>
-            </Select>
-          </Field>
+          <ExamPicker value={picker} onChange={setPicker} />
           <Field label="Language">
             <Select value={language} onValueChange={setLanguage}>
               <SelectTrigger><SelectValue /></SelectTrigger>
