@@ -31,15 +31,14 @@ serve(async (req) => {
         parameters: {
           type: "object",
           properties: {
-            score: { type: "integer", minimum: 0, maximum: 100 },
+            score: { type: "integer", description: "0-100 score" },
             summary: { type: "string" },
-            strengths: { type: "array", items: { type: "string" }, minItems: 1 },
-            gaps: { type: "array", items: { type: "string" }, minItems: 1 },
+            strengths: { type: "array", items: { type: "string" } },
+            gaps: { type: "array", items: { type: "string" } },
             errors: { type: "array", items: { type: "string" } },
-            suggestions: { type: "array", items: { type: "string" }, minItems: 3, maxItems: 5 },
+            suggestions: { type: "array", description: "3-5 concrete suggestions", items: { type: "string" } },
           },
           required: ["score", "summary", "strengths", "gaps", "suggestions"],
-          additionalProperties: false,
         },
       },
     };
