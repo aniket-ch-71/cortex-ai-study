@@ -1,6 +1,6 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useEffect, useRef, useState } from "react";
-import { FileText, Loader2, Plus, Trash2, FileDown, ArrowRight, RotateCw } from "lucide-react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { FileText, Loader2, Plus, Trash2, FileDown, ArrowRight, RotateCw, Search } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -9,7 +9,8 @@ import { Label } from "@/components/ui/label";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
-import { EXAMS, SUBJECTS, LANGUAGES } from "@/lib/cortex-data";
+import { LANGUAGES } from "@/lib/cortex-data";
+import { ExamPicker, defaultExamPicker, type ExamPickerValue } from "@/components/ExamPicker";
 
 export const Route = createFileRoute("/_authenticated/notes/")({
   head: () => ({ meta: [{ title: "Notes Generator — CORTEX" }] }),
