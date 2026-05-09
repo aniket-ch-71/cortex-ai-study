@@ -43,11 +43,10 @@ serve(async (req) => {
           type: "object",
           properties: {
             title: { type: "string" },
-            tips: { type: "array", items: { type: "string" }, minItems: 2, maxItems: 5 },
+            tips: { type: "array", description: "2-5 weekly tips", items: { type: "string" } },
             days: {
               type: "array",
-              minItems: 7,
-              maxItems: 7,
+              description: "Exactly 7 days, Monday through Sunday",
               items: {
                 type: "object",
                 properties: {
@@ -57,30 +56,26 @@ serve(async (req) => {
                   },
                   blocks: {
                     type: "array",
-                    minItems: 2,
                     items: {
                       type: "object",
                       properties: {
                         subject: { type: "string" },
                         topic: { type: "string" },
-                        durationMinutes: { type: "integer", minimum: 15, maximum: 240 },
+                        durationMinutes: { type: "integer", description: "15-240 minutes" },
                         activity: {
                           type: "string",
                           enum: ["concept", "practice", "revision", "mock-test", "break"],
                         },
                       },
                       required: ["subject", "topic", "durationMinutes", "activity"],
-                      additionalProperties: false,
                     },
                   },
                 },
                 required: ["day", "blocks"],
-                additionalProperties: false,
               },
             },
           },
           required: ["title", "tips", "days"],
-          additionalProperties: false,
         },
       },
     };
