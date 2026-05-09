@@ -80,7 +80,6 @@ serve(async (req) => {
             },
           },
           required: ["title", "questions"],
-          additionalProperties: false,
         },
       },
     };
