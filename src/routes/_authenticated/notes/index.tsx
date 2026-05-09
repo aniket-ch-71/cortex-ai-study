@@ -31,10 +31,10 @@ function NotesIndex() {
   const [rows, setRows] = useState<NoteRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [generating, setGenerating] = useState(false);
+  const [search, setSearch] = useState("");
 
   const [topic, setTopic] = useState("");
-  const [subject, setSubject] = useState<string>(SUBJECTS[0]);
-  const [exam, setExam] = useState<string>(EXAMS[0]);
+  const [picker, setPicker] = useState<ExamPickerValue>(defaultExamPicker());
   const [language, setLanguage] = useState("en");
 
   const load = async () => {
@@ -46,6 +46,17 @@ function NotesIndex() {
     setLoading(false);
   };
   useEffect(() => { load(); }, []);
+
+  const filtered = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    if (!q) return rows;
+    return rows.filter(
+      (r) =>
+        r.title.toLowerCase().includes(q) ||
+        r.topic.toLowerCase().includes(q) ||
+        (r.subject ?? "").toLowerCase().includes(q),
+    );
+  }, [rows, search]);
 
   const onGenerate = async () => {
     if (!topic.trim()) return toast.error("Enter a topic");
