@@ -15,6 +15,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedDoubtSolverRouteImport } from './routes/_authenticated/doubt-solver'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedPlannerIndexRouteImport } from './routes/_authenticated/planner/index'
+import { Route as AuthenticatedPerformanceIndexRouteImport } from './routes/_authenticated/performance/index'
 import { Route as AuthenticatedNotesIndexRouteImport } from './routes/_authenticated/notes/index'
 import { Route as AuthenticatedMockTestIndexRouteImport } from './routes/_authenticated/mock-test/index'
 import { Route as AuthenticatedAnalyserIndexRouteImport } from './routes/_authenticated/analyser/index'
@@ -51,6 +52,12 @@ const AuthenticatedPlannerIndexRoute =
   AuthenticatedPlannerIndexRouteImport.update({
     id: '/planner/',
     path: '/planner/',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
+const AuthenticatedPerformanceIndexRoute =
+  AuthenticatedPerformanceIndexRouteImport.update({
+    id: '/performance/',
+    path: '/performance/',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
 const AuthenticatedNotesIndexRoute = AuthenticatedNotesIndexRouteImport.update({
@@ -97,6 +104,7 @@ export interface FileRoutesByFullPath {
   '/analyser/': typeof AuthenticatedAnalyserIndexRoute
   '/mock-test/': typeof AuthenticatedMockTestIndexRoute
   '/notes/': typeof AuthenticatedNotesIndexRoute
+  '/performance/': typeof AuthenticatedPerformanceIndexRoute
   '/planner/': typeof AuthenticatedPlannerIndexRoute
   '/mock-test/$testId/results': typeof AuthenticatedMockTestTestIdResultsRoute
   '/mock-test/$testId/': typeof AuthenticatedMockTestTestIdIndexRoute
@@ -110,6 +118,7 @@ export interface FileRoutesByTo {
   '/analyser': typeof AuthenticatedAnalyserIndexRoute
   '/mock-test': typeof AuthenticatedMockTestIndexRoute
   '/notes': typeof AuthenticatedNotesIndexRoute
+  '/performance': typeof AuthenticatedPerformanceIndexRoute
   '/planner': typeof AuthenticatedPlannerIndexRoute
   '/mock-test/$testId/results': typeof AuthenticatedMockTestTestIdResultsRoute
   '/mock-test/$testId': typeof AuthenticatedMockTestTestIdIndexRoute
@@ -125,6 +134,7 @@ export interface FileRoutesById {
   '/_authenticated/analyser/': typeof AuthenticatedAnalyserIndexRoute
   '/_authenticated/mock-test/': typeof AuthenticatedMockTestIndexRoute
   '/_authenticated/notes/': typeof AuthenticatedNotesIndexRoute
+  '/_authenticated/performance/': typeof AuthenticatedPerformanceIndexRoute
   '/_authenticated/planner/': typeof AuthenticatedPlannerIndexRoute
   '/_authenticated/mock-test/$testId/results': typeof AuthenticatedMockTestTestIdResultsRoute
   '/_authenticated/mock-test/$testId/': typeof AuthenticatedMockTestTestIdIndexRoute
@@ -140,6 +150,7 @@ export interface FileRouteTypes {
     | '/analyser/'
     | '/mock-test/'
     | '/notes/'
+    | '/performance/'
     | '/planner/'
     | '/mock-test/$testId/results'
     | '/mock-test/$testId/'
@@ -153,6 +164,7 @@ export interface FileRouteTypes {
     | '/analyser'
     | '/mock-test'
     | '/notes'
+    | '/performance'
     | '/planner'
     | '/mock-test/$testId/results'
     | '/mock-test/$testId'
@@ -167,6 +179,7 @@ export interface FileRouteTypes {
     | '/_authenticated/analyser/'
     | '/_authenticated/mock-test/'
     | '/_authenticated/notes/'
+    | '/_authenticated/performance/'
     | '/_authenticated/planner/'
     | '/_authenticated/mock-test/$testId/results'
     | '/_authenticated/mock-test/$testId/'
@@ -223,6 +236,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedPlannerIndexRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/performance/': {
+      id: '/_authenticated/performance/'
+      path: '/performance'
+      fullPath: '/performance/'
+      preLoaderRoute: typeof AuthenticatedPerformanceIndexRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
     '/_authenticated/notes/': {
       id: '/_authenticated/notes/'
       path: '/notes'
@@ -274,6 +294,7 @@ interface AuthenticatedRouteChildren {
   AuthenticatedAnalyserIndexRoute: typeof AuthenticatedAnalyserIndexRoute
   AuthenticatedMockTestIndexRoute: typeof AuthenticatedMockTestIndexRoute
   AuthenticatedNotesIndexRoute: typeof AuthenticatedNotesIndexRoute
+  AuthenticatedPerformanceIndexRoute: typeof AuthenticatedPerformanceIndexRoute
   AuthenticatedPlannerIndexRoute: typeof AuthenticatedPlannerIndexRoute
   AuthenticatedMockTestTestIdResultsRoute: typeof AuthenticatedMockTestTestIdResultsRoute
   AuthenticatedMockTestTestIdIndexRoute: typeof AuthenticatedMockTestTestIdIndexRoute
@@ -286,6 +307,7 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedAnalyserIndexRoute: AuthenticatedAnalyserIndexRoute,
   AuthenticatedMockTestIndexRoute: AuthenticatedMockTestIndexRoute,
   AuthenticatedNotesIndexRoute: AuthenticatedNotesIndexRoute,
+  AuthenticatedPerformanceIndexRoute: AuthenticatedPerformanceIndexRoute,
   AuthenticatedPlannerIndexRoute: AuthenticatedPlannerIndexRoute,
   AuthenticatedMockTestTestIdResultsRoute:
     AuthenticatedMockTestTestIdResultsRoute,
@@ -305,3 +327,13 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
