@@ -45,8 +45,7 @@ serve(async (req) => {
             content: { type: "string", description: "Markdown formatted study notes" },
             flashcards: {
               type: "array",
-              minItems: n,
-              maxItems: n,
+              description: `Exactly ${n} flashcards`,
               items: {
                 type: "object",
                 properties: {
@@ -54,12 +53,10 @@ serve(async (req) => {
                   answer: { type: "string" },
                 },
                 required: ["question", "answer"],
-                additionalProperties: false,
               },
             },
           },
           required: ["title", "content", "flashcards"],
-          additionalProperties: false,
         },
       },
     };
