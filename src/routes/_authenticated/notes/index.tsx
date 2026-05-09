@@ -70,7 +70,13 @@ function NotesIndex() {
           "Content-Type": "application/json",
           Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
         },
-        body: JSON.stringify({ topic, subject, exam, language, numFlashcards: 12 }),
+        body: JSON.stringify({
+          topic,
+          subject: picker.subject,
+          exam: picker.subExam,
+          language,
+          numFlashcards: 12,
+        }),
       });
       if (!res.ok) {
         const j = await res.json().catch(() => ({}));
@@ -82,7 +88,10 @@ function NotesIndex() {
         .insert({
           user_id: u.user.id,
           title: payload.title || topic,
-          topic, subject, exam, language,
+          topic,
+          subject: picker.subject,
+          exam: picker.subExam,
+          language,
           style: "flashcards_notes",
           content: payload.content,
           flashcards: payload.flashcards,
