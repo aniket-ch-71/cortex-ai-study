@@ -147,15 +147,21 @@ function NotesIndex() {
       </section>
 
       <section className="mt-10">
-        <h2 className="font-display text-lg font-semibold">Your notes</h2>
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <h2 className="font-display text-lg font-semibold">Your notes</h2>
+          <div className="relative w-full sm:w-72">
+            <Search className="pointer-events-none absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+            <Input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search by topic / subject…" className="pl-8" />
+          </div>
+        </div>
         <div className="mt-4">
           {loading ? (
             <div className="space-y-3">{Array.from({ length: 3 }).map((_, i) => (<div key={i} className="h-20 animate-pulse rounded-lg bg-secondary" />))}</div>
-          ) : rows.length === 0 ? (
-            <div className="rounded-xl border border-dashed border-border p-10 text-center text-sm text-muted-foreground">No notes yet. Generate your first set above.</div>
+          ) : filtered.length === 0 ? (
+            <div className="rounded-xl border border-dashed border-border p-10 text-center text-sm text-muted-foreground">{rows.length === 0 ? "No notes yet. Generate your first set above." : "No notes match your search."}</div>
           ) : (
             <ul className="grid gap-3 md:grid-cols-2">
-              {rows.map((r) => (
+              {filtered.map((r) => (
                 <li key={r.id} className="group rounded-xl border border-border bg-card p-5 transition hover:border-primary/40">
                   <div className="flex items-start justify-between gap-3">
                     <div className="min-w-0">
