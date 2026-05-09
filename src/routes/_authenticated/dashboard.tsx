@@ -10,7 +10,6 @@ import {
   ArrowRight,
   CalendarDays,
   Trophy,
-  Clock,
   Activity,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
