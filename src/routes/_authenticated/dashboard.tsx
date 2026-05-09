@@ -10,7 +10,6 @@ import {
   ArrowRight,
   CalendarDays,
   Trophy,
-  Clock,
   Activity,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
@@ -28,6 +27,7 @@ function DashboardPage() {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [doubts, setDoubts] = useState<Doubt[]>([]);
   const [doubtsToday, setDoubtsToday] = useState(0);
+  const [stats, setStats] = useState({ tests: 0, doubts: 0, notes: 0, avg: 0 });
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -35,20 +35,46 @@ function DashboardPage() {
       const { data: u } = await supabase.auth.getUser();
       if (!u.user) return;
 
-      const [{ data: prof }, { data: list }, { data: usage }] = await Promise.all([
+      const todayStr = new Date().toISOString().slice(0, 10);
+      const [
+        { data: prof },
+        { data: list },
+        { data: usage },
+        { count: testsCount },
+        { count: doubtsCount },
+        { count: notesCount },
+        { data: attempts },
+      ] = await Promise.all([
         supabase.from("profiles").select("*").eq("id", u.user.id).maybeSingle(),
         supabase.from("doubts").select("*").order("created_at", { ascending: false }).limit(5),
         supabase
           .from("daily_usage")
           .select("doubts_used")
           .eq("user_id", u.user.id)
-          .eq("usage_date", new Date().toISOString().slice(0, 10))
+          .eq("usage_date", todayStr)
           .maybeSingle(),
+        supabase.from("mock_attempts").select("*", { count: "exact", head: true }),
+        supabase.from("doubts").select("*", { count: "exact", head: true }),
+        supabase.from("notes").select("*", { count: "exact", head: true }),
+        supabase.from("mock_attempts").select("score, total"),
       ]);
 
       setProfile(prof);
       setDoubts(list ?? []);
       setDoubtsToday(usage?.doubts_used ?? 0);
+      const avg =
+        attempts && attempts.length
+          ? Math.round(
+              (attempts.reduce((s, a) => s + (a.total ? (a.score / a.total) * 100 : 0), 0) /
+                attempts.length) * 1,
+            )
+          : 0;
+      setStats({
+        tests: testsCount ?? 0,
+        doubts: doubtsCount ?? 0,
+        notes: notesCount ?? 0,
+        avg,
+      });
       setLoading(false);
     })();
   }, []);
@@ -84,15 +110,15 @@ function DashboardPage() {
 
       {/* Stats */}
       <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <Stat icon={Brain} color="text-primary" label="Tests taken" value={loading ? "—" : "0"} />
-        <Stat icon={Trophy} color="text-amber" label="Average score" value={loading ? "—" : "—"} />
+        <Stat icon={Brain} color="text-primary" label="Tests taken" value={loading ? "—" : String(stats.tests)} />
+        <Stat icon={Trophy} color="text-amber" label="Average score" value={loading ? "—" : stats.tests ? `${stats.avg}%` : "—"} />
         <Stat
           icon={MessageCircleQuestion}
           color="text-purple"
           label="Doubts solved"
-          value={loading ? "—" : String(doubts.length)}
+          value={loading ? "—" : String(stats.doubts)}
         />
-        <Stat icon={Clock} color="text-teal" label="Study hours" value={loading ? "—" : "0"} />
+        <Stat icon={FileText} color="text-teal" label="Notes created" value={loading ? "—" : String(stats.notes)} />
       </div>
 
       {/* Quick actions */}
@@ -106,9 +132,9 @@ function DashboardPage() {
           color="text-purple"
           ready
         />
-        <ActionCard icon={Brain} title="Take a mock test" desc="Coming soon" color="text-primary" />
-        <ActionCard icon={FileText} title="Generate notes" desc="Coming soon" color="text-teal" />
-        <ActionCard icon={CalendarRange} title="Plan my week" desc="Coming soon" color="text-amber" />
+        <ActionCard to="/mock-test" icon={Brain} title="Take a mock test" desc="Real exam patterns" color="text-primary" ready />
+        <ActionCard to="/notes" icon={FileText} title="Generate notes" desc="Notes + flashcards" color="text-teal" ready />
+        <ActionCard to="/planner" icon={CalendarRange} title="Plan my week" desc="7-day AI plan" color="text-amber" ready />
       </div>
 
       {/* Recent + countdown */}

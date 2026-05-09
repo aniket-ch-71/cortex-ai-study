@@ -1,6 +1,6 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useEffect, useRef, useState } from "react";
-import { FileText, Loader2, Plus, Trash2, FileDown, ArrowRight, RotateCw } from "lucide-react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { FileText, Loader2, Plus, Trash2, FileDown, ArrowRight, RotateCw, Search } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -9,7 +9,8 @@ import { Label } from "@/components/ui/label";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
-import { EXAMS, SUBJECTS, LANGUAGES } from "@/lib/cortex-data";
+import { LANGUAGES } from "@/lib/cortex-data";
+import { ExamPicker, defaultExamPicker, type ExamPickerValue } from "@/components/ExamPicker";
 
 export const Route = createFileRoute("/_authenticated/notes/")({
   head: () => ({ meta: [{ title: "Notes Generator — CORTEX" }] }),
@@ -30,10 +31,10 @@ function NotesIndex() {
   const [rows, setRows] = useState<NoteRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [generating, setGenerating] = useState(false);
+  const [search, setSearch] = useState("");
 
   const [topic, setTopic] = useState("");
-  const [subject, setSubject] = useState<string>(SUBJECTS[0]);
-  const [exam, setExam] = useState<string>(EXAMS[0]);
+  const [picker, setPicker] = useState<ExamPickerValue>(defaultExamPicker());
   const [language, setLanguage] = useState("en");
 
   const load = async () => {
@@ -45,6 +46,17 @@ function NotesIndex() {
     setLoading(false);
   };
   useEffect(() => { load(); }, []);
+
+  const filtered = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    if (!q) return rows;
+    return rows.filter(
+      (r) =>
+        r.title.toLowerCase().includes(q) ||
+        r.topic.toLowerCase().includes(q) ||
+        (r.subject ?? "").toLowerCase().includes(q),
+    );
+  }, [rows, search]);
 
   const onGenerate = async () => {
     if (!topic.trim()) return toast.error("Enter a topic");
@@ -58,7 +70,13 @@ function NotesIndex() {
           "Content-Type": "application/json",
           Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
         },
-        body: JSON.stringify({ topic, subject, exam, language, numFlashcards: 12 }),
+        body: JSON.stringify({
+          topic,
+          subject: picker.subject,
+          exam: picker.subExam,
+          language,
+          numFlashcards: 12,
+        }),
       });
       if (!res.ok) {
         const j = await res.json().catch(() => ({}));
@@ -70,7 +88,10 @@ function NotesIndex() {
         .insert({
           user_id: u.user.id,
           title: payload.title || topic,
-          topic, subject, exam, language,
+          topic,
+          subject: picker.subject,
+          exam: picker.subExam,
+          language,
           style: "flashcards_notes",
           content: payload.content,
           flashcards: payload.flashcards,
@@ -112,18 +133,7 @@ function NotesIndex() {
           <Field label="Topic">
             <Input value={topic} onChange={(e) => setTopic(e.target.value)} placeholder="e.g. Newton's Laws" />
           </Field>
-          <Field label="Subject">
-            <Select value={subject} onValueChange={setSubject}>
-              <SelectTrigger><SelectValue /></SelectTrigger>
-              <SelectContent>{SUBJECTS.map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent>
-            </Select>
-          </Field>
-          <Field label="Exam">
-            <Select value={exam} onValueChange={setExam}>
-              <SelectTrigger><SelectValue /></SelectTrigger>
-              <SelectContent>{EXAMS.map((e) => <SelectItem key={e} value={e}>{e}</SelectItem>)}</SelectContent>
-            </Select>
-          </Field>
+          <ExamPicker value={picker} onChange={setPicker} />
           <Field label="Language">
             <Select value={language} onValueChange={setLanguage}>
               <SelectTrigger><SelectValue /></SelectTrigger>
@@ -137,15 +147,21 @@ function NotesIndex() {
       </section>
 
       <section className="mt-10">
-        <h2 className="font-display text-lg font-semibold">Your notes</h2>
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <h2 className="font-display text-lg font-semibold">Your notes</h2>
+          <div className="relative w-full sm:w-72">
+            <Search className="pointer-events-none absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+            <Input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search by topic / subject…" className="pl-8" />
+          </div>
+        </div>
         <div className="mt-4">
           {loading ? (
             <div className="space-y-3">{Array.from({ length: 3 }).map((_, i) => (<div key={i} className="h-20 animate-pulse rounded-lg bg-secondary" />))}</div>
-          ) : rows.length === 0 ? (
-            <div className="rounded-xl border border-dashed border-border p-10 text-center text-sm text-muted-foreground">No notes yet. Generate your first set above.</div>
+          ) : filtered.length === 0 ? (
+            <div className="rounded-xl border border-dashed border-border p-10 text-center text-sm text-muted-foreground">{rows.length === 0 ? "No notes yet. Generate your first set above." : "No notes match your search."}</div>
           ) : (
             <ul className="grid gap-3 md:grid-cols-2">
-              {rows.map((r) => (
+              {filtered.map((r) => (
                 <li key={r.id} className="group rounded-xl border border-border bg-card p-5 transition hover:border-primary/40">
                   <div className="flex items-start justify-between gap-3">
                     <div className="min-w-0">
