@@ -62,23 +62,20 @@ serve(async (req) => {
             title: { type: "string", description: "A short title for this test" },
             questions: {
               type: "array",
-              minItems: n,
-              maxItems: n,
+              description: `Exactly ${n} questions`,
               items: {
                 type: "object",
                 properties: {
                   question: { type: "string" },
                   options: {
                     type: "array",
-                    minItems: 4,
-                    maxItems: 4,
+                    description: "Exactly 4 options",
                     items: { type: "string" },
                   },
-                  correct_index: { type: "integer", minimum: 0, maximum: 3 },
+                  correct_index: { type: "integer", description: "0-3 index of correct option" },
                   explanation: { type: "string" },
                 },
                 required: ["question", "options", "correct_index", "explanation"],
-                additionalProperties: false,
               },
             },
           },
