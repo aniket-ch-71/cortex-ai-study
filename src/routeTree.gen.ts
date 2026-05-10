@@ -9,6 +9,7 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as OnboardingRouteImport } from './routes/onboarding'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
 import { Route as IndexRouteImport } from './routes/index'
@@ -24,6 +25,11 @@ import { Route as AuthenticatedNotesNoteIdIndexRouteImport } from './routes/_aut
 import { Route as AuthenticatedMockTestTestIdIndexRouteImport } from './routes/_authenticated/mock-test/$testId/index'
 import { Route as AuthenticatedMockTestTestIdResultsRouteImport } from './routes/_authenticated/mock-test/$testId/results'
 
+const OnboardingRoute = OnboardingRouteImport.update({
+  id: '/onboarding',
+  path: '/onboarding',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AuthRoute = AuthRouteImport.update({
   id: '/auth',
   path: '/auth',
@@ -106,6 +112,7 @@ const AuthenticatedMockTestTestIdResultsRoute =
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/onboarding': typeof OnboardingRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/doubt-solver': typeof AuthenticatedDoubtSolverRoute
   '/analyser/': typeof AuthenticatedAnalyserIndexRoute
@@ -121,6 +128,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/onboarding': typeof OnboardingRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/doubt-solver': typeof AuthenticatedDoubtSolverRoute
   '/analyser': typeof AuthenticatedAnalyserIndexRoute
@@ -138,6 +146,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/_authenticated': typeof AuthenticatedRouteWithChildren
   '/auth': typeof AuthRoute
+  '/onboarding': typeof OnboardingRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/_authenticated/doubt-solver': typeof AuthenticatedDoubtSolverRoute
   '/_authenticated/analyser/': typeof AuthenticatedAnalyserIndexRoute
@@ -155,6 +164,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/auth'
+    | '/onboarding'
     | '/dashboard'
     | '/doubt-solver'
     | '/analyser/'
@@ -170,6 +180,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/auth'
+    | '/onboarding'
     | '/dashboard'
     | '/doubt-solver'
     | '/analyser'
@@ -186,6 +197,7 @@ export interface FileRouteTypes {
     | '/'
     | '/_authenticated'
     | '/auth'
+    | '/onboarding'
     | '/_authenticated/dashboard'
     | '/_authenticated/doubt-solver'
     | '/_authenticated/analyser/'
@@ -203,10 +215,18 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthenticatedRoute: typeof AuthenticatedRouteWithChildren
   AuthRoute: typeof AuthRoute
+  OnboardingRoute: typeof OnboardingRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/onboarding': {
+      id: '/onboarding'
+      path: '/onboarding'
+      fullPath: '/onboarding'
+      preLoaderRoute: typeof OnboardingRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/auth': {
       id: '/auth'
       path: '/auth'
@@ -345,6 +365,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRoute: AuthenticatedRouteWithChildren,
   AuthRoute: AuthRoute,
+  OnboardingRoute: OnboardingRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
