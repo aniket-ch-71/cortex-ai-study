@@ -10,7 +10,8 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import { LANGUAGES } from "@/lib/cortex-data";
-import { ExamPicker, defaultExamPicker, type ExamPickerValue } from "@/components/ExamPicker";
+import { ExamPicker, defaultExamPicker, examPickerFromPrimary, type ExamPickerValue } from "@/components/ExamPicker";
+import { useProfile } from "@/hooks/useProfile";
 
 export const Route = createFileRoute("/_authenticated/notes/")({
   head: () => ({ meta: [{ title: "Notes Generator — CORTEX" }] }),
