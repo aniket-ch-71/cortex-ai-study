@@ -35,7 +35,15 @@ function NotesIndex() {
   const [search, setSearch] = useState("");
 
   const [topic, setTopic] = useState("");
+  const { primaryExam } = useProfile();
   const [picker, setPicker] = useState<ExamPickerValue>(defaultExamPicker());
+  const [pickerInit, setPickerInit] = useState(false);
+  useEffect(() => {
+    if (!pickerInit && primaryExam) {
+      setPicker(examPickerFromPrimary(primaryExam));
+      setPickerInit(true);
+    }
+  }, [primaryExam, pickerInit]);
   const [language, setLanguage] = useState("en");
 
   const load = async () => {
