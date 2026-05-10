@@ -24,7 +24,15 @@ type Row = { id: string; title: string; exam: string; exam_date: string | null; 
 const DAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
 
 function PlannerPage() {
+  const { primaryExam } = useProfile();
   const [exam, setExam] = useState<string>(EXAMS[0]);
+  const [seeded, setSeeded] = useState(false);
+  useEffect(() => {
+    if (!seeded && primaryExam && EXAMS.includes(primaryExam)) {
+      setExam(primaryExam);
+      setSeeded(true);
+    }
+  }, [primaryExam, seeded]);
   const [examDate, setExamDate] = useState("");
   const [hoursPerDay, setHoursPerDay] = useState(4);
   const [subjects, setSubjects] = useState<string[]>([SUBJECTS[0], SUBJECTS[1]]);
