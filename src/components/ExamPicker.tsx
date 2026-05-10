@@ -29,6 +29,18 @@ export function defaultExamPicker(): ExamPickerValue {
   return { category, subExam, subject };
 }
 
+/** Build an ExamPickerValue from a saved primary exam name (e.g. "SSC CGL"). */
+export function examPickerFromPrimary(primaryExam: string | null | undefined): ExamPickerValue {
+  if (!primaryExam) return defaultExamPicker();
+  for (const cat of EXAM_CATEGORIES) {
+    if (SUB_EXAMS[cat].includes(primaryExam)) {
+      const subject = (SUB_EXAM_SUBJECTS[primaryExam] ?? ["All"])[0];
+      return { category: cat, subExam: primaryExam, subject };
+    }
+  }
+  return defaultExamPicker();
+}
+
 export function ExamPicker({
   value,
   onChange,
