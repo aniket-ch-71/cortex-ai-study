@@ -23,6 +23,7 @@ import {
   isAllSections,
   type ExamCategory,
 } from "@/lib/exam-patterns";
+import { useProfile } from "@/hooks/useProfile";
 
 export const Route = createFileRoute("/_authenticated/mock-test/")({
   head: () => ({ meta: [{ title: "Mock Tests — CORTEX" }] }),
