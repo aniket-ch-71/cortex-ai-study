@@ -346,6 +346,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      username_available: { Args: { uname: string }; Returns: boolean }
     }
     Enums: {
       app_role: "admin" | "user"
