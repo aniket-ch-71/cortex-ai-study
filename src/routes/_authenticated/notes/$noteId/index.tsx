@@ -1,9 +1,10 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useEffect, useRef, useState } from "react";
-import { ArrowLeft, FileDown, Loader2, RotateCw } from "lucide-react";
+import { useEffect, useState } from "react";
+import { ArrowLeft, Printer, Loader2, RotateCw } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
+import { CopyButton } from "@/components/CopyButton";
 
 export const Route = createFileRoute("/_authenticated/notes/$noteId/")({
   head: () => ({ meta: [{ title: "Note — CORTEX" }] }),
