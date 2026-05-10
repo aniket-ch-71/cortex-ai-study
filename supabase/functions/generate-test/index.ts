@@ -32,8 +32,8 @@ serve(async (req) => {
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
 
     const lang = LANG_LABEL[language] ?? LANG_LABEL.en;
-    // Allow larger counts for full-section exams (up to 100 per call).
-    const n = Math.max(5, Math.min(100, Number(numQuestions) || 10));
+    // Hard cap: max 25 questions per AI call to keep generation reliable.
+    const n = Math.max(5, Math.min(25, Number(numQuestions) || 10));
 
     const negInfo =
       Number(negativeMarking) !== 0
