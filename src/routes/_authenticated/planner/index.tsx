@@ -9,6 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { EXAMS, SUBJECTS, LANGUAGES } from "@/lib/cortex-data";
+import { useProfile } from "@/hooks/useProfile";
 
 export const Route = createFileRoute("/_authenticated/planner/")({
   head: () => ({ meta: [{ title: "Study Planner — CORTEX" }] }),
@@ -23,7 +24,15 @@ type Row = { id: string; title: string; exam: string; exam_date: string | null; 
 const DAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
 
 function PlannerPage() {
+  const { primaryExam } = useProfile();
   const [exam, setExam] = useState<string>(EXAMS[0]);
+  const [seeded, setSeeded] = useState(false);
+  useEffect(() => {
+    if (!seeded && primaryExam && (EXAMS as readonly string[]).includes(primaryExam)) {
+      setExam(primaryExam);
+      setSeeded(true);
+    }
+  }, [primaryExam, seeded]);
   const [examDate, setExamDate] = useState("");
   const [hoursPerDay, setHoursPerDay] = useState(4);
   const [subjects, setSubjects] = useState<string[]>([SUBJECTS[0], SUBJECTS[1]]);

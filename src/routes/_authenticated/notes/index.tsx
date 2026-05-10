@@ -10,7 +10,8 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import { LANGUAGES } from "@/lib/cortex-data";
-import { ExamPicker, defaultExamPicker, type ExamPickerValue } from "@/components/ExamPicker";
+import { ExamPicker, defaultExamPicker, examPickerFromPrimary, type ExamPickerValue } from "@/components/ExamPicker";
+import { useProfile } from "@/hooks/useProfile";
 
 export const Route = createFileRoute("/_authenticated/notes/")({
   head: () => ({ meta: [{ title: "Notes Generator — CORTEX" }] }),
@@ -34,7 +35,15 @@ function NotesIndex() {
   const [search, setSearch] = useState("");
 
   const [topic, setTopic] = useState("");
+  const { primaryExam } = useProfile();
   const [picker, setPicker] = useState<ExamPickerValue>(defaultExamPicker());
+  const [pickerInit, setPickerInit] = useState(false);
+  useEffect(() => {
+    if (!pickerInit && primaryExam) {
+      setPicker(examPickerFromPrimary(primaryExam));
+      setPickerInit(true);
+    }
+  }, [primaryExam, pickerInit]);
   const [language, setLanguage] = useState("en");
 
   const load = async () => {

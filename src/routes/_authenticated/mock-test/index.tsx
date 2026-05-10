@@ -23,6 +23,7 @@ import {
   isAllSections,
   type ExamCategory,
 } from "@/lib/exam-patterns";
+import { useProfile } from "@/hooks/useProfile";
 
 export const Route = createFileRoute("/_authenticated/mock-test/")({
   head: () => ({ meta: [{ title: "Mock Tests — CORTEX" }] }),
@@ -54,7 +55,8 @@ function MockTestIndex() {
   const [loading, setLoading] = useState(true);
   const [generating, setGenerating] = useState(false);
 
-  // form state — cascading
+  // form state — cascading. Pre-seeded from user's primary exam if available.
+  const { primaryExam } = useProfile();
   const [category, setCategory] = useState<ExamCategory>("SSC");
   const [subExam, setSubExam] = useState<string>(SUB_EXAMS["SSC"][0]);
   const subjectsForExam = useMemo(
@@ -66,6 +68,21 @@ function MockTestIndex() {
   const [language, setLanguage] = useState("en");
   const [topic, setTopic] = useState("");
   const [numQuestions, setNumQuestions] = useState<number>(25);
+  const [primarySeeded, setPrimarySeeded] = useState(false);
+
+  // Seed once from profile primary exam
+  useEffect(() => {
+    if (!primarySeeded && primaryExam) {
+      for (const c of Object.keys(SUB_EXAMS) as ExamCategory[]) {
+        if (SUB_EXAMS[c].includes(primaryExam)) {
+          setCategory(c);
+          setSubExam(primaryExam);
+          break;
+        }
+      }
+      setPrimarySeeded(true);
+    }
+  }, [primaryExam, primarySeeded]);
 
   const pattern = useMemo(() => getPattern(subExam), [subExam]);
   const allSections = isAllSections(subject);

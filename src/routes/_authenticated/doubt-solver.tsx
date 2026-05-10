@@ -288,7 +288,7 @@ function ChatBubble({ msg }: { msg: Msg }) {
       </div>
       <div className={`max-w-[85%] ${isUser ? "items-end" : ""}`}>
         <div
-          className={`whitespace-pre-wrap rounded-xl px-4 py-3 text-sm leading-relaxed ${
+          className={`no-select whitespace-pre-wrap rounded-xl px-4 py-3 text-sm leading-relaxed ${
             isUser
               ? "bg-primary text-primary-foreground"
               : "border border-border bg-card text-foreground"

@@ -1,9 +1,10 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useEffect, useRef, useState } from "react";
-import { ArrowLeft, FileDown, Loader2, RotateCw } from "lucide-react";
+import { useEffect, useState } from "react";
+import { ArrowLeft, Printer, Loader2, RotateCw } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
+import { CopyButton } from "@/components/CopyButton";
 
 export const Route = createFileRoute("/_authenticated/notes/$noteId/")({
   head: () => ({ meta: [{ title: "Note — CORTEX" }] }),
@@ -24,8 +25,6 @@ function NoteView() {
   const [note, setNote] = useState<Note | null>(null);
   const [loading, setLoading] = useState(true);
   const [flipped, setFlipped] = useState<Record<number, boolean>>({});
-  const [exporting, setExporting] = useState(false);
-  const printRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     (async () => {
@@ -40,35 +39,7 @@ function NoteView() {
     })();
   }, [noteId]);
 
-  const exportPdf = async () => {
-    if (!printRef.current || !note) return;
-    setExporting(true);
-    try {
-      const [{ default: html2canvas }, { default: jsPDF }] = await Promise.all([
-        import("html2canvas"), import("jspdf"),
-      ]);
-      const canvas = await html2canvas(printRef.current, { backgroundColor: "#0A0E1A", scale: 2 });
-      const img = canvas.toDataURL("image/png");
-      const pdf = new jsPDF({ orientation: "portrait", unit: "pt", format: "a4" });
-      const pw = pdf.internal.pageSize.getWidth();
-      const ph = pdf.internal.pageSize.getHeight();
-      const ih = (canvas.height * pw) / canvas.width;
-      let left = ih, pos = 0;
-      pdf.addImage(img, "PNG", 0, pos, pw, ih);
-      left -= ph;
-      while (left > 0) {
-        pos = left - ih;
-        pdf.addPage();
-        pdf.addImage(img, "PNG", 0, pos, pw, ih);
-        left -= ph;
-      }
-      pdf.save(`${note.title.replace(/[^a-z0-9]+/gi, "_")}.pdf`);
-    } catch (e) {
-      toast.error(e instanceof Error ? e.message : "Export failed");
-    } finally {
-      setExporting(false);
-    }
-  };
+  const onPrint = () => window.print();
 
   if (loading || !note) {
     return <div className="flex min-h-[60vh] items-center justify-center text-sm text-muted-foreground"><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Loading…</div>;
@@ -76,43 +47,51 @@ function NoteView() {
 
   return (
     <div className="mx-auto max-w-4xl px-4 py-8 md:px-8">
-      <div className="flex items-center justify-between gap-4">
+      <div className="flex items-center justify-between gap-4" data-print-hide>
         <Link to="/notes" className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"><ArrowLeft className="h-4 w-4" /> Back</Link>
-        <Button variant="outline" size="sm" onClick={exportPdf} disabled={exporting}>
-          {exporting ? (<><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Exporting…</>) : (<><FileDown className="mr-2 h-4 w-4" /> Export PDF</>)}
-        </Button>
+        <div className="flex items-center gap-2">
+          <CopyButton text={`${note.title}\n\n${note.content}`} label="Copy notes" />
+          <Button variant="outline" size="sm" onClick={onPrint}>
+            <Printer className="mr-2 h-4 w-4" /> Print / PDF
+          </Button>
+        </div>
       </div>
 
-      <div ref={printRef} className="mt-6 space-y-6 rounded-xl bg-background p-6">
-        <div className="rounded-xl border border-border bg-card p-6">
+      <div className="print-area mt-6 space-y-6 rounded-xl bg-background p-6">
+        <div className="print-card rounded-xl border border-border bg-card p-6">
           <h1 className="font-display text-2xl font-bold">{note.title}</h1>
           <p className="mt-1 text-sm text-muted-foreground">{note.topic} · {note.subject}</p>
         </div>
 
-        <article className="prose-cortex rounded-xl border border-border bg-card p-6">
+        <article className="print-card prose-cortex no-select rounded-xl border border-border bg-card p-6">
           <MarkdownLite source={note.content} />
         </article>
 
-        <div className="rounded-xl border border-border bg-card p-6">
+        <div className="print-card rounded-xl border border-border bg-card p-6">
           <h2 className="font-display text-lg font-semibold">Flashcards</h2>
-          <p className="mt-1 text-xs text-muted-foreground">Tap a card to reveal the answer.</p>
+          <p className="mt-1 text-xs text-muted-foreground" data-print-hide>Tap a card to reveal the answer.</p>
           <div className="mt-4 grid gap-3 sm:grid-cols-2">
             {note.flashcards.map((f, i) => (
               <button
                 key={i}
                 onClick={() => setFlipped((m) => ({ ...m, [i]: !m[i] }))}
-                className="group relative min-h-[140px] rounded-lg border border-border bg-background p-4 text-left transition hover:border-primary/40"
+                className="print-card group relative min-h-[140px] rounded-lg border border-border bg-background p-4 text-left transition hover:border-primary/40"
               >
                 <div className="flex items-center justify-between text-xs text-muted-foreground">
                   <span>Card {i + 1}</span>
-                  <RotateCw className="h-3 w-3 opacity-0 transition group-hover:opacity-100" />
+                  <RotateCw className="h-3 w-3 opacity-0 transition group-hover:opacity-100" data-print-hide />
                 </div>
-                <p className="mt-2 text-sm font-medium">
+                <p className="mt-2 text-sm font-medium no-select">
                   {flipped[i] ? f.answer : f.question}
                 </p>
-                <p className="mt-2 text-[10px] uppercase tracking-wider text-muted-foreground">
+                <p className="mt-2 text-[10px] uppercase tracking-wider text-muted-foreground" data-print-hide>
                   {flipped[i] ? "Answer" : "Question"}
                 </p>
+                {/* Print: always show both Q and A */}
+                <div className="hidden print:block">
+                  <p className="mt-2 text-xs"><strong>Q:</strong> {f.question}</p>
+                  <p className="mt-1 text-xs"><strong>A:</strong> {f.answer}</p>
+                </div>
               </button>
             ))}
           </div>

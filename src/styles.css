@@ -179,4 +179,45 @@
     0%, 100% { transform: translateY(0); }
     50% { transform: translateY(-10px); }
   }
+  .no-select {
+    user-select: none;
+    -webkit-user-select: none;
+    -webkit-touch-callout: none;
+  }
+}
+
+/* Print: only the .print-area is visible, everything else hidden */
+@media print {
+  body {
+    background: #ffffff !important;
+    color: #000000 !important;
+    background-image: none !important;
+  }
+  [data-print-hide], [data-sidebar="sidebar"], header, nav, aside, footer, button {
+    display: none !important;
+  }
+  .print-area, .print-area * {
+    visibility: visible !important;
+    color: #000 !important;
+    background: #fff !important;
+    border-color: #ddd !important;
+    box-shadow: none !important;
+  }
+  .print-area {
+    position: absolute;
+    inset: 0;
+    padding: 24px;
+    width: 100%;
+  }
+  .print-area .print-card {
+    page-break-inside: avoid;
+    break-inside: avoid;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    padding: 12px;
+    margin-bottom: 12px;
+  }
+  .print-area h1, .print-area h2, .print-area h3 {
+    color: #000 !important;
+  }
 }

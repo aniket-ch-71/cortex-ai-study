@@ -9,6 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { SUBJECTS, EXAMS, LANGUAGES } from "@/lib/cortex-data";
+import { useProfile } from "@/hooks/useProfile";
 
 export const Route = createFileRoute("/_authenticated/analyser/")({
   head: () => ({ meta: [{ title: "Notes Analyser — CORTEX" }] }),
@@ -33,9 +34,17 @@ type Row = {
 };
 
 function AnalyserPage() {
+  const { primaryExam } = useProfile();
   const [topic, setTopic] = useState("");
   const [subject, setSubject] = useState<string>(SUBJECTS[0]);
   const [exam, setExam] = useState<string>(EXAMS[0]);
+  const [seeded, setSeeded] = useState(false);
+  useEffect(() => {
+    if (!seeded && primaryExam && (EXAMS as readonly string[]).includes(primaryExam)) {
+      setExam(primaryExam);
+      setSeeded(true);
+    }
+  }, [primaryExam, seeded]);
   const [language, setLanguage] = useState("en");
   const [text, setText] = useState("");
   const [analysing, setAnalysing] = useState(false);

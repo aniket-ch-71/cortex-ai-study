@@ -32,8 +32,8 @@ serve(async (req) => {
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
 
     const lang = LANG_LABEL[language] ?? LANG_LABEL.en;
-    // Allow larger counts for full-section exams (up to 100 per call).
-    const n = Math.max(5, Math.min(100, Number(numQuestions) || 10));
+    // Hard cap: max 25 questions per AI call to keep generation reliable.
+    const n = Math.max(5, Math.min(25, Number(numQuestions) || 10));
 
     const negInfo =
       Number(negativeMarking) !== 0
@@ -133,6 +133,10 @@ serve(async (req) => {
     }
 
     const args = JSON.parse(call.function.arguments);
+    // Hard cap: never let AI overshoot the requested question count.
+    if (Array.isArray(args?.questions) && args.questions.length > n) {
+      args.questions = args.questions.slice(0, n);
+    }
     return new Response(JSON.stringify(args), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });

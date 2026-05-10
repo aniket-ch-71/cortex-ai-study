@@ -228,34 +228,52 @@ export type Database = {
       }
       profiles: {
         Row: {
+          city: string | null
           created_at: string
+          exams: Json
           full_name: string | null
           id: string
           language: string
           last_active: string | null
+          onboarded: boolean
+          primary_exam: string | null
+          state: string | null
           streak: number
           target_exam: string | null
           updated_at: string
+          username: string | null
         }
         Insert: {
+          city?: string | null
           created_at?: string
+          exams?: Json
           full_name?: string | null
           id: string
           language?: string
           last_active?: string | null
+          onboarded?: boolean
+          primary_exam?: string | null
+          state?: string | null
           streak?: number
           target_exam?: string | null
           updated_at?: string
+          username?: string | null
         }
         Update: {
+          city?: string | null
           created_at?: string
+          exams?: Json
           full_name?: string | null
           id?: string
           language?: string
           last_active?: string | null
+          onboarded?: boolean
+          primary_exam?: string | null
+          state?: string | null
           streak?: number
           target_exam?: string | null
           updated_at?: string
+          username?: string | null
         }
         Relationships: []
       }
@@ -328,6 +346,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      username_available: { Args: { uname: string }; Returns: boolean }
     }
     Enums: {
       app_role: "admin" | "user"
