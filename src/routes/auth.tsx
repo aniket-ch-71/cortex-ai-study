@@ -44,6 +44,11 @@ function AuthPage() {
     });
   }, [navigate, search.redirect]);
 
+  // Signup is now the multi-step onboarding flow.
+  useEffect(() => {
+    if (mode === "signup") navigate({ to: "/onboarding" });
+  }, [mode, navigate]);
+
   return (
     <div className="grid min-h-screen md:grid-cols-2">
       {/* Brand panel */}
