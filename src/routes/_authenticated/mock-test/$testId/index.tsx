@@ -307,7 +307,7 @@ function TakeTestPage() {
       </div>
 
       {/* Question */}
-      <div className="mt-6 rounded-xl border border-border bg-card p-6">
+      <div className="no-select mt-6 rounded-xl border border-border bg-card p-6">
         <div className="flex items-start justify-between gap-4">
           <p className="font-medium leading-relaxed">{q.question}</p>
           {q.marks ? (
