@@ -28,7 +28,7 @@ function PlannerPage() {
   const [exam, setExam] = useState<string>(EXAMS[0]);
   const [seeded, setSeeded] = useState(false);
   useEffect(() => {
-    if (!seeded && primaryExam && EXAMS.includes(primaryExam)) {
+    if (!seeded && primaryExam && (EXAMS as readonly string[]).includes(primaryExam)) {
       setExam(primaryExam);
       setSeeded(true);
     }
