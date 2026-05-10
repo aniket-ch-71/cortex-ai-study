@@ -133,6 +133,10 @@ serve(async (req) => {
     }
 
     const args = JSON.parse(call.function.arguments);
+    // Hard cap: never let AI overshoot the requested question count.
+    if (Array.isArray(args?.questions) && args.questions.length > n) {
+      args.questions = args.questions.slice(0, n);
+    }
     return new Response(JSON.stringify(args), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
