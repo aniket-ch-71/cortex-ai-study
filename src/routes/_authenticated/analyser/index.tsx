@@ -34,9 +34,17 @@ type Row = {
 };
 
 function AnalyserPage() {
+  const { primaryExam } = useProfile();
   const [topic, setTopic] = useState("");
   const [subject, setSubject] = useState<string>(SUBJECTS[0]);
   const [exam, setExam] = useState<string>(EXAMS[0]);
+  const [seeded, setSeeded] = useState(false);
+  useEffect(() => {
+    if (!seeded && primaryExam && (EXAMS as readonly string[]).includes(primaryExam)) {
+      setExam(primaryExam);
+      setSeeded(true);
+    }
+  }, [primaryExam, seeded]);
   const [language, setLanguage] = useState("en");
   const [text, setText] = useState("");
   const [analysing, setAnalysing] = useState(false);
