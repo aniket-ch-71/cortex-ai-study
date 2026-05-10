@@ -1,78 +1,109 @@
+# Cortex Improvement Plan
 
-# CORTEX — Phase 1 Build Plan
+This is a large batch of work. To keep risk low and review easy, I'll ship it in 6 phases. Each phase is independently testable. I'll pause after Phase 1 + 2 for you to verify before continuing.
 
-India's AI-Powered Study Platform. Phase 1 covers the foundation and the most-used feature (AI Doubt Solver). Mock Tests, Notes Generator, Notes Analyser, and Study Planner come in follow-up phases.
+---
 
-## Stack adjustments from your spec
+## Phase A — Critical Fixes (Priority 1)
 
-Your spec assumed vanilla HTML + Firebase + user-pasted Anthropic key. Adapting to this Lovable project:
-- React + TanStack Start (file-based routes) instead of static .html files
-- Lovable Cloud (Supabase) for Auth + database instead of Firebase
-- Lovable AI Gateway (server-side, no key needed from users) instead of browser Claude calls
-- Tailwind v4 design tokens instead of plain CSS variables (same dark palette and fonts)
+1. **Disable text selection** on content surfaces
+   - Add a `.no-select` utility in `src/styles.css` (`user-select: none`).
+   - Apply to doubt-solver messages, notes content + flashcards, mock test question cards.
+   - Add a small `CopyButton` component (shadcn `Button` + sonner toast "Copied!") to each surface.
 
-## Design system
+2. **Fix Notes PDF export** with `window.print()`
+   - Remove `html2canvas` + `jsPDF` path; replace export button with print trigger.
+   - Add `@media print` rules in `src/styles.css`: hide sidebar/header (`[data-print-hide]`), force white bg, dark text, page-break rules for flashcards, expand the `.print-area`.
+   - Wrap printable area in `<div className="print-area">`. Mark layout chrome with `data-print-hide`.
 
-Dark theme inspired by Vercel/Linear/Raycast. Wired into `src/styles.css` as semantic tokens (light mode disabled — app is dark-only).
+3. **Mock test question cap**
+   - In `supabase/functions/generate-test/index.ts`: clamp `n` to `min(numQuestions, 25)` for AI generation.
+   - After parsing tool call, `args.questions = args.questions.slice(0, n)` before returning.
+   - Frontend: never request > 25 in a single AI call (sections loop already handles totals).
 
-- Background `#0A0E1A`, card `#141C2E`, border `#1E2D4A`
-- Accents: blue `#4F8EF7`, teal `#00C9A7`, purple `#7B61FF`, amber `#FFA63D`, coral `#FF6B6B`
-- Text: `#FFFFFF` primary, `#8B9BBF` secondary
-- Fonts: Space Grotesk (headings), Inter (body) via Google Fonts
-- Radius 12px cards / 8px buttons, 0.2s ease transitions, subtle scroll fade-ins, no gradients beyond soft background glows
+---
 
-## Pages in Phase 1
+## Phase B — Profile + Onboarding (Priority 2)
 
-### 1. Landing (`/`)
-Sticky navbar (logo + Features / Exams / Pricing / Login / Sign Up CTA) → Hero "Study Smarter with AI" with two CTAs and floating feature cards → stats bar (50Cr+ Students, 20+ Exams, 3 Languages, 24/7 AI) → 6 feature cards (AI Mock Tests, Smart Notes, Doubt Solver, Audio Lectures, Notes Analyser, Study Planner) → exam category chips (JEE, NEET, UPSC, SSC, GATE, CAT, NDA, CDS, Bank PO, IBPS, RRB, CBSE, ICSE, State Boards) → EN/Hindi/Hinglish side-by-side demo → 3-tier pricing (Free / Student Pro ₹99/mo / Exam Bundle ₹499/yr) → 3 testimonials → 6-item FAQ accordion → footer.
+4. **Schema migration**
+   - `profiles`: add `username text unique`, `exams jsonb default '[]'`, `primary_exam text`, `state text`, `city text`, `onboarded boolean default false`.
+   - Index on `lower(username)` for unique lookup.
+   - Update `handle_new_user()` trigger to default new fields.
 
-### 2. Auth (`/auth`)
-Split-screen layout. Toggle between Login and Sign Up with smooth animation. Sign Up collects: Full Name, Email, Password, Target Exam (dropdown), Preferred Language (EN/Hindi/Hinglish). Login: email + password + forgot password link. "Continue with Google" button (Lovable Cloud Google sign-in). Real-time Zod validation with inline errors. On success → redirect to `/dashboard`. Session persists via Supabase auth.
+5. **`useProfile` hook** at `src/hooks/useProfile.ts`
+   - React Query `useQuery(['profile', userId])` — single source of truth.
+   - Returns `{ profile, primaryExam, examCategory, subExam, loading, refetch }`.
+   - Maps `primary_exam` → category/sub-exam via `EXAM_PATTERNS`.
 
-### 3. Dashboard (`/dashboard`) — protected
-Collapsible shadcn sidebar (Dashboard, AI Doubt Solver, Mock Tests [coming soon], Notes Generator [coming soon], Notes Analyser [coming soon], Study Planner [coming soon], My Performance, Settings). Top bar with welcome + 🔥 streak + notification bell. Stats cards row (tests taken, average score, doubts solved, study hours). 4 big quick-action cards. Recent activity feed (last 5). Upcoming-exam countdown widget. Per-subject progress bars. Empty-state copy until the user has activity.
+6. **3-step onboarding** at `src/routes/onboarding.tsx` (gated route)
+   - Step 1: name, email, password (show/hide), username with debounced availability check.
+   - Step 2: searchable chip grid (uses existing `SUB_EXAMS`), min 3, primary = first selected (star icon).
+   - Step 3: state dropdown (29 states + 8 UTs), city input, language radio. "Complete" → write profile, fire `canvas-confetti` (CDN dynamic import), redirect to dashboard.
+   - Existing `/auth` flow redirects new users to `/onboarding` until `profile.onboarded = true`.
+   - `_authenticated` layout: if `!onboarded`, redirect to `/onboarding`.
 
-### 4. AI Doubt Solver (`/doubt-solver`) — protected
-WhatsApp/ChatGPT-style chat. Top controls: language toggle (EN / Hindi / Hinglish), subject tag selector (Maths, Physics, Chemistry, Biology, History, etc.), clear chat. Streaming responses from Lovable AI Gateway via a server function with system prompt:
+7. **Global pre-selection**
+   - `ExamPicker` accepts `defaultFromProfile` flag; pages (Mock Test, Notes, Analyser, Planner, Settings) initialize picker from `useProfile().primaryExam`.
 
-> "You are Cortex AI, an expert Indian education tutor. Explain concepts clearly for competitive exam students. Respond in [language] — when Hinglish, mix Hindi and English naturally. Always give step-by-step explanations with examples."
+---
 
-Typing indicator (3 dots), copy-response button on each AI message, daily free-doubt counter ("5 free doubts remaining today" — tracked in DB per user per day), input + Enter-to-send. Conversations persisted to `doubts` table.
+## Phase C — UI Polish (Priority 3)
 
-## Data model (Lovable Cloud)
+8. **Dashboard**: count-up stat cards (`requestAnimationFrame`, 800ms), daily quote (20-quote array, deterministic by `dayOfYear`), hover-lift on quick actions, fade-in for activity, fire emoji + CSS flicker if `streak > 0`.
 
-- `profiles` (id → auth.users, full_name, target_exam, language, streak, last_active, created_at) — auto-created on signup via trigger
-- `doubts` (id, user_id, subject, language, question, answer, created_at)
-- `daily_usage` (user_id, date, doubts_used) — for the rate limit
-- `user_roles` + `app_role` enum + `has_role()` security-definer function (admin/user) — set up now so future admin features are safe
-- RLS on all tables: users only read/write their own rows
+9. **Doubt Solver**: smooth `scrollIntoView`, 3-dot typing keyframe, message bubble fade+slide-up, `:focus-visible` ring, no-select + per-message copy button.
 
-## AI integration
+10. **Sidebar**: animated active indicator (left border via pseudo-element), 0.15s bg transition on hover, 0.3s width on collapse, tooltip on collapsed icons (already partially supported by shadcn sidebar).
 
-Single edge function `chat` calls Lovable AI Gateway with `google/gemini-3-flash-preview`, streams SSE back to the client, handles 429 (rate limit) and 402 (credits) with friendly toasts. System prompt lives server-side; client only sends messages, language, subject.
+11. **Page transitions**: add `animate-page-enter` (200ms fade + 8px translate) on the `_authenticated` layout `<main>`, keyed on `location.pathname`.
 
-## Global pieces
+---
 
-- Sonner toasts (success/error/info)
-- Skeleton loaders for AI content, spinner state on buttons
-- `_authenticated` layout route guards `/dashboard` and `/doubt-solver`, redirects to `/auth` with redirect-back
-- Semantic HTML, alt text on images, fully responsive (375 / 768 / 1280)
+## Phase D — Mock Test Tabs + Question Bank (Priority 4)
 
-## Technical notes
+12. **Schema**: new table `question_bank(id, exam, sub_exam, subject, topic, difficulty, question, options jsonb, correct_index int, explanation, language, created_at)` — public read for authenticated users; insert-only for service role.
 
-- Routes: `src/routes/index.tsx`, `auth.tsx`, `_authenticated.tsx`, `_authenticated/dashboard.tsx`, `_authenticated/doubt-solver.tsx`
-- Components: `Navbar`, `Footer`, `AppSidebar`, `FeatureCard`, `PricingCard`, `TestimonialCard`, `FaqAccordion`, `ChatMessage`, `LanguageToggle`
-- Edge function: `supabase/functions/chat/index.ts` (streaming)
-- DB migration creates profiles/doubts/daily_usage/user_roles + RLS + signup trigger
-- Auth uses Email/Password + Google (Lovable Cloud defaults)
+13. **Schema**: `daily_usage` add `ai_tests_used int default 0`. Free user limit = 3 AI tests/day (you said "10 questions" but listed "2/3 AI tests remaining" — defaulting to **3 AI tests/day**, will switch on confirmation).
 
-## What's NOT in Phase 1 (next phases)
+14. **Mock test page**: shadcn `Tabs` — "AI Generate" (existing flow + counter banner) and "Pre-installed Practice" (filter → load 25 random rows → instant-feedback runner).
 
-- Mock Test generator + test-taking UI + results + PDF
-- Notes Generator with PDF download
-- Notes Analyser scoring
-- Study Planner with calendar grid
-- Performance analytics page
-- Sidebar links for these will show "Coming soon"
+15. **Practice runner**: new route `/_authenticated/mock-test/practice`. Reuses question card component; reveals answer + explanation immediately; "Next" button; final score summary.
 
-After approval I'll enable Lovable Cloud, run the migration, and build the four pages.
+16. **Seed data**: migration inserts 50 SSC CGL General Awareness questions (English, mixed difficulty).
+
+---
+
+## Phase E — Current Affairs (Priority 5)
+
+17. **Schema**: `daily_current_affairs(date, language, items jsonb, generated_at)`, primary key `(date, language)`.
+
+18. **Edge function** `generate-current-affairs`: cache-check by `(today, lang)`; otherwise call AI Gateway with the prompt you specified (10 items, headline + explanation + tags + 2 MCQs), persist, return.
+
+19. **Page** `/_authenticated/current-affairs`: date header, `[All|SSC|UPSC|Bank|Railway]` filter, item cards with inline MCQ reveal, EN/HI toggle, "Print PDF" via `window.print()`.
+
+20. **Sidebar visibility**: show link only if `profile.exams` includes any of UPSC / SSC / Bank / Railway exams, OR a `settings.show_current_affairs` toggle is on.
+
+---
+
+## Phase F — Reviews (Priority 6)
+
+21. **Schema**: `reviews(id, user_id, rating int check 1-5, text, exam, display boolean default false, created_at)`. RLS: insert own, select where `display=true` (public), select own.
+
+22. **Landing page**: replace hardcoded testimonials with query (`display=true AND rating >= 4 LIMIT 6`); fallback to "Be the first to review!" placeholders if < 3.
+
+23. **Rating modal**: shows once after mock test results and once after notes generation (per-session flag in component state). Submit → insert; auto-set `display=true` when `rating >= 4`.
+
+---
+
+## Open Questions
+
+- **Free AI test limit**: prompt says "max 10 questions per day" but counter says "2/3 AI tests". I'll implement as **3 AI-generated tests per day** (each test up to 25 questions). Tell me if you want strict 10-question total instead.
+- **Onboarding for existing users**: I'll route any signed-in user with `onboarded=false` through `/onboarding` once. Existing accounts will see it on next login.
+
+---
+
+## Execution Order
+
+I'll do **Phase A + B in this turn** (critical fixes block everything else, and useProfile is required by later phases). Then I'll pause for your verification before Phase C–F.
+
+**Total**: ~3 migrations, 2 new edge functions, 1 new hook, 1 new route group, ~15 file edits. No new npm deps (canvas-confetti loaded from CDN).
