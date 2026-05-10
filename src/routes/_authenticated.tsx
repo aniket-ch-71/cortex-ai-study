@@ -23,7 +23,25 @@ function AuthedLayout() {
   const [checking, setChecking] = useState(true);
 
   useEffect(() => {
-    supabase.auth.getSession().then(() => setChecking(false));
+    (async () => {
+      const { data } = await supabase.auth.getSession();
+      if (data.session) {
+        // Gate on onboarding completion
+        const path = window.location.pathname;
+        if (path !== "/onboarding") {
+          const { data: prof } = await supabase
+            .from("profiles")
+            .select("onboarded")
+            .eq("id", data.session.user.id)
+            .maybeSingle();
+          if (prof && prof.onboarded === false) {
+            window.location.href = "/onboarding";
+            return;
+          }
+        }
+      }
+      setChecking(false);
+    })();
     const { data: sub } = supabase.auth.onAuthStateChange((_e, session) => {
       if (!session) window.location.href = "/auth";
     });
