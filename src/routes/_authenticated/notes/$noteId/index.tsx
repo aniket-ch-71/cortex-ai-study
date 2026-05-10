@@ -75,18 +75,23 @@ function NoteView() {
               <button
                 key={i}
                 onClick={() => setFlipped((m) => ({ ...m, [i]: !m[i] }))}
-                className="group relative min-h-[140px] rounded-lg border border-border bg-background p-4 text-left transition hover:border-primary/40"
+                className="print-card group relative min-h-[140px] rounded-lg border border-border bg-background p-4 text-left transition hover:border-primary/40"
               >
                 <div className="flex items-center justify-between text-xs text-muted-foreground">
                   <span>Card {i + 1}</span>
-                  <RotateCw className="h-3 w-3 opacity-0 transition group-hover:opacity-100" />
+                  <RotateCw className="h-3 w-3 opacity-0 transition group-hover:opacity-100" data-print-hide />
                 </div>
-                <p className="mt-2 text-sm font-medium">
+                <p className="mt-2 text-sm font-medium no-select">
                   {flipped[i] ? f.answer : f.question}
                 </p>
-                <p className="mt-2 text-[10px] uppercase tracking-wider text-muted-foreground">
+                <p className="mt-2 text-[10px] uppercase tracking-wider text-muted-foreground" data-print-hide>
                   {flipped[i] ? "Answer" : "Question"}
                 </p>
+                {/* Print: always show both Q and A */}
+                <div className="hidden print:block">
+                  <p className="mt-2 text-xs"><strong>Q:</strong> {f.question}</p>
+                  <p className="mt-1 text-xs"><strong>A:</strong> {f.answer}</p>
+                </div>
               </button>
             ))}
           </div>
