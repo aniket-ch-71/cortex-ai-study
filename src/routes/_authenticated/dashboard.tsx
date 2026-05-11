@@ -119,15 +119,10 @@ function DashboardPage() {
 
       {/* Stats */}
       <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <Stat icon={Brain} color="text-primary" label="Tests taken" value={loading ? "—" : String(stats.tests)} />
-        <Stat icon={Trophy} color="text-amber" label="Average score" value={loading ? "—" : stats.tests ? `${stats.avg}%` : "—"} />
-        <Stat
-          icon={MessageCircleQuestion}
-          color="text-purple"
-          label="Doubts solved"
-          value={loading ? "—" : String(stats.doubts)}
-        />
-        <Stat icon={FileText} color="text-teal" label="Notes created" value={loading ? "—" : String(stats.notes)} />
+        <Stat icon={Brain} color="text-primary" label="Tests taken" value={stats.tests} loading={loading} />
+        <Stat icon={Trophy} color="text-amber" label="Average score" value={stats.avg} loading={loading} suffix={stats.tests ? "%" : ""} placeholder={!stats.tests} />
+        <Stat icon={MessageCircleQuestion} color="text-purple" label="Doubts solved" value={stats.doubts} loading={loading} />
+        <Stat icon={FileText} color="text-teal" label="Notes created" value={stats.notes} loading={loading} />
       </div>
 
       {/* Quick actions */}
@@ -219,19 +214,38 @@ function Stat({
   color,
   label,
   value,
+  loading,
+  suffix = "",
+  placeholder = false,
 }: {
   icon: React.ComponentType<{ className?: string }>;
   color: string;
   label: string;
-  value: string;
+  value: number;
+  loading: boolean;
+  suffix?: string;
+  placeholder?: boolean;
 }) {
+  const animated = useCountUp(value, 800, !loading);
   return (
-    <div className="rounded-xl border border-border bg-card p-5">
+    <div className="rounded-xl border border-border bg-card p-5 transition-colors hover:border-primary/40">
       <div className={`grid h-9 w-9 place-items-center rounded-lg bg-secondary ${color}`}>
         <Icon className="h-4 w-4" />
       </div>
-      <div className="mt-3 font-display text-2xl font-bold">{value}</div>
+      <div className="mt-3 font-display text-2xl font-bold tabular-nums">
+        {loading || placeholder ? "—" : `${animated}${suffix}`}
+      </div>
       <div className="text-xs uppercase tracking-wider text-muted-foreground">{label}</div>
+    </div>
+  );
+}
+
+function DailyQuote() {
+  const q = getDailyQuote();
+  return (
+    <div className="mt-6 rounded-xl border border-border bg-card/60 px-5 py-4 animate-fade-up">
+      <p className="text-sm italic text-foreground/90">&ldquo;{q.text}&rdquo;</p>
+      <p className="mt-1 text-xs text-muted-foreground">— {q.author}</p>
     </div>
   );
 }
@@ -253,8 +267,8 @@ function ActionCard({
 }) {
   const inner = (
     <div
-      className={`group rounded-xl border border-border bg-card p-5 transition ${
-        ready ? "hover:border-primary/40" : "opacity-60"
+      className={`group rounded-xl border border-border bg-card p-5 ${
+        ready ? "hover-lift hover:border-primary/40" : "opacity-60"
       }`}
     >
       <div className={`grid h-10 w-10 place-items-center rounded-lg bg-secondary ${color}`}>
