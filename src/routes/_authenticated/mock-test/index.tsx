@@ -280,9 +280,31 @@ function MockTestIndex() {
         </div>
       </div>
 
-      {/* Generator */}
-      <section className="mt-8 rounded-xl border border-border bg-card p-6">
-        <h2 className="font-display text-lg font-semibold">Create a new test</h2>
+      <Tabs defaultValue="ai" className="mt-8">
+        <TabsList>
+          <TabsTrigger value="ai">
+            <Sparkles className="mr-1.5 h-3.5 w-3.5" /> AI Generate
+          </TabsTrigger>
+          <TabsTrigger value="practice">
+            <Library className="mr-1.5 h-3.5 w-3.5" /> Pre-installed Practice
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="ai" className="mt-6">
+          {/* AI Generator */}
+          <section className="rounded-xl border border-border bg-card p-6">
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <h2 className="font-display text-lg font-semibold">Create a new test</h2>
+              <span
+                className={`rounded-full border px-2.5 py-1 text-xs ${
+                  aiRemaining > 0
+                    ? "border-border text-muted-foreground"
+                    : "border-coral/40 text-coral"
+                }`}
+              >
+                {aiRemaining}/{AI_TEST_DAILY_LIMIT} AI tests left today
+              </span>
+            </div>
         <div className="mt-5 grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           <Field label="Step 1 · Exam category">
             <Select value={category} onValueChange={(v) => setCategory(v as ExamCategory)}>
