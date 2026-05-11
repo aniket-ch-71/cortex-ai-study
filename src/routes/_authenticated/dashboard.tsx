@@ -14,6 +14,8 @@ import {
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import type { Tables } from "@/integrations/supabase/types";
+import { useCountUp } from "@/hooks/useCountUp";
+import { getDailyQuote } from "@/lib/quotes";
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
   head: () => ({ meta: [{ title: "Dashboard — CORTEX" }] }),
@@ -96,17 +98,24 @@ function DashboardPage() {
         </div>
         <div className="flex items-center gap-3">
           <div className="flex items-center gap-1.5 rounded-full border border-border bg-card px-3 py-1.5 text-sm">
-            <Flame className="h-4 w-4 text-amber" />
+            {(profile?.streak ?? 0) > 0 ? (
+              <Flame className="h-4 w-4 text-amber animate-flicker" />
+            ) : (
+              <Flame className="h-4 w-4 text-muted-foreground" />
+            )}
             <span className="font-medium">{profile?.streak ?? 0} day streak</span>
           </div>
           <button
-            className="rounded-full border border-border bg-card p-2 text-muted-foreground hover:text-foreground"
+            className="rounded-full border border-border bg-card p-2 text-muted-foreground transition-colors hover:text-foreground"
             aria-label="Notifications"
           >
             <Bell className="h-4 w-4" />
           </button>
         </div>
       </div>
+
+      {/* Daily quote */}
+      <DailyQuote />
 
       {/* Stats */}
       <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
