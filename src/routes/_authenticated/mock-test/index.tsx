@@ -1,6 +1,6 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
-import { Brain, Loader2, Plus, Trash2, Trophy, ArrowRight, Info } from "lucide-react";
+import { Brain, Loader2, Plus, Trash2, Trophy, ArrowRight, Info, Sparkles, Library } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -13,6 +13,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { LANGUAGES } from "@/lib/cortex-data";
 import {
   EXAM_CATEGORIES,
@@ -24,6 +25,8 @@ import {
   type ExamCategory,
 } from "@/lib/exam-patterns";
 import { useProfile } from "@/hooks/useProfile";
+
+const AI_TEST_DAILY_LIMIT = 3;
 
 export const Route = createFileRoute("/_authenticated/mock-test/")({
   head: () => ({ meta: [{ title: "Mock Tests — CORTEX" }] }),
@@ -69,6 +72,8 @@ function MockTestIndex() {
   const [topic, setTopic] = useState("");
   const [numQuestions, setNumQuestions] = useState<number>(25);
   const [primarySeeded, setPrimarySeeded] = useState(false);
+  const [aiUsed, setAiUsed] = useState(0);
+  const aiRemaining = Math.max(0, AI_TEST_DAILY_LIMIT - aiUsed);
 
   // Seed once from profile primary exam
   useEffect(() => {
@@ -105,7 +110,9 @@ function MockTestIndex() {
   }, [allSections, pattern.totalQuestions]);
 
   const load = async () => {
-    const [{ data: t }, { data: a }] = await Promise.all([
+    const { data: u } = await supabase.auth.getUser();
+    const today = new Date().toISOString().slice(0, 10);
+    const [{ data: t }, { data: a }, { data: usage }] = await Promise.all([
       supabase
         .from("mock_tests")
         .select("id, title, subject, exam, difficulty, num_questions, created_at")
@@ -115,6 +122,14 @@ function MockTestIndex() {
         .from("mock_attempts")
         .select("id, test_id, score, total, completed_at")
         .order("completed_at", { ascending: false }),
+      u.user
+        ? supabase
+            .from("daily_usage")
+            .select("ai_tests_used")
+            .eq("user_id", u.user.id)
+            .eq("usage_date", today)
+            .maybeSingle()
+        : Promise.resolve({ data: null }),
     ]);
     setTests((t as TestRow[]) ?? []);
     const map: Record<string, AttemptRow> = {};
@@ -122,6 +137,7 @@ function MockTestIndex() {
       if (!map[at.test_id]) map[at.test_id] = at;
     }
     setAttempts(map);
+    setAiUsed((usage as { ai_tests_used?: number } | null)?.ai_tests_used ?? 0);
     setLoading(false);
   };
 
@@ -130,6 +146,10 @@ function MockTestIndex() {
   }, []);
 
   const onGenerate = async () => {
+    if (aiRemaining <= 0) {
+      toast.error("Daily limit reached. Try the Practice Bank, or come back tomorrow.");
+      return;
+    }
     setGenerating(true);
     try {
       const { data: u } = await supabase.auth.getUser();
@@ -218,6 +238,18 @@ function MockTestIndex() {
         .select("id")
         .single();
       if (error) throw error;
+
+      // Increment AI test usage counter
+      const today = new Date().toISOString().slice(0, 10);
+      const newCount = aiUsed + 1;
+      await supabase
+        .from("daily_usage")
+        .upsert(
+          { user_id: u.user.id, usage_date: today, ai_tests_used: newCount },
+          { onConflict: "user_id,usage_date" },
+        );
+      setAiUsed(newCount);
+
       toast.success("Test generated!");
       navigate({ to: "/mock-test/$testId", params: { testId: inserted.id } });
     } catch (e) {
@@ -248,9 +280,31 @@ function MockTestIndex() {
         </div>
       </div>
 
-      {/* Generator */}
-      <section className="mt-8 rounded-xl border border-border bg-card p-6">
-        <h2 className="font-display text-lg font-semibold">Create a new test</h2>
+      <Tabs defaultValue="ai" className="mt-8">
+        <TabsList>
+          <TabsTrigger value="ai">
+            <Sparkles className="mr-1.5 h-3.5 w-3.5" /> AI Generate
+          </TabsTrigger>
+          <TabsTrigger value="practice">
+            <Library className="mr-1.5 h-3.5 w-3.5" /> Pre-installed Practice
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="ai" className="mt-6">
+          {/* AI Generator */}
+          <section className="rounded-xl border border-border bg-card p-6">
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <h2 className="font-display text-lg font-semibold">Create a new test</h2>
+              <span
+                className={`rounded-full border px-2.5 py-1 text-xs ${
+                  aiRemaining > 0
+                    ? "border-border text-muted-foreground"
+                    : "border-coral/40 text-coral"
+                }`}
+              >
+                {aiRemaining}/{AI_TEST_DAILY_LIMIT} AI tests left today
+              </span>
+            </div>
         <div className="mt-5 grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           <Field label="Step 1 · Exam category">
             <Select value={category} onValueChange={(v) => setCategory(v as ExamCategory)}>
@@ -428,6 +482,30 @@ function MockTestIndex() {
           )}
         </div>
       </section>
+        </TabsContent>
+
+        <TabsContent value="practice" className="mt-6">
+          <section className="rounded-xl border border-border bg-card p-6">
+            <div className="flex items-start gap-3">
+              <span className="grid h-10 w-10 shrink-0 place-items-center rounded-lg bg-teal/15 text-teal">
+                <Library className="h-5 w-5" />
+              </span>
+              <div>
+                <h2 className="font-display text-lg font-semibold">Practice Bank</h2>
+                <p className="mt-1 text-sm text-muted-foreground">
+                  Hand-curated questions with instant feedback. No timer, unlimited attempts.
+                </p>
+              </div>
+            </div>
+            <Link
+              to="/mock-test/practice"
+              className="mt-5 inline-flex items-center gap-1.5 rounded-md bg-teal px-4 py-2.5 text-sm font-medium text-background transition hover:bg-teal/90"
+            >
+              Open Practice Bank <ArrowRight className="h-4 w-4" />
+            </Link>
+          </section>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }
