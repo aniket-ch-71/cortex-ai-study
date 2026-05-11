@@ -16,16 +16,19 @@ export type Database = {
     Tables: {
       daily_usage: {
         Row: {
+          ai_tests_used: number
           doubts_used: number
           usage_date: string
           user_id: string
         }
         Insert: {
+          ai_tests_used?: number
           doubts_used?: number
           usage_date?: string
           user_id: string
         }
         Update: {
+          ai_tests_used?: number
           doubts_used?: number
           usage_date?: string
           user_id?: string
@@ -274,6 +277,51 @@ export type Database = {
           target_exam?: string | null
           updated_at?: string
           username?: string | null
+        }
+        Relationships: []
+      }
+      question_bank: {
+        Row: {
+          correct_index: number
+          created_at: string
+          difficulty: string
+          exam: string
+          explanation: string
+          id: string
+          language: string
+          options: Json
+          question: string
+          sub_exam: string
+          subject: string
+          topic: string | null
+        }
+        Insert: {
+          correct_index: number
+          created_at?: string
+          difficulty?: string
+          exam: string
+          explanation?: string
+          id?: string
+          language?: string
+          options: Json
+          question: string
+          sub_exam: string
+          subject: string
+          topic?: string | null
+        }
+        Update: {
+          correct_index?: number
+          created_at?: string
+          difficulty?: string
+          exam?: string
+          explanation?: string
+          id?: string
+          language?: string
+          options?: Json
+          question?: string
+          sub_exam?: string
+          subject?: string
+          topic?: string | null
         }
         Relationships: []
       }
