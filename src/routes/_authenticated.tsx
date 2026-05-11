@@ -21,6 +21,7 @@ export const Route = createFileRoute("/_authenticated")({
 
 function AuthedLayout() {
   const [checking, setChecking] = useState(true);
+  const pathname = useRouterState({ select: (r) => r.location.pathname });
 
   useEffect(() => {
     (async () => {
