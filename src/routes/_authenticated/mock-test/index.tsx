@@ -482,6 +482,30 @@ function MockTestIndex() {
           )}
         </div>
       </section>
+        </TabsContent>
+
+        <TabsContent value="practice" className="mt-6">
+          <section className="rounded-xl border border-border bg-card p-6">
+            <div className="flex items-start gap-3">
+              <span className="grid h-10 w-10 shrink-0 place-items-center rounded-lg bg-teal/15 text-teal">
+                <Library className="h-5 w-5" />
+              </span>
+              <div>
+                <h2 className="font-display text-lg font-semibold">Practice Bank</h2>
+                <p className="mt-1 text-sm text-muted-foreground">
+                  Hand-curated questions with instant feedback. No timer, unlimited attempts.
+                </p>
+              </div>
+            </div>
+            <Link
+              to="/mock-test/practice"
+              className="mt-5 inline-flex items-center gap-1.5 rounded-md bg-teal px-4 py-2.5 text-sm font-medium text-background transition hover:bg-teal/90"
+            >
+              Open Practice Bank <ArrowRight className="h-4 w-4" />
+            </Link>
+          </section>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }
