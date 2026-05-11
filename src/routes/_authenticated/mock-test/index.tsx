@@ -72,6 +72,8 @@ function MockTestIndex() {
   const [topic, setTopic] = useState("");
   const [numQuestions, setNumQuestions] = useState<number>(25);
   const [primarySeeded, setPrimarySeeded] = useState(false);
+  const [aiUsed, setAiUsed] = useState(0);
+  const aiRemaining = Math.max(0, AI_TEST_DAILY_LIMIT - aiUsed);
 
   // Seed once from profile primary exam
   useEffect(() => {
@@ -108,7 +110,9 @@ function MockTestIndex() {
   }, [allSections, pattern.totalQuestions]);
 
   const load = async () => {
-    const [{ data: t }, { data: a }] = await Promise.all([
+    const { data: u } = await supabase.auth.getUser();
+    const today = new Date().toISOString().slice(0, 10);
+    const [{ data: t }, { data: a }, { data: usage }] = await Promise.all([
       supabase
         .from("mock_tests")
         .select("id, title, subject, exam, difficulty, num_questions, created_at")
@@ -118,6 +122,14 @@ function MockTestIndex() {
         .from("mock_attempts")
         .select("id, test_id, score, total, completed_at")
         .order("completed_at", { ascending: false }),
+      u.user
+        ? supabase
+            .from("daily_usage")
+            .select("ai_tests_used")
+            .eq("user_id", u.user.id)
+            .eq("usage_date", today)
+            .maybeSingle()
+        : Promise.resolve({ data: null }),
     ]);
     setTests((t as TestRow[]) ?? []);
     const map: Record<string, AttemptRow> = {};
@@ -125,6 +137,7 @@ function MockTestIndex() {
       if (!map[at.test_id]) map[at.test_id] = at;
     }
     setAttempts(map);
+    setAiUsed((usage as { ai_tests_used?: number } | null)?.ai_tests_used ?? 0);
     setLoading(false);
   };
 
