@@ -278,7 +278,7 @@ function ChatBubble({ msg }: { msg: Msg }) {
     toast.success("Copied");
   };
   return (
-    <div className={`flex gap-3 ${isUser ? "flex-row-reverse" : ""}`}>
+    <div className={`animate-message-in flex gap-3 ${isUser ? "flex-row-reverse" : ""}`}>
       <div
         className={`grid h-8 w-8 shrink-0 place-items-center rounded-full text-xs font-semibold ${
           isUser ? "bg-primary text-primary-foreground" : "bg-purple/20 text-purple"
