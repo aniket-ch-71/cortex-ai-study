@@ -146,6 +146,10 @@ function MockTestIndex() {
   }, []);
 
   const onGenerate = async () => {
+    if (aiRemaining <= 0) {
+      toast.error("Daily limit reached. Try the Practice Bank, or come back tomorrow.");
+      return;
+    }
     setGenerating(true);
     try {
       const { data: u } = await supabase.auth.getUser();
@@ -234,6 +238,18 @@ function MockTestIndex() {
         .select("id")
         .single();
       if (error) throw error;
+
+      // Increment AI test usage counter
+      const today = new Date().toISOString().slice(0, 10);
+      const newCount = aiUsed + 1;
+      await supabase
+        .from("daily_usage")
+        .upsert(
+          { user_id: u.user.id, usage_date: today, ai_tests_used: newCount },
+          { onConflict: "user_id,usage_date" },
+        );
+      setAiUsed(newCount);
+
       toast.success("Test generated!");
       navigate({ to: "/mock-test/$testId", params: { testId: inserted.id } });
     } catch (e) {
