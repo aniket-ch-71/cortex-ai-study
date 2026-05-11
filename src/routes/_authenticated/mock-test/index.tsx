@@ -1,6 +1,6 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
-import { Brain, Loader2, Plus, Trash2, Trophy, ArrowRight, Info } from "lucide-react";
+import { Brain, Loader2, Plus, Trash2, Trophy, ArrowRight, Info, Sparkles, Library } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -13,6 +13,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { LANGUAGES } from "@/lib/cortex-data";
 import {
   EXAM_CATEGORIES,
@@ -24,6 +25,8 @@ import {
   type ExamCategory,
 } from "@/lib/exam-patterns";
 import { useProfile } from "@/hooks/useProfile";
+
+const AI_TEST_DAILY_LIMIT = 3;
 
 export const Route = createFileRoute("/_authenticated/mock-test/")({
   head: () => ({ meta: [{ title: "Mock Tests — CORTEX" }] }),

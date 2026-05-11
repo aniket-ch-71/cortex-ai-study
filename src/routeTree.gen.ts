@@ -21,6 +21,7 @@ import { Route as AuthenticatedPerformanceIndexRouteImport } from './routes/_aut
 import { Route as AuthenticatedNotesIndexRouteImport } from './routes/_authenticated/notes/index'
 import { Route as AuthenticatedMockTestIndexRouteImport } from './routes/_authenticated/mock-test/index'
 import { Route as AuthenticatedAnalyserIndexRouteImport } from './routes/_authenticated/analyser/index'
+import { Route as AuthenticatedMockTestPracticeRouteImport } from './routes/_authenticated/mock-test/practice'
 import { Route as AuthenticatedNotesNoteIdIndexRouteImport } from './routes/_authenticated/notes/$noteId/index'
 import { Route as AuthenticatedMockTestTestIdIndexRouteImport } from './routes/_authenticated/mock-test/$testId/index'
 import { Route as AuthenticatedMockTestTestIdResultsRouteImport } from './routes/_authenticated/mock-test/$testId/results'
@@ -90,6 +91,12 @@ const AuthenticatedAnalyserIndexRoute =
     path: '/analyser/',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
+const AuthenticatedMockTestPracticeRoute =
+  AuthenticatedMockTestPracticeRouteImport.update({
+    id: '/mock-test/practice',
+    path: '/mock-test/practice',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
 const AuthenticatedNotesNoteIdIndexRoute =
   AuthenticatedNotesNoteIdIndexRouteImport.update({
     id: '/notes/$noteId/',
@@ -115,6 +122,7 @@ export interface FileRoutesByFullPath {
   '/onboarding': typeof OnboardingRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/doubt-solver': typeof AuthenticatedDoubtSolverRoute
+  '/mock-test/practice': typeof AuthenticatedMockTestPracticeRoute
   '/analyser/': typeof AuthenticatedAnalyserIndexRoute
   '/mock-test/': typeof AuthenticatedMockTestIndexRoute
   '/notes/': typeof AuthenticatedNotesIndexRoute
@@ -131,6 +139,7 @@ export interface FileRoutesByTo {
   '/onboarding': typeof OnboardingRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/doubt-solver': typeof AuthenticatedDoubtSolverRoute
+  '/mock-test/practice': typeof AuthenticatedMockTestPracticeRoute
   '/analyser': typeof AuthenticatedAnalyserIndexRoute
   '/mock-test': typeof AuthenticatedMockTestIndexRoute
   '/notes': typeof AuthenticatedNotesIndexRoute
@@ -149,6 +158,7 @@ export interface FileRoutesById {
   '/onboarding': typeof OnboardingRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/_authenticated/doubt-solver': typeof AuthenticatedDoubtSolverRoute
+  '/_authenticated/mock-test/practice': typeof AuthenticatedMockTestPracticeRoute
   '/_authenticated/analyser/': typeof AuthenticatedAnalyserIndexRoute
   '/_authenticated/mock-test/': typeof AuthenticatedMockTestIndexRoute
   '/_authenticated/notes/': typeof AuthenticatedNotesIndexRoute
@@ -167,6 +177,7 @@ export interface FileRouteTypes {
     | '/onboarding'
     | '/dashboard'
     | '/doubt-solver'
+    | '/mock-test/practice'
     | '/analyser/'
     | '/mock-test/'
     | '/notes/'
@@ -183,6 +194,7 @@ export interface FileRouteTypes {
     | '/onboarding'
     | '/dashboard'
     | '/doubt-solver'
+    | '/mock-test/practice'
     | '/analyser'
     | '/mock-test'
     | '/notes'
@@ -200,6 +212,7 @@ export interface FileRouteTypes {
     | '/onboarding'
     | '/_authenticated/dashboard'
     | '/_authenticated/doubt-solver'
+    | '/_authenticated/mock-test/practice'
     | '/_authenticated/analyser/'
     | '/_authenticated/mock-test/'
     | '/_authenticated/notes/'
@@ -304,6 +317,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAnalyserIndexRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/mock-test/practice': {
+      id: '/_authenticated/mock-test/practice'
+      path: '/mock-test/practice'
+      fullPath: '/mock-test/practice'
+      preLoaderRoute: typeof AuthenticatedMockTestPracticeRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
     '/_authenticated/notes/$noteId/': {
       id: '/_authenticated/notes/$noteId/'
       path: '/notes/$noteId'
@@ -331,6 +351,7 @@ declare module '@tanstack/react-router' {
 interface AuthenticatedRouteChildren {
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
   AuthenticatedDoubtSolverRoute: typeof AuthenticatedDoubtSolverRoute
+  AuthenticatedMockTestPracticeRoute: typeof AuthenticatedMockTestPracticeRoute
   AuthenticatedAnalyserIndexRoute: typeof AuthenticatedAnalyserIndexRoute
   AuthenticatedMockTestIndexRoute: typeof AuthenticatedMockTestIndexRoute
   AuthenticatedNotesIndexRoute: typeof AuthenticatedNotesIndexRoute
@@ -345,6 +366,7 @@ interface AuthenticatedRouteChildren {
 const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
   AuthenticatedDoubtSolverRoute: AuthenticatedDoubtSolverRoute,
+  AuthenticatedMockTestPracticeRoute: AuthenticatedMockTestPracticeRoute,
   AuthenticatedAnalyserIndexRoute: AuthenticatedAnalyserIndexRoute,
   AuthenticatedMockTestIndexRoute: AuthenticatedMockTestIndexRoute,
   AuthenticatedNotesIndexRoute: AuthenticatedNotesIndexRoute,
