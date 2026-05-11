@@ -1,4 +1,4 @@
-import { createFileRoute, Outlet, redirect } from "@tanstack/react-router";
+import { createFileRoute, Outlet, redirect, useRouterState } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
@@ -65,7 +65,7 @@ function AuthedLayout() {
             <SidebarTrigger />
             <span className="font-display text-sm font-semibold">CORTEX</span>
           </header>
-          <main className="flex-1 overflow-auto">
+          <main key={pathname} className="flex-1 overflow-auto animate-page-enter">
             <Outlet />
           </main>
         </div>
