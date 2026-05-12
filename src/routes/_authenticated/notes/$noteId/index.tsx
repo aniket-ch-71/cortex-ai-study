@@ -135,6 +135,10 @@ function NoteView() {
           </div>
         </div>
       </div>
+
+      <div data-print-hide>
+        <InlineReviewPrompt delayMs={30000} />
+      </div>
     </div>
   );
 }
