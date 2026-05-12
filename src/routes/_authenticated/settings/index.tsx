@@ -46,6 +46,7 @@ function SettingsPage() {
       if (prof) {
         setFullName(prof.full_name ?? "");
         setLanguage(prof.language ?? "en");
+        setShowCA((prof as any).show_current_affairs !== false);
         if (prof.target_exam) {
           setTargetExam(prof.target_exam);
           const cat = (Object.keys(SUB_EXAMS) as ExamCategory[]).find((c) =>
