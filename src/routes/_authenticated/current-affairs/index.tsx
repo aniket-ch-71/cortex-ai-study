@@ -188,11 +188,9 @@ function AffairCard({ affair }: { affair: Affair }) {
         {open ? "Hide MCQs" : "Practice MCQs"}
       </button>
 
-      {(open || true) && (
-        <div className={cn("mt-3 space-y-3 print:block", open ? "block" : "hidden")}>
-          {affair.questions?.map((q, i) => <MCQ key={i} q={q} idx={i} />)}
-        </div>
-      )}
+      <div className={cn("mt-3 space-y-3 print:!block", open ? "block" : "hidden")}>
+        {affair.questions?.map((q, i) => <MCQ key={i} q={q} idx={i} />)}
+      </div>
     </div>
   );
 }
