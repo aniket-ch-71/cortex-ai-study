@@ -4,6 +4,7 @@ import { ArrowLeft, Printer, Loader2, RotateCw, Info } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { CopyButton } from "@/components/CopyButton";
+import { InlineReviewPrompt } from "@/components/InlineReviewPrompt";
 
 export const Route = createFileRoute("/_authenticated/notes/$noteId/")({
   head: () => ({ meta: [{ title: "Note — CORTEX" }] }),
