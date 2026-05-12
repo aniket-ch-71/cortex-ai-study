@@ -74,6 +74,7 @@ export function AppSidebar() {
           <SidebarGroupContent>
             <SidebarMenu>
               {NAV.map((item) => {
+                if (item.gate === "currentAffairs" && !showCurrentAffairs) return null;
                 const active = path === item.url;
                 if (!item.ready) {
                   return (
