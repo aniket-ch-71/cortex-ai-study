@@ -48,6 +48,8 @@ export function AppSidebar() {
   const collapsed = state === "collapsed";
   const path = useRouterState({ select: (r) => r.location.pathname });
   const navigate = useNavigate();
+  const { profile } = useProfile();
+  const showCurrentAffairs = (profile as any)?.show_current_affairs !== false;
 
   const onLogout = async () => {
     await supabase.auth.signOut();
