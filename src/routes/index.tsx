@@ -12,10 +12,11 @@ import {
   Play,
   Star,
 } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { EXAMS } from "@/lib/cortex-data";
+import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/")({
   component: Index,
@@ -349,35 +350,78 @@ function Pricing() {
   );
 }
 
+type RealReview = { id: string; rating: number; review_text: string | null; exam: string | null; created_at: string; first_name: string };
+
 function Testimonials() {
+  const [reviews, setReviews] = useState<RealReview[]>([]);
+  const [stats, setStats] = useState<{ users: number; reviews: number } | null>(null);
+
+  useEffect(() => {
+    (async () => {
+      const [{ data: rs }, { data: st }] = await Promise.all([
+        supabase
+          .from("reviews")
+          .select("id, rating, review_text, exam, created_at")
+          .eq("display", true)
+          .gte("rating", 4)
+          .order("created_at", { ascending: false })
+          .limit(6),
+        supabase.rpc("public_stats" as any),
+      ]);
+      const list = (rs ?? []).map((r: any) => ({ ...r, first_name: "Student" })) as RealReview[];
+      setReviews(list);
+      const row = Array.isArray(st) ? st[0] : st;
+      if (row) setStats({ users: Number(row.users) || 0, reviews: Number(row.reviews) || 0 });
+    })();
+  }, []);
+
+  const placeholdersNeeded = Math.max(0, 3 - reviews.length);
+
   return (
     <section className="mx-auto max-w-7xl px-4 py-20 md:px-6">
       <div className="mx-auto max-w-2xl text-center">
         <h2 className="font-display text-3xl font-bold md:text-4xl">Loved by students across India</h2>
       </div>
       <div className="mt-12 grid gap-5 md:grid-cols-3">
-        {TESTIMONIALS.map((t) => (
-          <figure key={t.name} className="rounded-xl border border-border bg-card p-6">
+        {reviews.map((t) => (
+          <figure key={t.id} className="rounded-xl border border-border bg-card p-6">
             <div className="flex gap-0.5 text-amber">
-              {Array.from({ length: 5 }).map((_, i) => (
+              {Array.from({ length: t.rating }).map((_, i) => (
                 <Star key={i} className="h-4 w-4 fill-current" />
               ))}
             </div>
             <blockquote className="mt-4 text-sm leading-relaxed text-foreground/90">
-              "{t.quote}"
+              "{t.review_text ?? "Loved using Cortex for my prep."}"
             </blockquote>
             <figcaption className="mt-5 flex items-center gap-3">
               <div className="grid h-9 w-9 place-items-center rounded-full bg-primary/15 font-semibold text-primary">
-                {t.name[0]}
+                {t.first_name[0]}
               </div>
               <div>
-                <div className="text-sm font-medium">{t.name}</div>
-                <div className="text-xs text-muted-foreground">{t.exam}</div>
+                <div className="text-sm font-medium">{t.first_name}</div>
+                <div className="text-xs text-muted-foreground">{t.exam ?? "Aspirant"}</div>
               </div>
             </figcaption>
           </figure>
         ))}
+        {Array.from({ length: placeholdersNeeded }).map((_, i) => (
+          <Link
+            key={`ph-${i}`}
+            to="/dashboard"
+            className="group flex flex-col items-center justify-center rounded-xl border border-dashed border-border bg-card/40 p-8 text-center transition hover:border-primary/50"
+          >
+            <Star className="h-6 w-6 text-amber" />
+            <p className="mt-3 text-sm font-medium">Be the first to review Cortex!</p>
+            <p className="mt-1 text-xs text-muted-foreground">Share your experience after using our features.</p>
+            <span className="mt-4 text-xs font-medium text-primary group-hover:underline">Write a Review →</span>
+          </Link>
+        ))}
       </div>
+      {stats && stats.users > 0 && (
+        <p className="mt-10 text-center text-sm text-muted-foreground">
+          Join <span className="font-semibold text-foreground">{stats.users.toLocaleString("en-IN")}+</span> students already using Cortex
+        </p>
+      )}
     </section>
   );
 }
