@@ -11,11 +11,13 @@ import {
   CalendarDays,
   Trophy,
   Activity,
+  Star,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import type { Tables } from "@/integrations/supabase/types";
 import { useCountUp } from "@/hooks/useCountUp";
 import { getDailyQuote } from "@/lib/quotes";
+import { ReviewModal } from "@/components/ReviewModal";
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
   head: () => ({ meta: [{ title: "Dashboard — CORTEX" }] }),
@@ -138,7 +140,11 @@ function DashboardPage() {
         />
         <ActionCard to="/mock-test" icon={Brain} title="Take a mock test" desc="Real exam patterns" color="text-primary" ready />
         <ActionCard to="/notes" icon={FileText} title="Generate notes" desc="Notes + flashcards" color="text-teal" ready />
-        <ActionCard to="/planner" icon={CalendarRange} title="Plan my week" desc="7-day AI plan" color="text-amber" ready />
+        {(profile as any)?.has_reviewed ? (
+          <ActionCard to="/planner" icon={CalendarRange} title="Plan my week" desc="7-day AI plan" color="text-amber" ready />
+        ) : (
+          <RateCortexCard />
+        )}
       </div>
 
       {/* Recent + countdown */}
