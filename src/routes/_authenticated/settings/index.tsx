@@ -66,10 +66,11 @@ function SettingsPage() {
     if (!u.user) return setSaving(false);
     const { error } = await supabase
       .from("profiles")
-      .update({ full_name: fullName, target_exam: targetExam, language })
+      .update({ full_name: fullName, target_exam: targetExam, language, show_current_affairs: showCA } as any)
       .eq("id", u.user.id);
     setSaving(false);
     if (error) return toast.error(error.message);
+    qc.invalidateQueries({ queryKey: ["profile"] });
     toast.success("Profile saved");
   };
 
