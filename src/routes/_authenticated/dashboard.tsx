@@ -11,11 +11,13 @@ import {
   CalendarDays,
   Trophy,
   Activity,
+  Star,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import type { Tables } from "@/integrations/supabase/types";
 import { useCountUp } from "@/hooks/useCountUp";
 import { getDailyQuote } from "@/lib/quotes";
+import { ReviewModal } from "@/components/ReviewModal";
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
   head: () => ({ meta: [{ title: "Dashboard — CORTEX" }] }),
@@ -138,7 +140,11 @@ function DashboardPage() {
         />
         <ActionCard to="/mock-test" icon={Brain} title="Take a mock test" desc="Real exam patterns" color="text-primary" ready />
         <ActionCard to="/notes" icon={FileText} title="Generate notes" desc="Notes + flashcards" color="text-teal" ready />
-        <ActionCard to="/planner" icon={CalendarRange} title="Plan my week" desc="7-day AI plan" color="text-amber" ready />
+        {(profile as any)?.has_reviewed ? (
+          <ActionCard to="/planner" icon={CalendarRange} title="Plan my week" desc="7-day AI plan" color="text-amber" ready />
+        ) : (
+          <RateCortexCard />
+        )}
       </div>
 
       {/* Recent + countdown */}
@@ -286,6 +292,31 @@ function ActionCard({
     </div>
   );
   return ready && to ? <Link to={to}>{inner}</Link> : <div>{inner}</div>;
+}
+
+function RateCortexCard() {
+  const [open, setOpen] = useState(false);
+  return (
+    <>
+      <button
+        type="button"
+        onClick={() => setOpen(true)}
+        className="group rounded-xl border border-amber/30 bg-amber/5 p-5 text-left hover-lift hover:border-amber/60"
+      >
+        <div className="grid h-10 w-10 place-items-center rounded-lg bg-secondary text-amber">
+          <Star className="h-5 w-5" />
+        </div>
+        <div className="mt-4 flex items-center justify-between">
+          <div>
+            <div className="font-medium">Rate Cortex</div>
+            <div className="text-xs text-muted-foreground">Help others discover us</div>
+          </div>
+          <ArrowRight className="h-4 w-4 text-muted-foreground transition group-hover:translate-x-1 group-hover:text-foreground" />
+        </div>
+      </button>
+      <ReviewModal open={open} onOpenChange={setOpen} />
+    </>
+  );
 }
 
 function Progress({ label, value }: { label: string; value: number }) {

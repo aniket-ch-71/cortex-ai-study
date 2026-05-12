@@ -2,10 +2,12 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { Settings as Cog, Loader2, Save, KeyRound, Trash2 } from "lucide-react";
 import { toast } from "sonner";
+import { useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { LANGUAGES } from "@/lib/cortex-data";
 import { EXAM_CATEGORIES, SUB_EXAMS, type ExamCategory } from "@/lib/exam-patterns";
@@ -17,6 +19,7 @@ export const Route = createFileRoute("/_authenticated/settings/")({
 
 function SettingsPage() {
   const navigate = useNavigate();
+  const qc = useQueryClient();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [pwSaving, setPwSaving] = useState(false);
@@ -25,6 +28,7 @@ function SettingsPage() {
   const [category, setCategory] = useState<ExamCategory>("SSC");
   const [targetExam, setTargetExam] = useState<string>("SSC CGL");
   const [language, setLanguage] = useState("en");
+  const [showCA, setShowCA] = useState(true);
   const [doubtsToday, setDoubtsToday] = useState(0);
   const [email, setEmail] = useState("");
   const [newPw, setNewPw] = useState("");
@@ -42,6 +46,7 @@ function SettingsPage() {
       if (prof) {
         setFullName(prof.full_name ?? "");
         setLanguage(prof.language ?? "en");
+        setShowCA((prof as any).show_current_affairs !== false);
         if (prof.target_exam) {
           setTargetExam(prof.target_exam);
           const cat = (Object.keys(SUB_EXAMS) as ExamCategory[]).find((c) =>
@@ -61,10 +66,11 @@ function SettingsPage() {
     if (!u.user) return setSaving(false);
     const { error } = await supabase
       .from("profiles")
-      .update({ full_name: fullName, target_exam: targetExam, language })
+      .update({ full_name: fullName, target_exam: targetExam, language, show_current_affairs: showCA } as any)
       .eq("id", u.user.id);
     setSaving(false);
     if (error) return toast.error(error.message);
+    qc.invalidateQueries({ queryKey: ["profile"] });
     toast.success("Profile saved");
   };
 
@@ -143,6 +149,20 @@ function SettingsPage() {
         <Button onClick={onSave} disabled={saving} className="mt-6">
           {saving ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Saving…</> : <><Save className="mr-2 h-4 w-4" /> Save profile</>}
         </Button>
+      </section>
+
+      <section className="mt-6 rounded-xl border border-border bg-card p-6">
+        <h2 className="font-display text-lg font-semibold">Preferences</h2>
+        <div className="mt-4 flex items-center justify-between gap-4">
+          <div>
+            <p className="text-sm font-medium">Show Current Affairs tab</p>
+            <p className="text-xs text-muted-foreground">
+              Daily digest in the sidebar. Recommended for SSC, UPSC, Banking, Railway, CDS.
+            </p>
+          </div>
+          <Switch checked={showCA} onCheckedChange={setShowCA} />
+        </div>
+        <p className="mt-3 text-xs text-muted-foreground">Click "Save profile" above to apply.</p>
       </section>
 
       <section className="mt-6 rounded-xl border border-border bg-card p-6">

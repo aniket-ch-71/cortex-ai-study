@@ -6,6 +6,7 @@ import {
   FileText,
   ScanSearch,
   CalendarRange,
+  Newspaper,
   TrendingUp,
   Settings,
   LogOut,
@@ -26,14 +27,18 @@ import {
 } from "@/components/ui/sidebar";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { useProfile } from "@/hooks/useProfile";
 
-const NAV = [
+type NavItem = { title: string; url: string; icon: any; ready: boolean; gate?: "currentAffairs" };
+
+const NAV: NavItem[] = [
   { title: "Dashboard", url: "/dashboard", icon: LayoutDashboard, ready: true },
   { title: "AI Doubt Solver", url: "/doubt-solver", icon: MessageCircleQuestion, ready: true },
   { title: "Mock Tests", url: "/mock-test", icon: Brain, ready: true },
   { title: "Notes Generator", url: "/notes", icon: FileText, ready: true },
   { title: "Notes Analyser", url: "/analyser", icon: ScanSearch, ready: true },
   { title: "Study Planner", url: "/planner", icon: CalendarRange, ready: true },
+  { title: "Current Affairs", url: "/current-affairs", icon: Newspaper, ready: true, gate: "currentAffairs" },
   { title: "My Performance", url: "/performance", icon: TrendingUp, ready: true },
   { title: "Settings", url: "/settings", icon: Settings, ready: true },
 ];
@@ -43,6 +48,8 @@ export function AppSidebar() {
   const collapsed = state === "collapsed";
   const path = useRouterState({ select: (r) => r.location.pathname });
   const navigate = useNavigate();
+  const { profile } = useProfile();
+  const showCurrentAffairs = (profile as any)?.show_current_affairs !== false;
 
   const onLogout = async () => {
     await supabase.auth.signOut();
@@ -67,6 +74,7 @@ export function AppSidebar() {
           <SidebarGroupContent>
             <SidebarMenu>
               {NAV.map((item) => {
+                if (item.gate === "currentAffairs" && !showCurrentAffairs) return null;
                 const active = path === item.url;
                 if (!item.ready) {
                   return (

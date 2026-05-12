@@ -251,38 +251,76 @@
   }
 }
 
-/* Print: only the .print-area is visible, everything else hidden */
 @media print {
-  body {
-    background: #ffffff !important;
-    color: #000000 !important;
+  * {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+    overflow: visible !important;
+    height: auto !important;
+    max-height: none !important;
+  }
+
+  html, body {
+    height: auto !important;
+    overflow: visible !important;
+    background: white !important;
+    color: black !important;
     background-image: none !important;
   }
-  [data-print-hide], [data-sidebar="sidebar"], header, nav, aside, footer, button {
+
+  nav, header, aside,
+  [data-sidebar],
+  [data-print-hide],
+  .no-print,
+  button,
+  a[href] {
     display: none !important;
   }
-  .print-area, .print-area * {
-    visibility: visible !important;
-    color: #000 !important;
-    background: #fff !important;
-    border-color: #ddd !important;
-    box-shadow: none !important;
+
+  main {
+    margin: 0 !important;
+    padding: 0 !important;
+    width: 100% !important;
+    overflow: visible !important;
   }
-  .print-area {
-    position: absolute;
-    inset: 0;
-    padding: 24px;
-    width: 100%;
+
+  .print-content {
+    display: block !important;
+    color: black !important;
+    background: white !important;
   }
-  .print-area .print-card {
+
+  .print-content h1,
+  .print-content h2,
+  .print-content h3 {
+    color: black !important;
+    page-break-after: avoid;
+  }
+
+  .print-content p,
+  .print-content li {
+    color: black !important;
+    orphans: 3;
+    widows: 3;
+  }
+
+  .print-card {
     page-break-inside: avoid;
-    break-inside: avoid;
-    border: 1px solid #ddd;
-    border-radius: 8px;
-    padding: 12px;
-    margin-bottom: 12px;
+    border: 1px solid #ccc !important;
+    margin-bottom: 12px !important;
+    background: white !important;
+    color: black !important;
+    padding: 12px !important;
+    border-radius: 8px !important;
   }
-  .print-area h1, .print-area h2, .print-area h3 {
-    color: #000 !important;
+
+  pre, code {
+    background: #f5f5f5 !important;
+    color: black !important;
+    white-space: pre-wrap !important;
+    word-break: break-word !important;
+    border: 1px solid #ddd !important;
+    padding: 8px !important;
+    font-size: 11px !important;
   }
 }

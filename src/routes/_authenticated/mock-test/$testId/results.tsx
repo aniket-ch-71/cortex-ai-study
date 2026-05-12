@@ -15,6 +15,7 @@ import {
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
+import { InlineReviewPrompt } from "@/components/InlineReviewPrompt";
 
 export const Route = createFileRoute("/_authenticated/mock-test/$testId/results")({
   head: () => ({ meta: [{ title: "Results — CORTEX" }] }),
@@ -260,7 +261,7 @@ function ResultsPage() {
           )}
         </div>
 
-        {/* Section breakdown */}
+        <InlineReviewPrompt />
         {Object.keys(sectionStats).length > 1 && (
           <div className="rounded-xl border border-border bg-card p-6">
             <h2 className="font-display text-lg font-semibold">Section-wise breakdown</h2>
