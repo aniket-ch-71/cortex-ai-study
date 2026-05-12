@@ -14,6 +14,27 @@ export type Database = {
   }
   public: {
     Tables: {
+      current_affairs: {
+        Row: {
+          date: string
+          generated_at: string
+          id: string
+          items: Json
+        }
+        Insert: {
+          date: string
+          generated_at?: string
+          id?: string
+          items: Json
+        }
+        Update: {
+          date?: string
+          generated_at?: string
+          id?: string
+          items?: Json
+        }
+        Relationships: []
+      }
       daily_usage: {
         Row: {
           ai_tests_used: number
@@ -235,11 +256,13 @@ export type Database = {
           created_at: string
           exams: Json
           full_name: string | null
+          has_reviewed: boolean
           id: string
           language: string
           last_active: string | null
           onboarded: boolean
           primary_exam: string | null
+          show_current_affairs: boolean
           state: string | null
           streak: number
           target_exam: string | null
@@ -251,11 +274,13 @@ export type Database = {
           created_at?: string
           exams?: Json
           full_name?: string | null
+          has_reviewed?: boolean
           id: string
           language?: string
           last_active?: string | null
           onboarded?: boolean
           primary_exam?: string | null
+          show_current_affairs?: boolean
           state?: string | null
           streak?: number
           target_exam?: string | null
@@ -267,11 +292,13 @@ export type Database = {
           created_at?: string
           exams?: Json
           full_name?: string | null
+          has_reviewed?: boolean
           id?: string
           language?: string
           last_active?: string | null
           onboarded?: boolean
           primary_exam?: string | null
+          show_current_affairs?: boolean
           state?: string | null
           streak?: number
           target_exam?: string | null
@@ -322,6 +349,36 @@ export type Database = {
           sub_exam?: string
           subject?: string
           topic?: string | null
+        }
+        Relationships: []
+      }
+      reviews: {
+        Row: {
+          created_at: string
+          display: boolean
+          exam: string | null
+          id: string
+          rating: number
+          review_text: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          display?: boolean
+          exam?: string | null
+          id?: string
+          rating: number
+          review_text?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          display?: boolean
+          exam?: string | null
+          id?: string
+          rating?: number
+          review_text?: string | null
+          user_id?: string
         }
         Relationships: []
       }
@@ -393,6 +450,13 @@ export type Database = {
           _user_id: string
         }
         Returns: boolean
+      }
+      public_stats: {
+        Args: never
+        Returns: {
+          reviews: number
+          users: number
+        }[]
       }
       username_available: { Args: { uname: string }; Returns: boolean }
     }
