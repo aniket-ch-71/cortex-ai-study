@@ -19,6 +19,7 @@ export const Route = createFileRoute("/_authenticated/settings/")({
 
 function SettingsPage() {
   const navigate = useNavigate();
+  const qc = useQueryClient();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [pwSaving, setPwSaving] = useState(false);
@@ -27,6 +28,7 @@ function SettingsPage() {
   const [category, setCategory] = useState<ExamCategory>("SSC");
   const [targetExam, setTargetExam] = useState<string>("SSC CGL");
   const [language, setLanguage] = useState("en");
+  const [showCA, setShowCA] = useState(true);
   const [doubtsToday, setDoubtsToday] = useState(0);
   const [email, setEmail] = useState("");
   const [newPw, setNewPw] = useState("");
