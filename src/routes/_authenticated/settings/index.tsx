@@ -152,6 +152,20 @@ function SettingsPage() {
       </section>
 
       <section className="mt-6 rounded-xl border border-border bg-card p-6">
+        <h2 className="font-display text-lg font-semibold">Preferences</h2>
+        <div className="mt-4 flex items-center justify-between gap-4">
+          <div>
+            <p className="text-sm font-medium">Show Current Affairs tab</p>
+            <p className="text-xs text-muted-foreground">
+              Daily digest in the sidebar. Recommended for SSC, UPSC, Banking, Railway, CDS.
+            </p>
+          </div>
+          <Switch checked={showCA} onCheckedChange={setShowCA} />
+        </div>
+        <p className="mt-3 text-xs text-muted-foreground">Click "Save profile" above to apply.</p>
+      </section>
+
+      <section className="mt-6 rounded-xl border border-border bg-card p-6">
         <h2 className="font-display text-lg font-semibold">Daily limits</h2>
         <p className="mt-2 text-sm text-muted-foreground">
           AI Doubt Solver: <span className="font-medium text-foreground">{doubtsToday}/5</span> used today.
