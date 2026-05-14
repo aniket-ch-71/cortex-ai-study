@@ -1,4 +1,4 @@
-// CORTEX Study Planner — generates a weekly study schedule via Lovable AI Gateway
+// PARIKSHA Study Planner — generates a weekly study schedule via Lovable AI Gateway
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 
 const corsHeaders = {
@@ -26,7 +26,7 @@ serve(async (req) => {
     const subjStr = (subjects as string[]).length ? (subjects as string[]).join(", ") : "core syllabus subjects";
 
     const systemPrompt =
-      `You are Cortex AI, a study planner for Indian competitive exams. ` +
+      `You are PARIKSHA AI, a study planner for Indian competitive exams. ` +
       `Create a realistic 7-day weekly study plan for the ${exam} exam` +
       `${examDate ? ` (target date: ${examDate})` : ""}, with ${hoursPerDay} hours of study per day. ` +
       `Subjects to cover: ${subjStr}. ${weaknesses ? `Student weaknesses: ${weaknesses}.` : ""} ` +
