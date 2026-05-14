@@ -1,4 +1,4 @@
-// CORTEX Daily Current Affairs — generates and caches today's digest via Lovable AI Gateway
+// PARIKSHA Daily Current Affairs — generates and caches today's digest via Lovable AI Gateway
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
