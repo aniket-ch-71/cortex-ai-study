@@ -1,4 +1,4 @@
-// CORTEX Notes Analyser — scores user-pasted notes and returns structured feedback via Lovable AI Gateway
+// PARIKSHA Notes Analyser — scores user-pasted notes and returns structured feedback via Lovable AI Gateway
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 
 const corsHeaders = {
@@ -16,7 +16,7 @@ serve(async (req) => {
     if (!topic || !text) throw new Error("topic and text are required");
 
     const systemPrompt =
-      `You are Cortex AI, an expert Indian exam tutor evaluating a student's study notes ` +
+      `You are PARIKSHA AI, an expert Indian exam tutor evaluating a student's study notes ` +
       `on "${topic}"${subject ? ` (subject: ${subject})` : ""}${exam ? ` for the ${exam} exam` : ""}. ` +
       `Score the notes from 0-100 across coverage, accuracy, clarity, and exam-readiness. ` +
       `List the top strengths, the gaps/missing topics the student should add, factual errors if any, ` +
