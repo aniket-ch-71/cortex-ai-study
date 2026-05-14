@@ -1,4 +1,4 @@
-// CORTEX AI Doubt Solver — streams from Lovable AI Gateway.
+// PARIKSHA AI Doubt Solver — streams from Lovable AI Gateway.
 // System prompt lives server-side; client picks language + subject.
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 
@@ -26,7 +26,7 @@ serve(async (req) => {
     const subjectLine = subject ? ` The student's current subject is ${subject}.` : "";
 
     const systemPrompt =
-      `You are Cortex AI, an expert tutor for Indian competitive-exam students ` +
+      `You are PARIKSHA AI, an expert tutor for Indian competitive-exam students ` +
       `(JEE, NEET, UPSC, SSC, GATE, CAT, NDA, CDS, Bank PO, IBPS, RRB, CBSE/ICSE/State Boards). ` +
       `Always reply in ${lang}. ` +
       `Explain concepts clearly with step-by-step reasoning, give a worked example where useful, ` +
