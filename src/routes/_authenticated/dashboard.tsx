@@ -20,7 +20,7 @@ import { getDailyQuote } from "@/lib/quotes";
 import { ReviewModal } from "@/components/ReviewModal";
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
-  head: () => ({ meta: [{ title: "Dashboard — CORTEX" }] }),
+  head: () => ({ meta: [{ title: "Dashboard — PARIKSHA" }] }),
   component: DashboardPage,
 });
 
@@ -143,7 +143,7 @@ function DashboardPage() {
         {(profile as any)?.has_reviewed ? (
           <ActionCard to="/planner" icon={CalendarRange} title="Plan my week" desc="7-day AI plan" color="text-amber" ready />
         ) : (
-          <RateCortexCard />
+          <RatePARIKSHACard />
         )}
       </div>
 
@@ -294,7 +294,7 @@ function ActionCard({
   return ready && to ? <Link to={to}>{inner}</Link> : <div>{inner}</div>;
 }
 
-function RateCortexCard() {
+function RatePARIKSHACard() {
   const [open, setOpen] = useState(false);
   return (
     <>
@@ -308,7 +308,7 @@ function RateCortexCard() {
         </div>
         <div className="mt-4 flex items-center justify-between">
           <div>
-            <div className="font-medium">Rate Cortex</div>
+            <div className="font-medium">Rate PARIKSHA</div>
             <div className="text-xs text-muted-foreground">Help others discover us</div>
           </div>
           <ArrowRight className="h-4 w-4 text-muted-foreground transition group-hover:translate-x-1 group-hover:text-foreground" />
