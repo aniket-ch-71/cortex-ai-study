@@ -26,7 +26,7 @@ export function Navbar() {
           <span className="grid h-8 w-8 place-items-center rounded-lg bg-primary/15 text-primary">
             <Zap className="h-4 w-4" strokeWidth={2.5} />
           </span>
-          <span>CORTEX</span>
+          <span>PARIKSHA</span>
         </Link>
 
         <nav className="hidden items-center gap-8 md:flex">
