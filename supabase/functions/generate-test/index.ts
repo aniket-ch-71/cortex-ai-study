@@ -1,4 +1,4 @@
-// CORTEX Mock Test Generator — generates MCQs via Lovable AI Gateway using tool calling for structured JSON.
+// PARIKSHA Mock Test Generator — generates MCQs via Lovable AI Gateway using tool calling for structured JSON.
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 
 const corsHeaders = {
@@ -41,7 +41,7 @@ serve(async (req) => {
         : `This exam has no negative marking.`;
 
     const systemPrompt =
-      `You are Cortex AI, an expert exam-question setter for Indian competitive exams. ` +
+      `You are PARIKSHA AI, an expert exam-question setter for Indian competitive exams. ` +
       `Generate exactly ${n} high-quality multiple-choice questions for the "${exam || "general study"}" exam ` +
       `from the section "${subject}"${topic ? ` (topic focus: ${topic})` : ""} at ${difficulty} difficulty. ` +
       `Each question is worth ${marksPerQuestion} marks. ${negInfo} ` +
