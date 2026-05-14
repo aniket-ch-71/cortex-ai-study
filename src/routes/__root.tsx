@@ -73,20 +73,20 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "CORTEX — India's AI-Powered Study Platform" },
+      { title: "PARIKSHA — India's AI Study Platform" },
       {
         name: "description",
         content:
-          "CORTEX helps Indian students crack JEE, NEET, UPSC, SSC and more with an AI doubt solver, mock tests, smart notes and study planner — in English, Hindi and Hinglish.",
+          "PARIKSHA helps Indian students crack JEE, NEET, UPSC, SSC and more with an AI doubt solver, mock tests, smart notes and study planner — in English, Hindi and Hinglish.",
       },
-      { property: "og:title", content: "CORTEX — India's AI-Powered Study Platform" },
+      { property: "og:title", content: "PARIKSHA — India's AI Study Platform" },
       {
         property: "og:description",
         content: "AI doubt solver, mock tests, smart notes for JEE, NEET, UPSC and more.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
-      { name: "twitter:title", content: "CORTEX — India's AI-Powered Study Platform" },
+      { name: "twitter:title", content: "PARIKSHA — India's AI Study Platform" },
       { name: "description", content: "Study Spark is an AI-powered platform for Indian students offering personalized study tools and exam preparation." },
       { property: "og:description", content: "Study Spark is an AI-powered platform for Indian students offering personalized study tools and exam preparation." },
       { name: "twitter:description", content: "Study Spark is an AI-powered platform for Indian students offering personalized study tools and exam preparation." },
