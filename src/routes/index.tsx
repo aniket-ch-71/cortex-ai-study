@@ -15,7 +15,7 @@ import {
 import { useEffect, useState } from "react";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
-import { EXAMS } from "@/lib/cortex-data";
+import { EXAMS } from "@/lib/PARIKSHA-data";
 import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/")({
@@ -45,10 +45,10 @@ const TESTIMONIALS = [
 ];
 
 const FAQ = [
-  { q: "Is CORTEX free to start?", a: "Yes — sign up free and get 5 AI doubts every day plus access to basic notes and tests." },
+  { q: "Is PARIKSHA free to start?", a: "Yes — sign up free and get 5 AI doubts every day plus access to basic notes and tests." },
   { q: "Which exams are supported?", a: "JEE, NEET, UPSC, SSC, GATE, CAT, NDA, CDS, Bank PO, IBPS, RRB, CBSE, ICSE and major State Boards." },
   { q: "Can I study in Hindi or Hinglish?", a: "Absolutely. Every AI feature responds in English, Hindi or natural Hinglish — your choice." },
-  { q: "Do I need my own AI key?", a: "No. CORTEX includes the AI — no setup, no keys, no extra accounts." },
+  { q: "Do I need my own AI key?", a: "No. PARIKSHA includes the AI — no setup, no keys, no extra accounts." },
   { q: "Is my data safe?", a: "Yes. Your data is private to your account, protected with row-level security on every table." },
   { q: "Can I cancel anytime?", a: "Yes — paid plans are month-to-month or yearly with no lock-in." },
 ];
@@ -212,7 +212,7 @@ function Exams() {
       <div className="mx-auto max-w-2xl text-center">
         <h2 className="font-display text-3xl font-bold md:text-4xl">Built for every Indian exam</h2>
         <p className="mt-3 text-muted-foreground">
-          From boards to UPSC — pick your target, CORTEX adapts.
+          From boards to UPSC — pick your target, PARIKSHA adapts.
         </p>
       </div>
       <div className="mt-10 flex flex-wrap justify-center gap-3">
@@ -391,7 +391,7 @@ function Testimonials() {
               ))}
             </div>
             <blockquote className="mt-4 text-sm leading-relaxed text-foreground/90">
-              "{t.review_text ?? "Loved using Cortex for my prep."}"
+              "{t.review_text ?? "Loved using PARIKSHA for my prep."}"
             </blockquote>
             <figcaption className="mt-5 flex items-center gap-3">
               <div className="grid h-9 w-9 place-items-center rounded-full bg-primary/15 font-semibold text-primary">
@@ -411,7 +411,7 @@ function Testimonials() {
             className="group flex flex-col items-center justify-center rounded-xl border border-dashed border-border bg-card/40 p-8 text-center transition hover:border-primary/50"
           >
             <Star className="h-6 w-6 text-amber" />
-            <p className="mt-3 text-sm font-medium">Be the first to review Cortex!</p>
+            <p className="mt-3 text-sm font-medium">Be the first to review PARIKSHA!</p>
             <p className="mt-1 text-xs text-muted-foreground">Share your experience after using our features.</p>
             <span className="mt-4 text-xs font-medium text-primary group-hover:underline">Write a Review →</span>
           </Link>
@@ -419,7 +419,7 @@ function Testimonials() {
       </div>
       {stats && stats.users > 0 && (
         <p className="mt-10 text-center text-sm text-muted-foreground">
-          Join <span className="font-semibold text-foreground">{stats.users.toLocaleString("en-IN")}+</span> students already using Cortex
+          Join <span className="font-semibold text-foreground">{stats.users.toLocaleString("en-IN")}+</span> students already using PARIKSHA
         </p>
       )}
     </section>
