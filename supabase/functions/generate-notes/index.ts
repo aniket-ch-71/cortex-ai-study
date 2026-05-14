@@ -1,4 +1,4 @@
-// CORTEX Notes Generator — generates structured study notes + flashcards via Lovable AI Gateway tool calling
+// PARIKSHA Notes Generator — generates structured study notes + flashcards via Lovable AI Gateway tool calling
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 
 const corsHeaders = {
@@ -25,7 +25,7 @@ serve(async (req) => {
     const n = Math.max(5, Math.min(20, Number(numFlashcards) || 12));
 
     const systemPrompt =
-      `You are Cortex AI, an expert Indian exam tutor. ` +
+      `You are PARIKSHA AI, an expert Indian exam tutor. ` +
       `Create comprehensive study notes for the topic "${topic}" in subject "${subject}"` +
       `${exam ? ` for the ${exam} exam` : ""}. ` +
       `Notes must include: a short intro, key concepts as bullets, important formulas/definitions, ` +
