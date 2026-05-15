@@ -15,7 +15,7 @@ import {
 import { useEffect, useState } from "react";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
-import { EXAMS } from "@/lib/PARIKSHA-data";
+import { EXAMS } from "@/lib/cortex-data";
 import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/")({
