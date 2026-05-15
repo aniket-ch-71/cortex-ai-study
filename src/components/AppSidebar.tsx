@@ -64,7 +64,7 @@ export function AppSidebar() {
           <span className="grid h-7 w-7 shrink-0 place-items-center rounded-md bg-primary/15 text-primary">
             <Zap className="h-3.5 w-3.5" strokeWidth={2.5} />
           </span>
-          {!collapsed && <span className="font-display text-base font-bold">PARIKSHA</span>}
+          {!collapsed && <span className="font-display text-base font-bold">Pariksha AI AI AI</span>}
         </Link>
       </SidebarHeader>
 
