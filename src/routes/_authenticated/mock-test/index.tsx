@@ -344,15 +344,14 @@ function MockTestIndex() {
             >
               <SelectTrigger><SelectValue /></SelectTrigger>
               <SelectContent>
-                {allSections ? (
-  <SelectItem value={String(pattern.totalQuestions)}>
-    {pattern.totalQuestions} (full exam)
-  </SelectItem>
-) : (
-  [10, 25, 50, 100].map((n) => (
-    <SelectItem key={n} value={String(n)}>{n}</SelectItem>
-  ))
-)}
+                <SelectItem value={String(pattern.totalQuestions)}>
+                    {pattern.totalQuestions} (full exam)
+                  </SelectItem>
+                ) : (
+                  QUESTION_COUNT_OPTIONS.map((n) => (
+                    <SelectItem key={n} value={String(n)}>{n}</SelectItem>
+                  ))
+                )}
               </SelectContent>
             </Select>
           </Field>
