@@ -33,7 +33,7 @@ serve(async (req) => {
 
     const lang = LANG_LABEL[language] ?? LANG_LABEL.en;
     // Hard cap: max 25 questions per AI call to keep generation reliable.
-    const n = Math.max(5, Math.min(25, Number(numQuestions) || 10));
+    const n = Math.max(5, Math.min(100, Number(numQuestions) || 10));
 
     const negInfo =
       Number(negativeMarking) !== 0
