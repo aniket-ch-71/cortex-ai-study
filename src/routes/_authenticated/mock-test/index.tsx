@@ -54,13 +54,13 @@ type AttemptRow = {
 function MockTestIndex() {
   const navigate = useNavigate();
   const [tests, setTests] = useState<TestRow[]>([]);
-  const [attempts, setAttempts] = useState<Record<string, AttemptRow>>({});
+  const [attempts, setAttempts] = useState<<Record<string, AttemptRow>>({});
   const [loading, setLoading] = useState(true);
   const [generating, setGenerating] = useState(false);
 
   // form state — cascading. Pre-seeded from user's primary exam if available.
   const { primaryExam } = useProfile();
-  const [category, setCategory] = useState<ExamCategory>("SSC");
+  const [category, setCategory] = useState<<ExamCategory>("SSC");
   const [subExam, setSubExam] = useState<string>(SUB_EXAMS["SSC"][0]);
   const subjectsForExam = useMemo(
     () => SUB_EXAM_SUBJECTS[subExam] ?? ["All"],
@@ -104,9 +104,12 @@ function MockTestIndex() {
     setSubject(subs[0]);
   }, [subExam]);
 
-  // When "All Sections" picked, lock to real total
+  // When "All Sections" picked, lock to real total AND clear topic
   useEffect(() => {
-    if (allSections) setNumQuestions(pattern.totalQuestions);
+    if (allSections) {
+      setNumQuestions(pattern.totalQuestions);
+      setTopic("");
+    }
   }, [allSections, pattern.totalQuestions]);
 
   const load = async () => {
@@ -158,13 +161,16 @@ function MockTestIndex() {
         return;
       }
 
+      // FIX: Determine actual questions count - use pattern total for all sections, else use selected
+      const actualNumQuestions = allSections ? pattern.totalQuestions : numQuestions;
+
       // Build per-section requests for All Sections, else one request
       const sectionsToGenerate = allSections
         ? pattern.sections
         : [
             {
               name: subject,
-              questions: numQuestions,
+              questions: actualNumQuestions, // FIX: Use actual count here
               marks:
                 pattern.sections.find((s) => s.name === subject)?.marks ??
                 pattern.sections[0]?.marks ??
@@ -172,7 +178,7 @@ function MockTestIndex() {
             },
           ];
 
-      const allQuestions: Array<{
+      const allQuestions: Array<<{
         question: string;
         options: string[];
         correct_index: number;
@@ -195,9 +201,9 @@ function MockTestIndex() {
               subject: sec.name,
               exam: subExam,
               difficulty,
-              numQuestions: sec.questions,
+              numQuestions: sec.questions, // This will be 100 for all sections, or selected count
               language,
-              topic,
+              topic: allSections ? "" : topic,
               marksPerQuestion: sec.marks,
               negativeMarking: pattern.negativeMarking,
             }),
@@ -344,7 +350,8 @@ function MockTestIndex() {
             >
               <SelectTrigger><SelectValue /></SelectTrigger>
               <SelectContent>
-                <SelectItem value={String(pattern.totalQuestions)}>
+                {allSections ? (
+                  <SelectItem value={String(pattern.totalQuestions)}>
                     {pattern.totalQuestions} (full exam)
                   </SelectItem>
                 ) : (
@@ -379,7 +386,8 @@ function MockTestIndex() {
             <Input
               value={topic}
               onChange={(e) => setTopic(e.target.value)}
-              placeholder="e.g. Trigonometry, Mughal Empire…"
+              placeholder={allSections ? "Disabled for All Sections" : "e.g. Trigonometry, Mughal Empire…"}
+              disabled={allSections}
             />
           </Field>
         </div>
