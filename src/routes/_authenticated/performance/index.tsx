@@ -241,3 +241,11 @@ function Card({ icon, label, value }: { icon: React.ReactNode; label: string; va
     </div>
   );
 }
+
+function journey(pct: number) {
+  if (pct === 0) return { label: "Not started yet", color: "text-muted-foreground", bar: "bg-muted-foreground/40" };
+  if (pct <= 25) return { label: "Building foundation 🌱", color: "text-primary", bar: "bg-primary" };
+  if (pct <= 50) return { label: "Getting there 📈", color: "text-amber", bar: "bg-amber" };
+  if (pct <= 75) return { label: "Good progress 💪", color: "text-orange-400", bar: "bg-orange-400" };
+  return { label: "Mastered! 🏆", color: "text-emerald-400", bar: "bg-emerald-500" };
+}
