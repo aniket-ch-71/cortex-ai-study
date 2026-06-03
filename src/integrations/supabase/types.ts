@@ -451,13 +451,7 @@ export type Database = {
         }
         Returns: boolean
       }
-      public_stats: {
-        Args: never
-        Returns: {
-          reviews: number
-          users: number
-        }[]
-      }
+      public_stats: { Args: never; Returns: Json }
       username_available: { Args: { uname: string }; Returns: boolean }
     }
     Enums: {
