@@ -381,3 +381,182 @@ function estimateExamCountdown(_exam: string) {
   const days = Math.max(0, Math.ceil((target.getTime() - now.getTime()) / 86_400_000));
   return { days };
 }
+
+function StreakCard({ profile }: { profile: Profile | null }) {
+  const streak = profile?.streak ?? 0;
+  const best = (profile as any)?.best_streak ?? 0;
+  const lastDate = (profile as any)?.last_streak_date as string | null;
+
+  if (streak === 0 && !lastDate) {
+    return (
+      <Link
+        to="/mock-test"
+        className="mt-6 block rounded-xl border border-amber/40 bg-gradient-to-r from-amber/10 via-amber/5 to-transparent p-5 transition hover:border-amber/70"
+      >
+        <div className="flex items-center justify-between gap-3">
+          <div>
+            <p className="font-display text-lg font-semibold">🚀 Start your streak today!</p>
+            <p className="mt-1 text-sm text-muted-foreground">Complete 1 task to begin</p>
+          </div>
+          <span className="rounded-md bg-amber px-3 py-2 text-sm font-medium text-background">
+            Take a 5-min test →
+          </span>
+        </div>
+      </Link>
+    );
+  }
+
+  if (streak === 0 && lastDate) {
+    return (
+      <Link
+        to="/mock-test"
+        className="mt-6 block rounded-xl border border-primary/40 bg-gradient-to-r from-primary/10 via-primary/5 to-transparent p-5 transition hover:border-primary/70"
+      >
+        <div className="flex items-center justify-between gap-3">
+          <div>
+            <p className="font-display text-lg font-semibold">💪 Comeback time!</p>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Your best was {best} day{best === 1 ? "" : "s"}. Beat that today!
+            </p>
+          </div>
+          <span className="rounded-md bg-primary px-3 py-2 text-sm font-medium text-primary-foreground">
+            Restart streak →
+          </span>
+        </div>
+      </Link>
+    );
+  }
+
+  const milestone =
+    streak >= 30
+      ? "Legendary! 👑"
+      : streak >= 14
+        ? "Two weeks strong! 💪"
+        : streak >= 7
+          ? "Week warrior! 🏆"
+          : "Keep it up! ⚡";
+
+  return (
+    <div className="mt-6 flex items-center justify-between gap-3 rounded-xl border border-amber/40 bg-gradient-to-r from-amber/10 to-transparent p-5">
+      <div className="flex items-center gap-3">
+        <Flame className="h-7 w-7 text-amber animate-flicker" />
+        <div>
+          <p className="font-display text-lg font-semibold">🔥 {streak} day streak!</p>
+          <p className="text-sm text-muted-foreground">{milestone}</p>
+        </div>
+      </div>
+      {best > streak && (
+        <span className="text-xs text-muted-foreground">Best: {best}</span>
+      )}
+    </div>
+  );
+}
+
+const DISMISS_KEY = "pariksha.recoDismissed";
+
+function RecommendationWidget({
+  profile,
+  stats,
+  loading,
+}: {
+  profile: Profile | null;
+  stats: { tests: number; doubts: number; notes: number; avg: number };
+  loading: boolean;
+}) {
+  const [dismissed, setDismissed] = useState<string[]>([]);
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem(DISMISS_KEY);
+      if (raw) setDismissed(JSON.parse(raw));
+    } catch {}
+  }, []);
+  const dismiss = (id: string) => {
+    const next = [...dismissed, id];
+    setDismissed(next);
+    try {
+      localStorage.setItem(DISMISS_KEY, JSON.stringify(next));
+    } catch {}
+  };
+  if (loading || !profile) return null;
+
+  const exam = profile.target_exam ?? "";
+  const all: {
+    id: string;
+    title: string;
+    desc: string;
+    cta: string;
+    to: string;
+    show: boolean;
+  }[] = [
+    {
+      id: "first-test",
+      title: "🎯 Take your first mock test",
+      desc: "See where you stand before you start preparing",
+      cta: "Start 10-min test →",
+      to: "/mock-test",
+      show: stats.tests === 0,
+    },
+    {
+      id: "build-foundation",
+      title: "📚 Build your foundation first",
+      desc: "Try the Notes Generator to strengthen weak topics",
+      cta: "Generate notes →",
+      to: "/notes",
+      show: stats.tests > 0 && stats.avg < 40,
+    },
+    {
+      id: "first-doubt",
+      title: "🤔 Got a doubt? Ask AI",
+      desc: "PARIKSHA explains step-by-step in Hinglish",
+      cta: "Ask now →",
+      to: "/doubt-solver",
+      show: stats.doubts === 0,
+    },
+    {
+      id: "study-plan",
+      title: "📅 No study plan yet?",
+      desc: `Get AI-generated 7-day plan${exam ? ` for ${exam}` : ""}`,
+      cta: "Create plan →",
+      to: "/planner",
+      show: true,
+    },
+    {
+      id: "current-affairs",
+      title: "📰 Today's current affairs ready!",
+      desc: "8 affairs + 16 MCQs — 5 min read",
+      cta: "Read now →",
+      to: "/current-affairs",
+      show: /SSC|UPSC|Bank|IBPS|RRB/i.test(exam),
+    },
+  ];
+  const shown = all.filter((r) => r.show && !dismissed.includes(r.id)).slice(0, 2);
+  if (shown.length === 0) return null;
+
+  return (
+    <div className="mt-6 grid gap-3 sm:grid-cols-2">
+      {shown.map((r) => (
+        <div
+          key={r.id}
+          className="relative rounded-xl border border-border bg-gradient-to-br from-primary/10 via-card to-card p-5 transition hover:border-primary/40"
+        >
+          <button
+            type="button"
+            onClick={() => dismiss(r.id)}
+            aria-label="Dismiss"
+            className="absolute right-3 top-3 rounded-md p-1 text-muted-foreground/60 transition hover:bg-secondary hover:text-foreground"
+          >
+            <X className="h-3.5 w-3.5" />
+          </button>
+          <p className="pr-6 font-display text-base font-semibold">{r.title}</p>
+          <p className="mt-1 text-sm text-muted-foreground">{r.desc}</p>
+          <Link
+            to={r.to}
+            className="mt-3 inline-flex items-center gap-1 text-sm font-medium text-primary hover:underline"
+          >
+            <Rocket className="h-3.5 w-3.5" /> {r.cta}
+          </Link>
+        </div>
+      ))}
+    </div>
+  );
+}
