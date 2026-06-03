@@ -112,39 +112,79 @@ function PerformancePage() {
           <p className="mt-3 text-sm text-muted-foreground">Take a few tests to see subject accuracy.</p>
         ) : (
           <div className="mt-4 space-y-3">
-            {subjects.map((s) => (
-              <div key={s.name}>
-                <div className="flex justify-between text-sm">
-                  <span className="truncate">{s.name}</span>
-                  <span className="text-muted-foreground">{s.pct}%</span>
+            {subjects.map((s) => {
+              const j = journey(s.pct);
+              return (
+                <div key={s.name}>
+                  <div className="flex items-center justify-between gap-3 text-sm">
+                    <span className="truncate">{s.name}</span>
+                    <div className="flex items-center gap-3">
+                      <span className={`text-xs ${j.color}`}>{j.label}</span>
+                      <span className="text-muted-foreground tabular-nums">{s.pct}%</span>
+                      {s.pct > 75 ? (
+                        <span className="rounded-full bg-emerald-500/15 px-2 py-0.5 text-[10px] font-medium text-emerald-400">✓ Strong</span>
+                      ) : s.pct === 0 ? (
+                        <a href="/mock-test" className="text-xs text-primary hover:underline">Start here →</a>
+                      ) : s.pct < 50 ? (
+                        <a href="/mock-test/practice" className="text-xs text-primary hover:underline">Practice →</a>
+                      ) : null}
+                    </div>
+                  </div>
+                  <div className="mt-1 h-2 overflow-hidden rounded-full bg-secondary">
+                    <div
+                      className={`h-full ${j.bar}`}
+                      style={{ width: `${Math.max(2, s.pct)}%` }}
+                    />
+                  </div>
                 </div>
-                <div className="mt-1 h-2 overflow-hidden rounded-full bg-secondary">
-                  <div
-                    className={`h-full ${s.pct >= 70 ? "bg-teal" : s.pct >= 50 ? "bg-primary" : "bg-coral"}`}
-                    style={{ width: `${s.pct}%` }}
-                  />
-                </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
       </section>
 
-      {/* Weak topics */}
+      {/* Focus areas */}
       <section className="mt-6 rounded-xl border border-border bg-card p-6">
-        <h2 className="font-display text-lg font-semibold">Weak areas</h2>
+        <h2 className="font-display text-lg font-semibold">Focus Areas — Prioritize These</h2>
+        <p className="mt-1 text-sm text-muted-foreground">Small daily improvements = big exam results!</p>
         {weak.length === 0 ? (
           <p className="mt-3 text-sm text-muted-foreground">No weak subjects yet — nice!</p>
         ) : (
           <ul className="mt-3 flex flex-wrap gap-2">
             {weak.map((s) => (
-              <li key={s.name} className="rounded-full border border-coral/40 bg-coral/10 px-3 py-1 text-xs text-coral">
+              <li key={s.name} className="rounded-full border border-amber/40 bg-amber/10 px-3 py-1 text-xs text-amber">
                 {s.name} · {s.pct}%
               </li>
             ))}
           </ul>
         )}
       </section>
+
+      {/* Weekly goal */}
+      {subjects.length > 0 && (
+        <section className="mt-6 rounded-xl border border-primary/30 bg-gradient-to-r from-primary/10 to-transparent p-6">
+          <h2 className="font-display text-lg font-semibold">This week's goal</h2>
+          {(() => {
+            const lowest = [...subjects].sort((a, b) => a.pct - b.pct)[0];
+            const target = Math.min(100, lowest.pct + 10);
+            return (
+              <>
+                <p className="mt-2 text-sm">
+                  Improve <span className="font-semibold">{lowest.name}</span> from{" "}
+                  <span className="font-semibold">{lowest.pct}%</span> to{" "}
+                  <span className="font-semibold text-primary">{target}%</span>
+                </p>
+                <a
+                  href="/mock-test/practice"
+                  className="mt-3 inline-flex items-center gap-1 rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition hover:bg-primary/90"
+                >
+                  Start Practice →
+                </a>
+              </>
+            );
+          })()}
+        </section>
+      )}
 
       {/* Streak calendar */}
       <section className="mt-6 rounded-xl border border-border bg-card p-6">
