@@ -344,7 +344,8 @@ function MockTestIndex() {
             >
               <SelectTrigger><SelectValue /></SelectTrigger>
               <SelectContent>
-                <SelectItem value={String(pattern.totalQuestions)}>
+                {allSections ? (
+                  <SelectItem value={String(pattern.totalQuestions)}>
                     {pattern.totalQuestions} (full exam)
                   </SelectItem>
                 ) : (
