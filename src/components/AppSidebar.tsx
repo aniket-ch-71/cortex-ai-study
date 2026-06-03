@@ -11,6 +11,7 @@ import {
   Settings,
   LogOut,
   Zap,
+  Gift,
 } from "lucide-react";
 import {
   Sidebar,
@@ -40,6 +41,7 @@ const NAV: NavItem[] = [
   { title: "Study Planner", url: "/planner", icon: CalendarRange, ready: true },
   { title: "Current Affairs", url: "/current-affairs", icon: Newspaper, ready: true, gate: "currentAffairs" },
   { title: "My Performance", url: "/performance", icon: TrendingUp, ready: true },
+  { title: "Refer Friends", url: "/referral", icon: Gift, ready: true },
   { title: "Settings", url: "/settings", icon: Settings, ready: true },
 ];
 

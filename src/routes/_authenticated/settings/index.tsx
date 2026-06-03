@@ -13,7 +13,7 @@ import { LANGUAGES } from "@/lib/cortex-data";
 import { EXAM_CATEGORIES, SUB_EXAMS, type ExamCategory } from "@/lib/exam-patterns";
 
 export const Route = createFileRoute("/_authenticated/settings/")({
-  head: () => ({ meta: [{ title: "Settings — CORTEX" }] }),
+  head: () => ({ meta: [{ title: "Settings — PARIKSHA" }] }),
   component: SettingsPage,
 });
 

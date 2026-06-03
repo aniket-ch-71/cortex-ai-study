@@ -16,6 +16,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedDoubtSolverRouteImport } from './routes/_authenticated/doubt-solver'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedSettingsIndexRouteImport } from './routes/_authenticated/settings/index'
+import { Route as AuthenticatedReferralIndexRouteImport } from './routes/_authenticated/referral/index'
 import { Route as AuthenticatedPlannerIndexRouteImport } from './routes/_authenticated/planner/index'
 import { Route as AuthenticatedPerformanceIndexRouteImport } from './routes/_authenticated/performance/index'
 import { Route as AuthenticatedNotesIndexRouteImport } from './routes/_authenticated/notes/index'
@@ -61,6 +62,12 @@ const AuthenticatedSettingsIndexRoute =
   AuthenticatedSettingsIndexRouteImport.update({
     id: '/settings/',
     path: '/settings/',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
+const AuthenticatedReferralIndexRoute =
+  AuthenticatedReferralIndexRouteImport.update({
+    id: '/referral/',
+    path: '/referral/',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
 const AuthenticatedPlannerIndexRoute =
@@ -136,6 +143,7 @@ export interface FileRoutesByFullPath {
   '/notes/': typeof AuthenticatedNotesIndexRoute
   '/performance/': typeof AuthenticatedPerformanceIndexRoute
   '/planner/': typeof AuthenticatedPlannerIndexRoute
+  '/referral/': typeof AuthenticatedReferralIndexRoute
   '/settings/': typeof AuthenticatedSettingsIndexRoute
   '/mock-test/$testId/results': typeof AuthenticatedMockTestTestIdResultsRoute
   '/mock-test/$testId/': typeof AuthenticatedMockTestTestIdIndexRoute
@@ -154,6 +162,7 @@ export interface FileRoutesByTo {
   '/notes': typeof AuthenticatedNotesIndexRoute
   '/performance': typeof AuthenticatedPerformanceIndexRoute
   '/planner': typeof AuthenticatedPlannerIndexRoute
+  '/referral': typeof AuthenticatedReferralIndexRoute
   '/settings': typeof AuthenticatedSettingsIndexRoute
   '/mock-test/$testId/results': typeof AuthenticatedMockTestTestIdResultsRoute
   '/mock-test/$testId': typeof AuthenticatedMockTestTestIdIndexRoute
@@ -174,6 +183,7 @@ export interface FileRoutesById {
   '/_authenticated/notes/': typeof AuthenticatedNotesIndexRoute
   '/_authenticated/performance/': typeof AuthenticatedPerformanceIndexRoute
   '/_authenticated/planner/': typeof AuthenticatedPlannerIndexRoute
+  '/_authenticated/referral/': typeof AuthenticatedReferralIndexRoute
   '/_authenticated/settings/': typeof AuthenticatedSettingsIndexRoute
   '/_authenticated/mock-test/$testId/results': typeof AuthenticatedMockTestTestIdResultsRoute
   '/_authenticated/mock-test/$testId/': typeof AuthenticatedMockTestTestIdIndexRoute
@@ -194,6 +204,7 @@ export interface FileRouteTypes {
     | '/notes/'
     | '/performance/'
     | '/planner/'
+    | '/referral/'
     | '/settings/'
     | '/mock-test/$testId/results'
     | '/mock-test/$testId/'
@@ -212,6 +223,7 @@ export interface FileRouteTypes {
     | '/notes'
     | '/performance'
     | '/planner'
+    | '/referral'
     | '/settings'
     | '/mock-test/$testId/results'
     | '/mock-test/$testId'
@@ -231,6 +243,7 @@ export interface FileRouteTypes {
     | '/_authenticated/notes/'
     | '/_authenticated/performance/'
     | '/_authenticated/planner/'
+    | '/_authenticated/referral/'
     | '/_authenticated/settings/'
     | '/_authenticated/mock-test/$testId/results'
     | '/_authenticated/mock-test/$testId/'
@@ -293,6 +306,13 @@ declare module '@tanstack/react-router' {
       path: '/settings'
       fullPath: '/settings/'
       preLoaderRoute: typeof AuthenticatedSettingsIndexRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/referral/': {
+      id: '/_authenticated/referral/'
+      path: '/referral'
+      fullPath: '/referral/'
+      preLoaderRoute: typeof AuthenticatedReferralIndexRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
     '/_authenticated/planner/': {
@@ -378,6 +398,7 @@ interface AuthenticatedRouteChildren {
   AuthenticatedNotesIndexRoute: typeof AuthenticatedNotesIndexRoute
   AuthenticatedPerformanceIndexRoute: typeof AuthenticatedPerformanceIndexRoute
   AuthenticatedPlannerIndexRoute: typeof AuthenticatedPlannerIndexRoute
+  AuthenticatedReferralIndexRoute: typeof AuthenticatedReferralIndexRoute
   AuthenticatedSettingsIndexRoute: typeof AuthenticatedSettingsIndexRoute
   AuthenticatedMockTestTestIdResultsRoute: typeof AuthenticatedMockTestTestIdResultsRoute
   AuthenticatedMockTestTestIdIndexRoute: typeof AuthenticatedMockTestTestIdIndexRoute
@@ -394,6 +415,7 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedNotesIndexRoute: AuthenticatedNotesIndexRoute,
   AuthenticatedPerformanceIndexRoute: AuthenticatedPerformanceIndexRoute,
   AuthenticatedPlannerIndexRoute: AuthenticatedPlannerIndexRoute,
+  AuthenticatedReferralIndexRoute: AuthenticatedReferralIndexRoute,
   AuthenticatedSettingsIndexRoute: AuthenticatedSettingsIndexRoute,
   AuthenticatedMockTestTestIdResultsRoute:
     AuthenticatedMockTestTestIdResultsRoute,

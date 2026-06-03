@@ -12,7 +12,7 @@ import { EXAMS, SUBJECTS, LANGUAGES } from "@/lib/cortex-data";
 import { useProfile } from "@/hooks/useProfile";
 
 export const Route = createFileRoute("/_authenticated/planner/")({
-  head: () => ({ meta: [{ title: "Study Planner — CORTEX" }] }),
+  head: () => ({ meta: [{ title: "Study Planner — PARIKSHA" }] }),
   component: PlannerPage,
 });
 

@@ -14,7 +14,7 @@ import {
 } from "@/components/ui/select";
 
 export const Route = createFileRoute("/_authenticated/mock-test/practice")({
-  head: () => ({ meta: [{ title: "Practice Bank — CORTEX" }] }),
+  head: () => ({ meta: [{ title: "Practice Bank — PARIKSHA" }] }),
   component: PracticePage,
 });
 

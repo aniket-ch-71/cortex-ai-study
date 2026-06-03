@@ -64,7 +64,7 @@ function AuthedLayout() {
         <div className="flex min-w-0 flex-1 flex-col">
           <header className="flex h-14 items-center gap-3 border-b border-border bg-background/70 px-4 backdrop-blur-xl">
             <SidebarTrigger />
-            <span className="font-display text-sm font-semibold">CORTEX</span>
+            <span className="font-display text-sm font-semibold">PARIKSHA</span>
           </header>
           <main key={pathname} className="flex-1 overflow-auto animate-page-enter">
             <Outlet />

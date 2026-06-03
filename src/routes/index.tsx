@@ -31,12 +31,13 @@ const FEATURES = [
   { icon: CalendarRange, color: "text-primary", title: "Study Planner", desc: "Personal week-by-week schedule built around your exam date." },
 ];
 
-const STATS = [
-  { value: "50Cr+", label: "Students" },
-  { value: "20+", label: "Exams" },
-  { value: "3", label: "Languages" },
-  { value: "24/7", label: "AI Support" },
-];
+type LiveStats = {
+  total_registered?: number;
+  doubts_solved_today?: number;
+  tests_taken_this_week?: number;
+  active_today?: number;
+  reviews?: number;
+};
 
 const TESTIMONIALS = [
   { name: "Aarav S.", exam: "JEE Advanced 2025", quote: "The AI doubt solver in Hinglish saved me hours every night. It actually explains step-by-step." },
@@ -163,12 +164,54 @@ function FloatingCard({
 }
 
 function StatsBar() {
+  const [stats, setStats] = useState<LiveStats>({});
+
+  useEffect(() => {
+    let cancelled = false;
+    const fetchIt = async () => {
+      const { data } = await supabase.rpc("public_stats" as any);
+      const row: any = Array.isArray(data) ? data[0] : data;
+      if (!cancelled && row) setStats(row as LiveStats);
+    };
+    fetchIt();
+    const id = setInterval(fetchIt, 30_000);
+    return () => {
+      cancelled = true;
+      clearInterval(id);
+    };
+  }, []);
+
+  const items = [
+    {
+      value: (stats.active_today ?? 0) > 0 ? `${stats.active_today}` : "100+",
+      label: "Students active today",
+      live: true,
+    },
+    {
+      value: (stats.doubts_solved_today ?? 0) > 0 ? `${stats.doubts_solved_today}` : "50+",
+      label: "Doubts solved today",
+    },
+    {
+      value: (stats.tests_taken_this_week ?? 0) > 0 ? `${stats.tests_taken_this_week}` : "200+",
+      label: "Tests this week",
+    },
+    { value: "24/7", label: "AI Support" },
+  ];
+
   return (
     <section className="border-y border-border bg-card/40">
       <div className="mx-auto grid max-w-7xl grid-cols-2 gap-6 px-4 py-8 md:grid-cols-4 md:px-6">
-        {STATS.map((s) => (
+        {items.map((s) => (
           <div key={s.label} className="text-center">
-            <div className="font-display text-2xl font-bold md:text-3xl">{s.value}</div>
+            <div className="flex items-center justify-center gap-2 font-display text-2xl font-bold md:text-3xl">
+              {s.live && (
+                <span className="relative flex h-2 w-2">
+                  <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75"></span>
+                  <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-500"></span>
+                </span>
+              )}
+              {s.value}
+            </div>
             <div className="mt-1 text-xs uppercase tracking-wider text-muted-foreground">
               {s.label}
             </div>
@@ -370,8 +413,8 @@ function Testimonials() {
       ]);
       const list = (rs ?? []).map((r: any) => ({ ...r, first_name: "Student" })) as RealReview[];
       setReviews(list);
-      const row = Array.isArray(st) ? st[0] : st;
-      if (row) setStats({ users: Number(row.users) || 0, reviews: Number(row.reviews) || 0 });
+      const row: any = Array.isArray(st) ? st[0] : st;
+      if (row) setStats({ users: Number(row.total_registered ?? row.users) || 0, reviews: Number(row.reviews) || 0 });
     })();
   }, []);
 
