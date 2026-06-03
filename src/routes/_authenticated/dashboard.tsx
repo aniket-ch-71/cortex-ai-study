@@ -113,6 +113,13 @@ function DashboardPage() {
       {/* Daily quote */}
       <DailyQuote />
 
+      {/* Personalized recommendations */}
+      <RecommendationWidget
+        profile={profile}
+        stats={stats}
+        loading={loading}
+      />
+
       {/* Stats */}
       <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <Stat icon={Brain} color="text-primary" label="Tests taken" value={stats.tests} loading={loading} />
@@ -123,7 +130,7 @@ function DashboardPage() {
 
       {/* Quick actions */}
       <h2 className="mt-10 font-display text-lg font-semibold">Quick actions</h2>
-      <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5">
         <ActionCard
           to="/doubt-solver"
           icon={MessageCircleQuestion}
@@ -134,11 +141,12 @@ function DashboardPage() {
         />
         <ActionCard to="/mock-test" icon={Brain} title="Take a mock test" desc="Real exam patterns" color="text-primary" ready />
         <ActionCard to="/notes" icon={FileText} title="Generate notes" desc="Notes + flashcards" color="text-teal" ready />
-        {(profile as any)?.has_reviewed ? (
-          <ActionCard to="/planner" icon={CalendarRange} title="Plan my week" desc="7-day AI plan" color="text-amber" ready />
-        ) : (
+        <ActionCard to="/planner" icon={CalendarRange} title="Plan my week" desc="7-day AI plan" color="text-amber" ready />
+        {((profile as any)?.referral_count ?? 0) < 3 ? (
+          <ActionCard to="/referral" icon={Gift} title="Refer Friends" desc="Unlock badges" color="text-teal" ready />
+        ) : !(profile as any)?.has_reviewed ? (
           <RatePARIKSHACard />
-        )}
+        ) : null}
       </div>
 
       {/* Recent + countdown */}
