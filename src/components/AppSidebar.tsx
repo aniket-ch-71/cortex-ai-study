@@ -11,6 +11,7 @@ import {
   Settings,
   LogOut,
   Zap,
+  Gift,
 } from "lucide-react";
 import {
   Sidebar,
