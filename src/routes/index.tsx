@@ -413,8 +413,8 @@ function Testimonials() {
       ]);
       const list = (rs ?? []).map((r: any) => ({ ...r, first_name: "Student" })) as RealReview[];
       setReviews(list);
-      const row = Array.isArray(st) ? st[0] : st;
-      if (row) setStats({ users: Number(row.users) || 0, reviews: Number(row.reviews) || 0 });
+      const row: any = Array.isArray(st) ? st[0] : st;
+      if (row) setStats({ users: Number(row.total_registered ?? row.users) || 0, reviews: Number(row.reviews) || 0 });
     })();
   }, []);
 
