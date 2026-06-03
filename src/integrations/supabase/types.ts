@@ -252,6 +252,7 @@ export type Database = {
       }
       profiles: {
         Row: {
+          best_streak: number
           city: string | null
           created_at: string
           exams: Json
@@ -260,8 +261,11 @@ export type Database = {
           id: string
           language: string
           last_active: string | null
+          last_streak_date: string | null
           onboarded: boolean
           primary_exam: string | null
+          referral_code: string | null
+          referral_count: number
           show_current_affairs: boolean
           state: string | null
           streak: number
@@ -270,6 +274,7 @@ export type Database = {
           username: string | null
         }
         Insert: {
+          best_streak?: number
           city?: string | null
           created_at?: string
           exams?: Json
@@ -278,8 +283,11 @@ export type Database = {
           id: string
           language?: string
           last_active?: string | null
+          last_streak_date?: string | null
           onboarded?: boolean
           primary_exam?: string | null
+          referral_code?: string | null
+          referral_count?: number
           show_current_affairs?: boolean
           state?: string | null
           streak?: number
@@ -288,6 +296,7 @@ export type Database = {
           username?: string | null
         }
         Update: {
+          best_streak?: number
           city?: string | null
           created_at?: string
           exams?: Json
@@ -296,8 +305,11 @@ export type Database = {
           id?: string
           language?: string
           last_active?: string | null
+          last_streak_date?: string | null
           onboarded?: boolean
           primary_exam?: string | null
+          referral_code?: string | null
+          referral_count?: number
           show_current_affairs?: boolean
           state?: string | null
           streak?: number
@@ -349,6 +361,27 @@ export type Database = {
           sub_exam?: string
           subject?: string
           topic?: string | null
+        }
+        Relationships: []
+      }
+      referrals: {
+        Row: {
+          created_at: string
+          id: string
+          referred_id: string
+          referrer_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          referred_id: string
+          referrer_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          referred_id?: string
+          referrer_id?: string
         }
         Relationships: []
       }
@@ -444,6 +477,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      bump_streak: { Args: { _user_id: string }; Returns: undefined }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
