@@ -14,7 +14,7 @@ import { ExamPicker, defaultExamPicker, examPickerFromPrimary, type ExamPickerVa
 import { useProfile } from "@/hooks/useProfile";
 
 export const Route = createFileRoute("/_authenticated/notes/")({
-  head: () => ({ meta: [{ title: "Notes Generator — CORTEX" }] }),
+  head: () => ({ meta: [{ title: "Notes Generator — PARIKSHA" }] }),
   component: NotesIndex,
 });
 

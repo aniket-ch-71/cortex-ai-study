@@ -4,7 +4,7 @@ import { TrendingUp, Loader2, Trophy, Flame } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/_authenticated/performance/")({
-  head: () => ({ meta: [{ title: "My Performance — CORTEX" }] }),
+  head: () => ({ meta: [{ title: "My Performance — PARIKSHA" }] }),
   component: PerformancePage,
 });
 

@@ -29,7 +29,7 @@ import { useProfile } from "@/hooks/useProfile";
 const AI_TEST_DAILY_LIMIT = 3;
 
 export const Route = createFileRoute("/_authenticated/mock-test/")({
-  head: () => ({ meta: [{ title: "Mock Tests — CORTEX" }] }),
+  head: () => ({ meta: [{ title: "Mock Tests — PARIKSHA" }] }),
   component: MockTestIndex,
 });
 

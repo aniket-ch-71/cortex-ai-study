@@ -9,7 +9,7 @@ export function Footer() {
             <span className="grid h-8 w-8 place-items-center rounded-lg bg-primary/15 text-primary">
               <Zap className="h-4 w-4" strokeWidth={2.5} />
             </span>
-            CORTEX
+            PARIKSHA
           </div>
           <p className="mt-3 text-sm text-muted-foreground">
             India's AI-powered study platform for competitive exams.
@@ -41,7 +41,7 @@ export function Footer() {
       </div>
       <div className="border-t border-border">
         <p className="mx-auto max-w-7xl px-4 py-6 text-center text-xs text-muted-foreground md:px-6">
-          © {new Date().getFullYear()} CORTEX. Made in India for Indian students.
+          © {new Date().getFullYear()} PARIKSHA. Made in India for Indian students.
         </p>
       </div>
     </footer>

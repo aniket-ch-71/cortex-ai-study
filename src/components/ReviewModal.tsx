@@ -58,7 +58,7 @@ export function ReviewModal({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Rate Cortex</DialogTitle>
+          <DialogTitle>Rate PARIKSHA</DialogTitle>
           <DialogDescription>
             Your honest feedback helps other students discover us.
           </DialogDescription>

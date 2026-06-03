@@ -7,7 +7,7 @@ import { CopyButton } from "@/components/CopyButton";
 import { InlineReviewPrompt } from "@/components/InlineReviewPrompt";
 
 export const Route = createFileRoute("/_authenticated/notes/$noteId/")({
-  head: () => ({ meta: [{ title: "Note — CORTEX" }] }),
+  head: () => ({ meta: [{ title: "Note — PARIKSHA" }] }),
   component: NoteView,
 });
 

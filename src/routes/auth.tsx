@@ -14,7 +14,7 @@ export const Route = createFileRoute("/auth")({
     redirect: typeof s.redirect === "string" ? s.redirect : "/dashboard",
   }),
   head: () => ({
-    meta: [{ title: "Sign in or sign up — CORTEX" }],
+    meta: [{ title: "Sign in or sign up — PARIKSHA" }],
   }),
   component: AuthPage,
 });
@@ -57,7 +57,7 @@ function AuthPage() {
           <span className="grid h-8 w-8 place-items-center rounded-lg bg-primary/15 text-primary">
             <Zap className="h-4 w-4" strokeWidth={2.5} />
           </span>
-          CORTEX
+          PARIKSHA
         </Link>
 
         <div className="relative">
@@ -76,7 +76,7 @@ function AuthPage() {
           </ul>
         </div>
 
-        <p className="text-xs text-muted-foreground">© CORTEX · Made in India</p>
+        <p className="text-xs text-muted-foreground">© PARIKSHA · Made in India</p>
         <div className="pointer-events-none absolute -right-32 -top-32 h-80 w-80 rounded-full bg-primary/30 blur-3xl" />
         <div className="pointer-events-none absolute -bottom-32 -left-32 h-80 w-80 rounded-full bg-purple/20 blur-3xl" />
       </aside>
@@ -88,7 +88,7 @@ function AuthPage() {
             <span className="grid h-8 w-8 place-items-center rounded-lg bg-primary/15 text-primary">
               <Zap className="h-4 w-4" strokeWidth={2.5} />
             </span>
-            CORTEX
+            PARIKSHA
           </Link>
 
           <div className="mb-6 inline-flex rounded-md border border-border bg-card p-1 text-sm">
@@ -158,7 +158,7 @@ function SignupForm({ redirect }: { redirect: string }) {
       toast.error(error.message);
       return;
     }
-    toast.success("Welcome to CORTEX! Check your email to confirm your account.");
+    toast.success("Welcome to PARIKSHA! Check your email to confirm your account.");
     navigate({ to: redirect });
   };
 

@@ -6,7 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { LANGUAGES, SUBJECTS, type LangValue } from "@/lib/cortex-data";
 
 export const Route = createFileRoute("/_authenticated/doubt-solver")({
-  head: () => ({ meta: [{ title: "AI Doubt Solver — CORTEX" }] }),
+  head: () => ({ meta: [{ title: "AI Doubt Solver — PARIKSHA" }] }),
   component: DoubtSolverPage,
 });
 
@@ -263,7 +263,7 @@ function DoubtSolverPage() {
             </button>
           </form>
           <p className="mt-2 text-center text-xs text-muted-foreground">
-            CORTEX AI can make mistakes. Double-check important facts.
+            PARIKSHA AI can make mistakes. Double-check important facts.
           </p>
         </div>
       </div>

@@ -18,7 +18,7 @@ import { Button } from "@/components/ui/button";
 import { InlineReviewPrompt } from "@/components/InlineReviewPrompt";
 
 export const Route = createFileRoute("/_authenticated/mock-test/$testId/results")({
-  head: () => ({ meta: [{ title: "Results — CORTEX" }] }),
+  head: () => ({ meta: [{ title: "Results — PARIKSHA" }] }),
   validateSearch: z.object({ attempt: z.string() }),
   component: ResultsPage,
 });

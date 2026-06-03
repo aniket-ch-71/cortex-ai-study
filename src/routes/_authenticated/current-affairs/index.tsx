@@ -19,7 +19,7 @@ import { cn } from "@/lib/utils";
 export const Route = createFileRoute("/_authenticated/current-affairs/")({
   head: () => ({
     meta: [
-      { title: "Current Affairs — CORTEX" },
+      { title: "Current Affairs — PARIKSHA" },
       { name: "description", content: "Today's top current affairs for SSC, UPSC, Banking, Railway, CDS." },
     ],
   }),

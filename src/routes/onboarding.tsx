@@ -12,7 +12,7 @@ import {
 import { SUB_EXAMS } from "@/lib/exam-patterns";
 
 export const Route = createFileRoute("/onboarding")({
-  head: () => ({ meta: [{ title: "Welcome to CORTEX" }] }),
+  head: () => ({ meta: [{ title: "Welcome to PARIKSHA" }] }),
   component: Onboarding,
 });
 
@@ -185,7 +185,7 @@ function Onboarding() {
           <span className="grid h-8 w-8 place-items-center rounded-lg bg-primary/15 text-primary">
             <Zap className="h-4 w-4" strokeWidth={2.5} />
           </span>
-          CORTEX
+          PARIKSHA
         </Link>
 
         {/* Progress */}
