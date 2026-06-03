@@ -12,6 +12,9 @@ import {
   Trophy,
   Activity,
   Star,
+  Gift,
+  Rocket,
+  X,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import type { Tables } from "@/integrations/supabase/types";
