@@ -31,12 +31,13 @@ const FEATURES = [
   { icon: CalendarRange, color: "text-primary", title: "Study Planner", desc: "Personal week-by-week schedule built around your exam date." },
 ];
 
-const STATS = [
-  { value: "50Cr+", label: "Students" },
-  { value: "20+", label: "Exams" },
-  { value: "3", label: "Languages" },
-  { value: "24/7", label: "AI Support" },
-];
+type LiveStats = {
+  total_registered?: number;
+  doubts_solved_today?: number;
+  tests_taken_this_week?: number;
+  active_today?: number;
+  reviews?: number;
+};
 
 const TESTIMONIALS = [
   { name: "Aarav S.", exam: "JEE Advanced 2025", quote: "The AI doubt solver in Hinglish saved me hours every night. It actually explains step-by-step." },
