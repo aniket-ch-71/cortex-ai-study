@@ -1,12 +1,7 @@
 // PARIKSHA Daily Current Affairs — generates and caches today's digest via Lovable AI Gateway
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers":
-    "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
-};
+import { corsHeaders, requireUser } from "../_shared/auth.ts";
 
 function todayIST(): string {
   // YYYY-MM-DD in Asia/Kolkata
@@ -22,16 +17,26 @@ function todayIST(): string {
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
   try {
+    const auth = await requireUser(req);
+    if (auth instanceof Response) return auth;
+
     const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
     const SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
 
     const admin = createClient(SUPABASE_URL, SERVICE_KEY);
+    // `force` regeneration is restricted to admins to prevent credit drain.
     let force = false;
     try {
       const body = await req.json();
-      force = !!body?.force;
+      if (body?.force) {
+        const { data: isAdmin } = await admin.rpc("has_role", {
+          _user_id: auth.userId,
+          _role: "admin",
+        });
+        force = !!isAdmin;
+      }
     } catch (_) {
       /* no body */
     }
