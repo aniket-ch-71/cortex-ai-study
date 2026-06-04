@@ -183,15 +183,10 @@ function MockTestIndex() {
 
       let title = "";
       for (const sec of sectionsToGenerate) {
-        const res = await fetch(
-          `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/generate-test`,
+        const { data: payload, error: fnErr } = await supabase.functions.invoke(
+          "generate-test",
           {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
-            },
-            body: JSON.stringify({
+            body: {
               subject: sec.name,
               exam: subExam,
               difficulty,
@@ -200,19 +195,16 @@ function MockTestIndex() {
               topic,
               marksPerQuestion: sec.marks,
               negativeMarking: pattern.negativeMarking,
-            }),
+            },
           },
         );
-        if (!res.ok) {
-          const j = await res.json().catch(() => ({}));
-          throw new Error(j.error || `HTTP ${res.status}`);
-        }
-        const payload = await res.json();
+        if (fnErr) throw new Error(fnErr.message || "Failed to generate test");
         if (!title) title = payload.title || `${subExam} Mock Test`;
         for (const q of payload.questions) {
           allQuestions.push({ ...q, section: sec.name, marks: sec.marks });
         }
       }
+
 
       const { data: inserted, error } = await supabase
         .from("mock_tests")
