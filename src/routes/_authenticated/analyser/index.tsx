@@ -68,19 +68,11 @@ function AnalyserPage() {
     try {
       const { data: u } = await supabase.auth.getUser();
       if (!u.user) return toast.error("Please sign in");
-      const res = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/analyse-notes`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
-        },
-        body: JSON.stringify({ topic, subject, exam, text, language }),
+      const { data: a, error: fnErr } = await supabase.functions.invoke("analyse-notes", {
+        body: { topic, subject, exam, text, language },
       });
-      if (!res.ok) {
-        const j = await res.json().catch(() => ({}));
-        throw new Error(j.error || `HTTP ${res.status}`);
-      }
-      const a = await res.json();
+      if (fnErr) throw new Error(fnErr.message || "Failed to analyse notes");
+
       const fb: Feedback = {
         summary: a.summary,
         strengths: a.strengths ?? [],

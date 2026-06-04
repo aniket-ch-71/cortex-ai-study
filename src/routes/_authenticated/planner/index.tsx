@@ -62,19 +62,14 @@ function PlannerPage() {
     try {
       const { data: u } = await supabase.auth.getUser();
       if (!u.user) return toast.error("Please sign in");
-      const res = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/generate-plan`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+      const { data: plan, error: fnErr } = await supabase.functions.invoke(
+        "generate-plan",
+        {
+          body: { exam, examDate, hoursPerDay, subjects, weaknesses, language },
         },
-        body: JSON.stringify({ exam, examDate, hoursPerDay, subjects, weaknesses, language }),
-      });
-      if (!res.ok) {
-        const j = await res.json().catch(() => ({}));
-        throw new Error(j.error || `HTTP ${res.status}`);
-      }
-      const plan = (await res.json()) as Plan;
+      ) as { data: Plan; error: any };
+      if (fnErr) throw new Error(fnErr.message || "Failed to generate plan");
+
       const { data: ins, error } = await supabase
         .from("study_plans")
         .insert({
