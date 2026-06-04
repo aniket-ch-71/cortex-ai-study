@@ -173,6 +173,27 @@ function ResultsPage() {
     }
   };
 
+  const downloadShareCard = async () => {
+    if (!shareCardRef.current) return;
+    setDownloading(true);
+    try {
+      const { toPng } = await import("html-to-image");
+      const dataUrl = await toPng(shareCardRef.current, {
+        pixelRatio: 2,
+        backgroundColor: "#0A0E1A",
+        cacheBust: true,
+      });
+      const a = document.createElement("a");
+      a.href = dataUrl;
+      a.download = `pariksha-result-${Date.now()}.png`;
+      a.click();
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Image download failed");
+    } finally {
+      setDownloading(false);
+    }
+  };
+
   if (loading || !data) {
     return (
       <div className="flex min-h-[60vh] items-center justify-center text-sm text-muted-foreground">
