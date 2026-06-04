@@ -11,6 +11,9 @@ import {
   Loader2,
   RotateCcw,
   Target,
+  Share2,
+  Download,
+  Zap,
 } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
