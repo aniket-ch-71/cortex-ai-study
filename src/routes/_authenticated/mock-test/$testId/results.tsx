@@ -66,6 +66,9 @@ function ResultsPage() {
   const { attempt: attemptId } = Route.useSearch();
   const [loading, setLoading] = useState(true);
   const [exporting, setExporting] = useState(false);
+  const [showShare, setShowShare] = useState(false);
+  const [downloading, setDownloading] = useState(false);
+  const [firstName, setFirstName] = useState("Student");
   const [data, setData] = useState<{
     title: string;
     subject: string;
@@ -78,6 +81,22 @@ function ResultsPage() {
     breakdown: Breakdown | null;
   } | null>(null);
   const printableRef = useRef<HTMLDivElement>(null);
+  const shareCardRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    (async () => {
+      const { data: u } = await supabase.auth.getUser();
+      if (u.user) {
+        const { data: p } = await supabase
+          .from("profiles")
+          .select("full_name")
+          .eq("id", u.user.id)
+          .maybeSingle();
+        const fn = (p?.full_name ?? "").trim().split(/\s+/)[0];
+        if (fn) setFirstName(fn);
+      }
+    })();
+  }, []);
 
   useEffect(() => {
     (async () => {
