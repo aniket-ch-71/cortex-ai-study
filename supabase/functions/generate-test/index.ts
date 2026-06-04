@@ -1,11 +1,8 @@
 // PARIKSHA Mock Test Generator — generates MCQs via Lovable AI Gateway using tool calling for structured JSON.
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { corsHeaders, requireUser, enforceDailyQuota } from "../_shared/auth.ts";
 
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers":
-    "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
-};
+const AI_TEST_DAILY_LIMIT = 3;
 
 const LANG_LABEL: Record<string, string> = {
   en: "English",
@@ -17,6 +14,11 @@ serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
+    const auth = await requireUser(req);
+    if (auth instanceof Response) return auth;
+    const quota = await enforceDailyQuota(auth.admin, auth.userId, "tests", AI_TEST_DAILY_LIMIT);
+    if (quota) return quota;
+
     const {
       subject,
       exam = "",

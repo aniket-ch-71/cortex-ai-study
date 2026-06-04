@@ -477,6 +477,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      bump_daily_usage: {
+        Args: { _kind: string; _limit: number; _user_id: string }
+        Returns: boolean
+      }
       bump_streak: { Args: { _user_id: string }; Returns: undefined }
       has_role: {
         Args: {
