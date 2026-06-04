@@ -153,6 +153,27 @@ function Onboarding() {
         throw pErr;
       }
 
+      // 2b. Redeem referral code if captured on landing page
+      try {
+        const refCode = localStorage.getItem("pariksha_ref");
+        if (refCode) {
+          const { data: referrer } = await supabase
+            .from("profiles")
+            .select("id")
+            .eq("referral_code", refCode)
+            .maybeSingle();
+          if (referrer?.id && referrer.id !== userId) {
+            await supabase.from("referrals").insert({
+              referrer_id: referrer.id,
+              referred_id: userId,
+            } as any);
+          }
+          localStorage.removeItem("pariksha_ref");
+        }
+      } catch {
+        /* non-blocking */
+      }
+
       // 3. Confetti
       try {
         // @ts-ignore — loaded from CDN at runtime
