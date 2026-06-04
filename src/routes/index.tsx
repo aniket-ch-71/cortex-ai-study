@@ -55,6 +55,16 @@ const FAQ = [
 ];
 
 function Index() {
+  useEffect(() => {
+    try {
+      const params = new URLSearchParams(window.location.search);
+      const ref = params.get("ref");
+      if (ref) localStorage.setItem("pariksha_ref", ref);
+    } catch {
+      /* ignore */
+    }
+  }, []);
+
   return (
     <div className="min-h-screen">
       <Navbar />

@@ -22,11 +22,12 @@ export function Navbar() {
   return (
     <header className="sticky top-0 z-40 border-b border-border/60 bg-background/70 backdrop-blur-xl">
       <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 md:px-6">
-        <Link to="/" className="flex items-center gap-2 font-display text-xl font-bold">
-          <span className="grid h-8 w-8 place-items-center rounded-lg bg-primary/15 text-primary">
-            <Zap className="h-4 w-4" strokeWidth={2.5} />
+        <Link to="/" className="flex items-center gap-1.5 font-display text-xl font-bold tracking-tight">
+          <Zap className="h-5 w-5 text-primary" strokeWidth={2.5} aria-hidden />
+          <span>
+            <span className="bg-gradient-to-br from-[#4F8EF7] to-[#00C9A7] bg-clip-text text-transparent">P</span>
+            <span className="text-foreground">ARIKSHA</span>
           </span>
-          <span>PARIKSHA</span>
         </Link>
 
         <nav className="hidden items-center gap-8 md:flex">

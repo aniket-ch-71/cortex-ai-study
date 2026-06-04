@@ -11,6 +11,9 @@ import {
   Loader2,
   RotateCcw,
   Target,
+  Share2,
+  Download,
+  Zap,
 } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -63,6 +66,9 @@ function ResultsPage() {
   const { attempt: attemptId } = Route.useSearch();
   const [loading, setLoading] = useState(true);
   const [exporting, setExporting] = useState(false);
+  const [showShare, setShowShare] = useState(false);
+  const [downloading, setDownloading] = useState(false);
+  const [firstName, setFirstName] = useState("Student");
   const [data, setData] = useState<{
     title: string;
     subject: string;
@@ -75,6 +81,22 @@ function ResultsPage() {
     breakdown: Breakdown | null;
   } | null>(null);
   const printableRef = useRef<HTMLDivElement>(null);
+  const shareCardRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    (async () => {
+      const { data: u } = await supabase.auth.getUser();
+      if (u.user) {
+        const { data: p } = await supabase
+          .from("profiles")
+          .select("full_name")
+          .eq("id", u.user.id)
+          .maybeSingle();
+        const fn = (p?.full_name ?? "").trim().split(/\s+/)[0];
+        if (fn) setFirstName(fn);
+      }
+    })();
+  }, []);
 
   useEffect(() => {
     (async () => {
@@ -148,6 +170,27 @@ function ResultsPage() {
       toast.error(e instanceof Error ? e.message : "PDF export failed");
     } finally {
       setExporting(false);
+    }
+  };
+
+  const downloadShareCard = async () => {
+    if (!shareCardRef.current) return;
+    setDownloading(true);
+    try {
+      const { toPng } = await import("html-to-image");
+      const dataUrl = await toPng(shareCardRef.current, {
+        pixelRatio: 2,
+        backgroundColor: "#0A0E1A",
+        cacheBust: true,
+      });
+      const a = document.createElement("a");
+      a.href = dataUrl;
+      a.download = `pariksha-result-${Date.now()}.png`;
+      a.click();
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Image download failed");
+    } finally {
+      setDownloading(false);
     }
   };
 
@@ -260,6 +303,21 @@ function ResultsPage() {
             </div>
           )}
         </div>
+
+        {/* Share Results */}
+        <ShareResultsSection
+          show={showShare}
+          onToggle={() => setShowShare((v) => !v)}
+          cardRef={shareCardRef}
+          firstName={firstName}
+          testName={data.title}
+          finalScore={finalScore}
+          maxMarks={maxMarks}
+          pct={pct}
+          gradeLabel={grade.label}
+          onDownload={downloadShareCard}
+          downloading={downloading}
+        />
 
         <InlineReviewPrompt />
         {Object.keys(sectionStats).length > 1 && (
@@ -414,4 +472,197 @@ function formatTime(s: number) {
   const m = Math.floor(s / 60);
   const r = s % 60;
   return `${m}m ${r}s`;
+}
+
+function ShareResultsSection({
+  show,
+  onToggle,
+  cardRef,
+  firstName,
+  testName,
+  finalScore,
+  maxMarks,
+  pct,
+  gradeLabel,
+  onDownload,
+  downloading,
+}: {
+  show: boolean;
+  onToggle: () => void;
+  cardRef: React.RefObject<HTMLDivElement | null>;
+  firstName: string;
+  testName: string;
+  finalScore: number;
+  maxMarks: number;
+  pct: number;
+  gradeLabel: string;
+  onDownload: () => void;
+  downloading: boolean;
+}) {
+  const gradeColor =
+    pct >= 80 ? "#00C9A7" : pct >= 60 ? "#4F8EF7" : pct >= 40 ? "#FFA63D" : "#FF6B6B";
+  const dashArray = `${Math.min(339, Math.max(0, pct * 3.39)).toFixed(2)} 339`;
+  const today = new Intl.DateTimeFormat("en-IN", {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+  }).format(new Date());
+
+  const waMessage =
+    `🎉 Maine PARIKSHA pe ${testName} mein ${pct}% score kiya!\n` +
+    `Kya tu beat kar sakta hai?\n` +
+    `Try karo free: https://cortex-ai-study.lovable.app`;
+  const waHref = `https://wa.me/?text=${encodeURIComponent(waMessage)}`;
+
+  return (
+    <div className="rounded-xl border border-border bg-card p-6">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <h2 className="font-display text-lg font-semibold">Share your result</h2>
+          <p className="text-sm text-muted-foreground">
+            Brag a little — challenge friends to beat your score.
+          </p>
+        </div>
+        <Button onClick={onToggle} variant={show ? "outline" : "default"}>
+          <Share2 className="mr-2 h-4 w-4" />
+          {show ? "Hide card" : "Share Results"}
+        </Button>
+      </div>
+
+      {show && (
+        <div className="mt-6 space-y-4">
+          <div className="mx-auto w-full max-w-[420px]">
+            <div
+              ref={cardRef}
+              className="relative overflow-hidden rounded-2xl border border-white/10 p-6 text-white shadow-2xl"
+              style={{
+                background: "linear-gradient(135deg, #0A0E1A 0%, #141C2E 100%)",
+                fontFamily: '"Inter", system-ui, sans-serif',
+              }}
+            >
+              {/* Header */}
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-1.5 font-bold tracking-tight" style={{ fontFamily: '"Space Grotesk", "Inter", sans-serif' }}>
+                  <Zap className="h-4 w-4" style={{ color: "#4F8EF7" }} strokeWidth={2.5} />
+                  <span>
+                    <span
+                      style={{
+                        background: "linear-gradient(135deg, #4F8EF7, #00C9A7)",
+                        WebkitBackgroundClip: "text",
+                        WebkitTextFillColor: "transparent",
+                      }}
+                    >
+                      P
+                    </span>
+                    <span>ARIKSHA</span>
+                  </span>
+                </div>
+                <span className="text-xs text-white/60">{today}</span>
+              </div>
+
+              {/* Student */}
+              <p className="mt-5 text-sm text-white/60">{firstName}'s result</p>
+              <h3
+                className="mt-1 line-clamp-2 text-2xl font-bold leading-tight"
+                style={{ fontFamily: '"Space Grotesk", "Inter", sans-serif' }}
+              >
+                {testName}
+              </h3>
+
+              {/* Score circle */}
+              <div className="mt-6 flex items-center justify-center">
+                <div className="relative">
+                  <svg width="120" height="120" viewBox="0 0 120 120">
+                    <circle
+                      cx="60"
+                      cy="60"
+                      r="54"
+                      fill="none"
+                      stroke="rgba(255,255,255,0.08)"
+                      strokeWidth="10"
+                    />
+                    <circle
+                      cx="60"
+                      cy="60"
+                      r="54"
+                      fill="none"
+                      stroke={gradeColor}
+                      strokeWidth="10"
+                      strokeLinecap="round"
+                      strokeDasharray={dashArray}
+                      transform="rotate(-90 60 60)"
+                    />
+                    <text
+                      x="60"
+                      y="58"
+                      textAnchor="middle"
+                      fill="#fff"
+                      style={{ font: 'bold 26px "Space Grotesk", "Inter", sans-serif' }}
+                    >
+                      {pct}%
+                    </text>
+                    <text
+                      x="60"
+                      y="78"
+                      textAnchor="middle"
+                      fill="rgba(255,255,255,0.6)"
+                      style={{ font: '11px "Inter", sans-serif' }}
+                    >
+                      score
+                    </text>
+                  </svg>
+                </div>
+              </div>
+
+              {/* Score + grade */}
+              <div className="mt-4 text-center">
+                <p className="font-display text-xl font-bold">
+                  {finalScore}
+                  <span className="text-white/40"> / {maxMarks}</span>
+                </p>
+                <span
+                  className="mt-2 inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold"
+                  style={{
+                    background: `${gradeColor}22`,
+                    color: gradeColor,
+                    border: `1px solid ${gradeColor}55`,
+                  }}
+                >
+                  {gradeLabel}
+                </span>
+              </div>
+
+              {/* Footer */}
+              <p className="mt-6 text-center text-[11px] uppercase tracking-wider text-white/40">
+                Powered by PARIKSHA · pariksha.ai
+              </p>
+            </div>
+          </div>
+
+          <div className="grid gap-2 sm:grid-cols-2">
+            <a
+              href={waHref}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex w-full items-center justify-center gap-2 rounded-md bg-emerald-500 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-emerald-500/90"
+            >
+              Share on WhatsApp 📤
+            </a>
+            <button
+              type="button"
+              onClick={onDownload}
+              disabled={downloading}
+              className="inline-flex w-full items-center justify-center gap-2 rounded-md bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground transition hover:bg-primary/90 disabled:opacity-60"
+            >
+              {downloading ? (
+                <><Loader2 className="h-4 w-4 animate-spin" /> Rendering…</>
+              ) : (
+                <><Download className="h-4 w-4" /> Download Image</>
+              )}
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
 }
