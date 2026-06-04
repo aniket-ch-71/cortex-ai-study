@@ -304,6 +304,21 @@ function ResultsPage() {
           )}
         </div>
 
+        {/* Share Results */}
+        <ShareResultsSection
+          show={showShare}
+          onToggle={() => setShowShare((v) => !v)}
+          cardRef={shareCardRef}
+          firstName={firstName}
+          testName={data.title}
+          finalScore={finalScore}
+          maxMarks={maxMarks}
+          pct={pct}
+          gradeLabel={grade.label}
+          onDownload={downloadShareCard}
+          downloading={downloading}
+        />
+
         <InlineReviewPrompt />
         {Object.keys(sectionStats).length > 1 && (
           <div className="rounded-xl border border-border bg-card p-6">
