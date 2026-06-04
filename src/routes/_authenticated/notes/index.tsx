@@ -73,25 +73,20 @@ function NotesIndex() {
     try {
       const { data: u } = await supabase.auth.getUser();
       if (!u.user) return toast.error("Please sign in");
-      const res = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/generate-notes`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+      const { data: payload, error: fnErr } = await supabase.functions.invoke(
+        "generate-notes",
+        {
+          body: {
+            topic,
+            subject: picker.subject,
+            exam: picker.subExam,
+            language,
+            numFlashcards: 12,
+          },
         },
-        body: JSON.stringify({
-          topic,
-          subject: picker.subject,
-          exam: picker.subExam,
-          language,
-          numFlashcards: 12,
-        }),
-      });
-      if (!res.ok) {
-        const j = await res.json().catch(() => ({}));
-        throw new Error(j.error || `HTTP ${res.status}`);
-      }
-      const payload = await res.json();
+      );
+      if (fnErr) throw new Error(fnErr.message || "Failed to generate notes");
+
       const { data: inserted, error } = await supabase
         .from("notes")
         .insert({
