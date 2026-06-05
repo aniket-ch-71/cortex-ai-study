@@ -1,100 +1,99 @@
-# Plan — Bug fix + remaining polish tasks
+# PARIKSHA — Premium Platform Upgrade Plan
 
-## 1. Fix `/src/styles.css` 500 error
+A full pass to elevate PARIKSHA to Linear/Notion/Stripe-tier polish while preserving every existing feature, route, and backend contract.
 
-Lightning CSS error: `@import rules must precede all rules aside from @charset and @layer statements`.
+## Scope guardrails
+- No backend schema changes. No route renames. No new auth flows.
+- Dark theme only (current palette extended, not replaced).
+- All edits frontend/presentation. No edge function logic changes.
 
-Current top of `src/styles.css`:
-```css
-@import "tailwindcss" source(none);
-@source "../src";            ← non-@import rule
-@import "tw-animate-css";    ← @import after a non-@import → invalid
-@import url("https://fonts.googleapis.com/css2?...");  ← also remote @import, banned on this stack
-```
+---
 
-Two issues: ordering, plus remote Google Fonts `@import` (Lightning CSS resolves `@import` from disk and will break the production build per the tailwind4-gotchas guidance).
+## 1. Design system upgrade (`src/styles.css`)
+- Add semantic tokens: `--surface-1/2/3`, `--border-subtle/strong`, `--text-primary/secondary/tertiary`, `--gradient-brand`, `--gradient-mesh`, `--shadow-sm/md/lg/glow`.
+- Add utilities: `.surface-elevated`, `.gradient-brand-text`, `.gradient-mesh-bg`, `.shadow-glow`, `.focus-ring` (a11y), `.tap-target` (≥44px).
+- Add animations: `shimmer`, `pulse-glow`, `slide-up-stagger`, `gradient-shift`.
+- Refine type scale: display (Space Grotesk 56/72), h1–h6 ratios, body sizes, mono for stats.
 
-Fix:
-- Reorder so all `@import` statements come first, `@source` after:
-  ```css
-  @import "tailwindcss" source(none);
-  @import "tw-animate-css";
-  @source "../src";
-  ```
-- Remove the Google Fonts CSS `@import` entirely.
-- Add the font link tags to `src/routes/__root.tsx` `head().links`:
-  ```ts
-  { rel: "preconnect", href: "https://fonts.googleapis.com" },
-  { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
-  { rel: "stylesheet", href: "https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" },
-  ```
+## 2. Shared component library (new in `src/components/ui-pro/`)
+- `PageHeader` — title + subtitle + actions, consistent across authed pages.
+- `StatCard` — icon, label, value (count-up), delta chip, sparkline slot.
+- `EmptyState` — illustration slot, title, description, CTA.
+- `SectionCard` — elevated surface with header/footer.
+- `GradientButton`, `GhostIconButton` (44px tap target, aria-label enforced).
+- `Skeleton` presets: `SkeletonCard`, `SkeletonRow`, `SkeletonChart`.
+- `Badge` variants: success/warning/danger/info/brand.
 
-All other styles untouched.
+## 3. Landing page (`src/routes/index.tsx`)
+- Hero: bold H1 with gradient keyword, sub-headline, dual CTA (Start free / Watch demo), trust strip ("Trusted by 12,000+ aspirants"), animated mesh background.
+- Logo cloud (mock exam bodies).
+- Feature bento grid (6 features: AI Doubt Solver, Mock Tests, Smart Notes, Planner, Current Affairs, Analytics).
+- "How it works" 3-step section with numbered cards.
+- Exam grid (JEE/NEET/UPSC/SSC/CAT/Banking) with hover lift.
+- Social proof: testimonials carousel, stats band (questions solved, tests taken, avg score lift).
+- Pricing table (Free / Pro / Pro+ — keeps current model, just copy).
+- FAQ (accordion, 8 Qs).
+- Final CTA band + footer.
+- Copywriting rewritten to outcome-driven SaaS voice.
 
-## 2. Shareable Result Card — `mock-test/$testId/results.tsx`
+## 4. Auth + Onboarding polish
+- `auth.tsx`: split-screen layout (form left, gradient brand panel right with rotating quotes/social proof). Cleaner input states, password strength hint, Google button prominent.
+- `onboarding.tsx`: progress bar, step transitions, larger touch targets, success confetti micro-moment on finish.
 
-- Install `html-to-image` (`bun add html-to-image`).
-- Add state `const [showShare, setShowShare] = useState(false)` and `const cardRef = useRef<HTMLDivElement>(null)`.
-- Read first name via existing `useProfile()` hook (`profile.full_name?.split(" ")[0] ?? "Student"`).
-- Render a **"Share Results"** button right after the score-card section. Clicking toggles `showShare`.
-- When `showShare`, render:
-  - The card (`ref={cardRef}`, fixed 600×800 px-ish layout, scales down on mobile via responsive wrapper):
-    - Gradient bg `linear-gradient(135deg,#0A0E1A,#141C2E)`, rounded-2xl, padding, border `border-white/10`.
-    - Header row: `⚡ PARIKSHA` (gradient P, matches Task 4 logo) on left, today's date `Intl.DateTimeFormat('en-IN',{day:'numeric',month:'short',year:'numeric'})` on right.
-    - Student first name (text-xl muted).
-    - Test title (display font, text-3xl bold, line-clamp-2).
-    - SVG progress circle (120×120, cx=60 cy=60 r=54, `strokeDasharray={pct*3.39+" 339"}`, stroke = grade color — teal/blue/amber/coral, rotate −90°). Score number centered with `<text>` inside SVG.
-    - Score `{finalScore}/{maxMarks}` line + percentage.
-    - Grade badge (Excellent / Good / Keep Practicing / Needs work — uses existing `grade.label`).
-    - Footer: `Powered by PARIKSHA · pariksha.ai` (muted).
-  - Two full-width buttons below:
-    - **Share on WhatsApp** (`bg-emerald-500/90`, white text): opens `https://wa.me/?text=` with the exact Hinglish message specified, URL-encoded, using `testName` and `pct`.
-    - **Download Image** (`bg-primary`, white text): `toPng(cardRef.current,{pixelRatio:2,backgroundColor:'#0A0E1A'})` → trigger download `pariksha-result-${Date.now()}.png`.
-- Loading/error states: toast on download failure.
-- Card hidden when `showShare` is false; clicking the toggle button again hides it.
+## 5. Dashboard (`_authenticated/dashboard.tsx`)
+- New layout: greeting + streak flame + exam-readiness ring (0–100 score derived client-side from existing stats).
+- Stat row: Tests taken, Avg score, Study minutes, Streak (StatCard with count-up).
+- Today's plan card + "Continue where you left off" card.
+- Weekly heatmap (7-day activity from existing session data).
+- Quick actions grid (Doubt Solver, Mock Test, Notes, Planner) with hover-lift.
+- Recommendation widget (existing) restyled.
+- Empty states for new users.
 
-## 3. Referral capture (`?ref=CODE`)
+## 6. Per-feature page polish (presentation-only)
+- `mock-test/index.tsx`, `mock-test/$testId`, `results.tsx` — consistent PageHeader, better question card, progress bar, results page already has share card (keep, restyle).
+- `notes/*` — card grid with cover gradient by subject, hover-lift.
+- `doubt-solver.tsx` — chat surface refinement, message bubbles, suggested prompts chips.
+- `planner/*`, `current-affairs/*`, `performance/*`, `analyser/*`, `referral/*`, `settings/*` — apply PageHeader + SectionCard + Skeleton states. No logic changes.
 
-`src/routes/index.tsx` (landing):
-- Add `useEffect` on mount: parse `window.location.search` for `ref`, if present `localStorage.setItem('pariksha_ref', ref)`.
+## 7. Sidebar + topbar (`AppSidebar.tsx`, `_authenticated.tsx`)
+- Tighter spacing, group labels, active-state animated indicator (already partially present — refine).
+- Topbar: breadcrumb + user menu (avatar dropdown with profile/settings/logout).
+- Mobile: refined sheet drawer.
 
-`src/routes/onboarding.tsx` (already the place "after successful signup completion"):
-- After the existing profile-finalize/onboarded update succeeds, run a helper `redeemReferral(userId)`:
-  1. `const code = localStorage.getItem('pariksha_ref')`. Skip if missing.
-  2. Find referrer: `supabase.from('profiles').select('id').eq('referral_code', code).maybeSingle()`. Skip if not found or `id === userId` (no self-referral).
-  3. Insert `{ referrer_id: foundId, referred_id: userId }` into `referrals`. The DB trigger `bump_referral_count` auto-increments the referrer's count, so the client does not need to do step 3 of the spec separately.
-  4. `localStorage.removeItem('pariksha_ref')`.
-- Wrap in try/catch; swallow errors silently so a failed referral never blocks onboarding.
+## 8. Mobile + a11y pass
+- All interactive elements ≥44×44 tap targets.
+- `aria-label` on every icon-only button.
+- `focus-visible` ring on all interactives via `.focus-ring` utility.
+- `h-dvh` instead of `h-screen` for full-height layouts.
+- Single `<main>` per route (already correct in `_authenticated.tsx` — verify others).
+- Test at 375/768/1024/1440.
 
-(Note: RLS already allows `insert where auth.uid() = referred_id`, so this works without service role.)
+## 9. SEO per route (TanStack head)
+- Each public route (`/`, `/auth`) and key authed-but-shareable pages get `head()` with title, description, og:title, og:description, og:url, canonical.
+- JSON-LD: Organization on `__root.tsx`, SoftwareApplication on `/`, FAQPage on landing FAQ section.
+- Update root `og:image` removed (currently set in root — move to leaf `/` only to avoid override on every page).
+- Fix duplicate description tags currently in `__root.tsx` (two `description` meta entries present).
 
-## 4. Navbar logo polish — `src/components/Navbar.tsx`
+## 10. Performance
+- Lazy-load heavy authed routes via dynamic imports where TanStack supports (`html-to-image`, charts).
+- Add `loading="lazy"` + width/height to all `<img>`.
+- Memoize Stat/Heatmap calculations with `useMemo`.
+- Remove any unused deps surfaced during pass.
 
-Replace the current logo node with:
-```tsx
-<Link to="/" className="flex items-center gap-1.5 font-display text-xl font-bold tracking-tight">
-  <Zap className="h-5 w-5 text-primary" aria-hidden />
-  <span>
-    <span className="bg-gradient-to-br from-[#4F8EF7] to-[#00C9A7] bg-clip-text text-transparent">P</span>
-    <span className="text-foreground">ARIKSHA</span>
-  </span>
-</Link>
-```
-- Keep all existing nav links, mobile hamburger, and auth-aware items unchanged.
-- Apply the same logo treatment inside the shareable card so branding matches.
+## 11. Verification
+- Build passes (auto).
+- Manual viewport check at 375, 768, 1440 on `/`, `/auth`, `/dashboard`, `/mock-test`, `/notes`.
+- Console clean.
 
-## Technical notes
+---
 
-- New dependency: `html-to-image` (already used pattern; `html2canvas` is present but `html-to-image` is what the spec asks for and produces cleaner SVG/text output).
-- No DB migrations, no edge function changes.
-- No changes to security posture from the previous turn.
-- Files touched:
-  - `src/styles.css` (reorder, drop Google Fonts @import)
-  - `src/routes/__root.tsx` (font `<link>` tags)
-  - `src/routes/_authenticated/mock-test/$testId/results.tsx` (share card + buttons)
-  - `src/routes/index.tsx` (capture `?ref=`)
-  - `src/routes/onboarding.tsx` (redeem referral on finalize)
-  - `src/components/Navbar.tsx` (logo)
-  - `package.json` / `bun.lock` (new dep)
+## Files touched (estimate)
+**Edited:** `src/styles.css`, `src/routes/__root.tsx`, `src/routes/index.tsx`, `src/routes/auth.tsx`, `src/routes/onboarding.tsx`, `src/routes/_authenticated.tsx`, `src/routes/_authenticated/dashboard.tsx`, plus light polish on the 12 other authed route files, `src/components/Navbar.tsx`, `src/components/Footer.tsx`, `src/components/AppSidebar.tsx`.
+**New:** `src/components/ui-pro/PageHeader.tsx`, `StatCard.tsx`, `EmptyState.tsx`, `SectionCard.tsx`, `Skeleton*.tsx`, `GradientButton.tsx`.
 
-Mobile (≤375px): share card uses `max-w-[360px] mx-auto`, score circle scales via responsive width; WhatsApp/Download buttons stack full-width; navbar logo size unchanged from current responsive behavior.
+## Out of scope (confirm if you want included)
+- Backend/RLS/edge function changes.
+- New features (gamification badges, daily challenges DB) — UI scaffolding only unless you want me to add tables.
+- Adding real testimonials/logos — I'll use tasteful placeholders you can swap.
+
+Approve and I'll execute top-to-bottom in one pass.
