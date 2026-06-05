@@ -3,10 +3,10 @@
 @source "../src";
 
 /*
- * PARIKSHA — dark-only design system
- * Background #0A0E1A, card #141C2E, border #1E2D4A
- * Accents: blue #4F8EF7, teal #00C9A7, purple #7B61FF, amber #FFA63D, coral #FF6B6B
+ * PARIKSHA — premium dark SaaS design system
+ * Surfaces 0A0E1A / 141C2E / 1B2540, brand gradient #4F8EF7 → #7B61FF → #00C9A7
  */
+
 
 @theme inline {
   --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
