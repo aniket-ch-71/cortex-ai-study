@@ -21,6 +21,8 @@ import type { Tables } from "@/integrations/supabase/types";
 import { useCountUp } from "@/hooks/useCountUp";
 import { getDailyQuote } from "@/lib/quotes";
 import { ReviewModal } from "@/components/ReviewModal";
+import { StatCard } from "@/components/ui-pro/StatCard";
+
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
   head: () => ({ meta: [{ title: "Dashboard — PARIKSHA" }] }),
