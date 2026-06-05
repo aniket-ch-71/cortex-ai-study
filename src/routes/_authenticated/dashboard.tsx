@@ -94,18 +94,19 @@ function DashboardPage() {
   return (
     <div className="mx-auto max-w-6xl px-4 py-8 md:px-8">
       {/* Welcome bar */}
-      <div className="flex flex-wrap items-center justify-between gap-4">
+      <div className="flex flex-wrap items-end justify-between gap-4 border-b border-border/60 pb-6">
         <div>
-          <h1 className="font-display text-2xl font-bold md:text-3xl">
-            Welcome back, {firstName} 👋
+          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-primary/80">Dashboard</p>
+          <h1 className="mt-1 font-display text-3xl font-bold tracking-tight md:text-4xl">
+            Welcome back, <span className="gradient-brand-text">{firstName}</span>
           </h1>
-          <p className="mt-1 text-sm text-muted-foreground">
+          <p className="mt-2 text-sm text-muted-foreground">
             {profile?.target_exam ? `Preparing for ${profile.target_exam}` : "Set your target exam in Settings"}
           </p>
         </div>
         <div className="flex items-center gap-3">
           <button
-            className="rounded-full border border-border bg-card p-2 text-muted-foreground transition-colors hover:text-foreground"
+            className="tap-target rounded-full border border-border/70 bg-card p-2.5 text-muted-foreground transition-colors hover:text-foreground focus-ring"
             aria-label="Notifications"
           >
             <Bell className="h-4 w-4" />
@@ -127,11 +128,12 @@ function DashboardPage() {
 
       {/* Stats */}
       <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <Stat icon={Brain} color="text-primary" label="Tests taken" value={stats.tests} loading={loading} />
-        <Stat icon={Trophy} color="text-amber" label="Average score" value={stats.avg} loading={loading} suffix={stats.tests ? "%" : ""} placeholder={!stats.tests} />
-        <Stat icon={MessageCircleQuestion} color="text-purple" label="Doubts solved" value={stats.doubts} loading={loading} />
-        <Stat icon={FileText} color="text-teal" label="Notes created" value={stats.notes} loading={loading} />
+        <StatCard icon={Brain} tone="primary" label="Tests taken" value={stats.tests} loading={loading} />
+        <StatCard icon={Trophy} tone="amber" label="Average score" value={stats.avg} loading={loading} suffix={stats.tests ? "%" : ""} placeholder={!stats.tests} />
+        <StatCard icon={MessageCircleQuestion} tone="purple" label="Doubts solved" value={stats.doubts} loading={loading} />
+        <StatCard icon={FileText} tone="teal" label="Notes created" value={stats.notes} loading={loading} />
       </div>
+
 
       {/* Quick actions */}
       <h2 className="mt-10 font-display text-lg font-semibold">Quick actions</h2>
