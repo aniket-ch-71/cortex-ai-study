@@ -6,31 +6,46 @@ import { supabase } from "@/integrations/supabase/client";
 export function Navbar() {
   const [open, setOpen] = useState(false);
   const [authed, setAuthed] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => setAuthed(!!data.session));
     const { data: sub } = supabase.auth.onAuthStateChange((_e, s) => setAuthed(!!s));
-    return () => sub.subscription.unsubscribe();
+    const onScroll = () => setScrolled(window.scrollY > 8);
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => {
+      sub.subscription.unsubscribe();
+      window.removeEventListener("scroll", onScroll);
+    };
   }, []);
 
   const links = [
     { href: "#features", label: "Features" },
     { href: "#exams", label: "Exams" },
     { href: "#pricing", label: "Pricing" },
+    { href: "#faq", label: "FAQ" },
   ];
 
   return (
-    <header className="sticky top-0 z-40 border-b border-border/60 bg-background/70 backdrop-blur-xl">
+    <header
+      className={`sticky top-0 z-40 border-b transition-colors ${
+        scrolled
+          ? "border-border/80 bg-background/85 backdrop-blur-xl"
+          : "border-transparent bg-background/40 backdrop-blur-md"
+      }`}
+    >
       <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 md:px-6">
-        <Link to="/" className="flex items-center gap-1.5 font-display text-xl font-bold tracking-tight">
-          <Zap className="h-5 w-5 text-primary" strokeWidth={2.5} aria-hidden />
+        <Link to="/" className="flex items-center gap-2 font-display text-xl font-bold tracking-tight focus-ring">
+          <span className="grid h-8 w-8 place-items-center rounded-lg bg-primary/15 text-primary ring-1 ring-inset ring-primary/30">
+            <Zap className="h-4 w-4" strokeWidth={2.5} aria-hidden />
+          </span>
           <span>
-            <span className="bg-gradient-to-br from-[#4F8EF7] to-[#00C9A7] bg-clip-text text-transparent">P</span>
+            <span className="gradient-brand-text">P</span>
             <span className="text-foreground">ARIKSHA</span>
           </span>
         </Link>
 
-        <nav className="hidden items-center gap-8 md:flex">
+        <nav className="hidden items-center gap-8 md:flex" aria-label="Primary">
           {links.map((l) => (
             <a
               key={l.href}
@@ -46,9 +61,9 @@ export function Navbar() {
           {authed ? (
             <Link
               to="/dashboard"
-              className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition hover:bg-primary/90"
+              className="rounded-lg gradient-brand-bg px-4 py-2 text-sm font-medium text-white shadow-elev-1 transition hover:shadow-glow-blue"
             >
-              Dashboard
+              Open Dashboard
             </Link>
           ) : (
             <>
@@ -61,18 +76,19 @@ export function Navbar() {
               <Link
                 to="/auth"
                 search={{ mode: "signup" }}
-                className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition hover:bg-primary/90"
+                className="rounded-lg gradient-brand-bg px-4 py-2 text-sm font-medium text-white shadow-elev-1 transition hover:shadow-glow-blue"
               >
-                Sign Up Free
+                Start Free
               </Link>
             </>
           )}
         </div>
 
         <button
-          className="rounded-md border border-border p-2 md:hidden"
+          className="tap-target rounded-lg border border-border p-2 md:hidden focus-ring"
           onClick={() => setOpen(!open)}
-          aria-label="Toggle menu"
+          aria-label={open ? "Close menu" : "Open menu"}
+          aria-expanded={open}
         >
           {open ? <X className="h-4 w-4" /> : <Menu className="h-4 w-4" />}
         </button>
@@ -86,7 +102,7 @@ export function Navbar() {
                 key={l.href}
                 href={l.href}
                 onClick={() => setOpen(false)}
-                className="block rounded-md px-3 py-2 text-sm text-muted-foreground hover:bg-card hover:text-foreground"
+                className="block rounded-md px-3 py-2.5 text-sm text-muted-foreground hover:bg-card hover:text-foreground"
               >
                 {l.label}
               </a>
@@ -94,24 +110,24 @@ export function Navbar() {
             {authed ? (
               <Link
                 to="/dashboard"
-                className="block rounded-md bg-primary px-3 py-2 text-center text-sm font-medium text-primary-foreground"
+                className="block rounded-lg gradient-brand-bg px-3 py-2.5 text-center text-sm font-medium text-white"
               >
-                Dashboard
+                Open Dashboard
               </Link>
             ) : (
               <>
                 <Link
                   to="/auth"
-                  className="block rounded-md px-3 py-2 text-sm text-muted-foreground hover:bg-card hover:text-foreground"
+                  className="block rounded-md px-3 py-2.5 text-sm text-muted-foreground hover:bg-card hover:text-foreground"
                 >
                   Login
                 </Link>
                 <Link
                   to="/auth"
                   search={{ mode: "signup" }}
-                  className="block rounded-md bg-primary px-3 py-2 text-center text-sm font-medium text-primary-foreground"
+                  className="block rounded-lg gradient-brand-bg px-3 py-2.5 text-center text-sm font-medium text-white"
                 >
-                  Sign Up Free
+                  Start Free
                 </Link>
               </>
             )}

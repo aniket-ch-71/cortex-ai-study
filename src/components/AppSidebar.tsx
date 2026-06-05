@@ -30,19 +30,35 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useProfile } from "@/hooks/useProfile";
 
-type NavItem = { title: string; url: string; icon: any; ready: boolean; gate?: "currentAffairs" };
+type NavItem = { title: string; url: string; icon: any; gate?: "currentAffairs" };
 
-const NAV: NavItem[] = [
-  { title: "Dashboard", url: "/dashboard", icon: LayoutDashboard, ready: true },
-  { title: "AI Doubt Solver", url: "/doubt-solver", icon: MessageCircleQuestion, ready: true },
-  { title: "Mock Tests", url: "/mock-test", icon: Brain, ready: true },
-  { title: "Notes Generator", url: "/notes", icon: FileText, ready: true },
-  { title: "Notes Analyser", url: "/analyser", icon: ScanSearch, ready: true },
-  { title: "Study Planner", url: "/planner", icon: CalendarRange, ready: true },
-  { title: "Current Affairs", url: "/current-affairs", icon: Newspaper, ready: true, gate: "currentAffairs" },
-  { title: "My Performance", url: "/performance", icon: TrendingUp, ready: true },
-  { title: "Refer Friends", url: "/referral", icon: Gift, ready: true },
-  { title: "Settings", url: "/settings", icon: Settings, ready: true },
+const GROUPS: { label: string; items: NavItem[] }[] = [
+  {
+    label: "Overview",
+    items: [{ title: "Dashboard", url: "/dashboard", icon: LayoutDashboard }],
+  },
+  {
+    label: "Study",
+    items: [
+      { title: "AI Doubt Solver", url: "/doubt-solver", icon: MessageCircleQuestion },
+      { title: "Mock Tests", url: "/mock-test", icon: Brain },
+      { title: "Notes Generator", url: "/notes", icon: FileText },
+      { title: "Notes Analyser", url: "/analyser", icon: ScanSearch },
+      { title: "Study Planner", url: "/planner", icon: CalendarRange },
+      { title: "Current Affairs", url: "/current-affairs", icon: Newspaper, gate: "currentAffairs" },
+    ],
+  },
+  {
+    label: "Insights",
+    items: [{ title: "My Performance", url: "/performance", icon: TrendingUp }],
+  },
+  {
+    label: "Account",
+    items: [
+      { title: "Refer Friends", url: "/referral", icon: Gift },
+      { title: "Settings", url: "/settings", icon: Settings },
+    ],
+  },
 ];
 
 export function AppSidebar() {
@@ -62,62 +78,52 @@ export function AppSidebar() {
   return (
     <Sidebar collapsible="icon">
       <SidebarHeader className="border-b border-sidebar-border">
-        <Link to="/dashboard" className="flex items-center gap-2 px-2 py-1.5">
-          <span className="grid h-7 w-7 shrink-0 place-items-center rounded-md bg-primary/15 text-primary">
-            <Zap className="h-3.5 w-3.5" strokeWidth={2.5} />
+        <Link to="/dashboard" className="flex items-center gap-2 px-2 py-2 focus-ring">
+          <span className="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-primary/15 text-primary ring-1 ring-inset ring-primary/30">
+            <Zap className="h-4 w-4" strokeWidth={2.5} />
           </span>
-          {!collapsed && <span className="font-display text-base font-bold">Pariksha</span>}
+          {!collapsed && (
+            <span className="font-display text-base font-bold tracking-tight">
+              <span className="gradient-brand-text">P</span>ariksha
+            </span>
+          )}
         </Link>
       </SidebarHeader>
 
       <SidebarContent>
-        <SidebarGroup>
-          <SidebarGroupLabel>Study</SidebarGroupLabel>
-          <SidebarGroupContent>
-            <SidebarMenu>
-              {NAV.map((item) => {
-                if (item.gate === "currentAffairs" && !showCurrentAffairs) return null;
-                const active = path === item.url;
-                if (!item.ready) {
+        {GROUPS.map((group) => (
+          <SidebarGroup key={group.label}>
+            {!collapsed && (
+              <SidebarGroupLabel className="text-[10px] font-semibold uppercase tracking-[0.16em] text-muted-foreground/70">
+                {group.label}
+              </SidebarGroupLabel>
+            )}
+            <SidebarGroupContent>
+              <SidebarMenu>
+                {group.items.map((item) => {
+                  if (item.gate === "currentAffairs" && !showCurrentAffairs) return null;
+                  const active = path === item.url;
                   return (
                     <SidebarMenuItem key={item.title}>
-                      <SidebarMenuButton
-                        className="cursor-not-allowed opacity-50"
-                        title="Coming soon"
-                      >
-                        <item.icon className="h-4 w-4" />
-                        {!collapsed && (
-                          <span className="flex w-full items-center justify-between">
-                            {item.title}
-                            <span className="rounded bg-secondary px-1.5 py-0.5 text-[10px] uppercase tracking-wider text-muted-foreground">
-                              soon
-                            </span>
-                          </span>
-                        )}
+                      <SidebarMenuButton asChild isActive={active}>
+                        <Link to={item.url} className="flex items-center gap-2.5">
+                          <item.icon className="h-4 w-4" />
+                          {!collapsed && <span>{item.title}</span>}
+                        </Link>
                       </SidebarMenuButton>
                     </SidebarMenuItem>
                   );
-                }
-                return (
-                  <SidebarMenuItem key={item.title}>
-                    <SidebarMenuButton asChild isActive={active}>
-                      <Link to={item.url} className="flex items-center gap-2">
-                        <item.icon className="h-4 w-4" />
-                        {!collapsed && <span>{item.title}</span>}
-                      </Link>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                );
-              })}
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
+                })}
+              </SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
+        ))}
       </SidebarContent>
 
       <SidebarFooter className="border-t border-sidebar-border">
         <SidebarMenu>
           <SidebarMenuItem>
-            <SidebarMenuButton onClick={onLogout}>
+            <SidebarMenuButton onClick={onLogout} aria-label="Sign out">
               <LogOut className="h-4 w-4" />
               {!collapsed && <span>Sign out</span>}
             </SidebarMenuButton>

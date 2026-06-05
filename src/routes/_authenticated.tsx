@@ -59,12 +59,14 @@ function AuthedLayout() {
 
   return (
     <SidebarProvider>
-      <div className="flex min-h-screen w-full bg-background">
+      <div className="flex min-h-dvh w-full bg-background gradient-mesh-bg">
         <AppSidebar />
         <div className="flex min-w-0 flex-1 flex-col">
-          <header className="flex h-14 items-center gap-3 border-b border-border bg-background/70 px-4 backdrop-blur-xl">
-            <SidebarTrigger />
-            <span className="font-display text-sm font-semibold">PARIKSHA</span>
+          <header className="sticky top-0 z-30 flex h-14 items-center gap-3 border-b border-border/70 bg-background/75 px-4 backdrop-blur-xl">
+            <SidebarTrigger className="focus-ring" />
+            <span className="font-display text-sm font-semibold tracking-tight">
+              <span className="gradient-brand-text">P</span>ARIKSHA
+            </span>
           </header>
           <main key={pathname} className="flex-1 overflow-auto animate-page-enter">
             <Outlet />
@@ -74,3 +76,4 @@ function AuthedLayout() {
     </SidebarProvider>
   );
 }
+
