@@ -196,6 +196,32 @@
     box-shadow: 0 0 60px -10px oklch(0.78 0.16 175 / 0.45);
   }
 
+  .shimmer {
+    background: linear-gradient(90deg, transparent 0%, oklch(1 0 0 / 0.06) 50%, transparent 100%);
+    background-size: 200% 100%;
+    animation: shimmer 1.6s ease-in-out infinite;
+  }
+  @keyframes shimmer {
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+  }
+  .animate-pulse-glow {
+    animation: pulse-glow 2.4s ease-in-out infinite;
+  }
+  @keyframes pulse-glow {
+    0%, 100% { box-shadow: 0 0 0 0 oklch(0.68 0.16 260 / 0.5); }
+    50% { box-shadow: 0 0 0 14px oklch(0.68 0.16 260 / 0); }
+  }
+  .animate-gradient {
+    background-size: 200% 200%;
+    animation: gradient-shift 8s ease infinite;
+  }
+  @keyframes gradient-shift {
+    0%, 100% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+  }
+
+
   .animate-fade-up {
     animation: fade-up 0.6s ease-out both;
   }
