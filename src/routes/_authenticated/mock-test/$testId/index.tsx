@@ -4,6 +4,7 @@ import { ArrowLeft, ArrowRight, Loader2, Clock, CheckCircle2, Flag, AlertTriangl
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
+import { recordAttemptIntelligence } from "@/lib/intelligence";
 
 export const Route = createFileRoute("/_authenticated/mock-test/$testId/")({
   head: () => ({ meta: [{ title: "Take Test — PARIKSHA" }] }),
@@ -168,6 +169,19 @@ function TakeTestPage() {
           .select("id")
           .single();
         if (error) throw error;
+
+        // Fire-and-forget intelligence capture (don't block navigation)
+        void recordAttemptIntelligence({
+          userId: u.user.id,
+          attemptId: attempt.id,
+          testId: test.id,
+          defaultSubject: test.subject,
+          questions: test.questions,
+          answers: answers as unknown as Record<string, number>,
+          marked: marked as unknown as Record<string, boolean>,
+          totalTimeSeconds: Math.floor((Date.now() - startedAt) / 1000),
+        }).catch((e) => console.error("intelligence capture failed", e));
+
         if (auto) toast.message("Time's up — test auto-submitted");
         navigate({
           to: "/mock-test/$testId/results",
