@@ -14,6 +14,7 @@ import {
   Share2,
   Download,
   Zap,
+  BookX,
 } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -303,6 +304,31 @@ function ResultsPage() {
             </div>
           )}
         </div>
+
+        {/* Mistake Book callout */}
+        {wrong + (data.total - data.score - wrong) > 0 && (
+          <Link
+            to="/mistakes"
+            className="flex items-center justify-between gap-3 rounded-xl border border-coral/30 bg-coral/5 px-5 py-4 transition hover:border-coral/60"
+          >
+            <div className="flex items-center gap-3">
+              <span className="grid h-9 w-9 place-items-center rounded-lg bg-coral/15 text-coral">
+                <BookX className="h-4 w-4" />
+              </span>
+              <div>
+                <p className="font-display text-sm font-semibold">
+                  Added {data.total - data.score} question{data.total - data.score === 1 ? "" : "s"} to your Mistake Book
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  Reattempt them to lock concepts in.
+                </p>
+              </div>
+            </div>
+            <span className="inline-flex items-center gap-1 text-sm font-medium text-coral">
+              Review <ArrowLeft className="h-3.5 w-3.5 rotate-180" />
+            </span>
+          </Link>
+        )}
 
         {/* Share Results */}
         <ShareResultsSection
