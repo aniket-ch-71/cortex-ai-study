@@ -22,6 +22,7 @@ import { useCountUp } from "@/hooks/useCountUp";
 import { getDailyQuote } from "@/lib/quotes";
 import { ReviewModal } from "@/components/ReviewModal";
 import { StatCard } from "@/components/ui-pro/StatCard";
+import { ReadinessRing } from "@/components/ReadinessRing";
 
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
@@ -209,14 +210,7 @@ function DashboardPage() {
           )}
 
           <div className="mt-6">
-            <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-              Subject progress
-            </h4>
-            <div className="mt-3 space-y-3">
-              {["Maths", "Physics", "Chemistry"].map((s) => (
-                <Progress key={s} label={s} value={0} />
-              ))}
-            </div>
+            <ReadinessRing />
           </div>
         </aside>
       </div>

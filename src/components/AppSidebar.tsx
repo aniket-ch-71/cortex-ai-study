@@ -12,6 +12,7 @@ import {
   LogOut,
   Zap,
   Gift,
+  BookX,
 } from "lucide-react";
 import {
   Sidebar,
@@ -50,7 +51,10 @@ const GROUPS: { label: string; items: NavItem[] }[] = [
   },
   {
     label: "Insights",
-    items: [{ title: "My Performance", url: "/performance", icon: TrendingUp }],
+    items: [
+      { title: "My Performance", url: "/performance", icon: TrendingUp },
+      { title: "Mistake Book", url: "/mistakes", icon: BookX },
+    ],
   },
   {
     label: "Account",

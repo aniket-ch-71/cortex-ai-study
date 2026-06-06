@@ -21,6 +21,7 @@ import { Route as AuthenticatedPlannerIndexRouteImport } from './routes/_authent
 import { Route as AuthenticatedPerformanceIndexRouteImport } from './routes/_authenticated/performance/index'
 import { Route as AuthenticatedNotesIndexRouteImport } from './routes/_authenticated/notes/index'
 import { Route as AuthenticatedMockTestIndexRouteImport } from './routes/_authenticated/mock-test/index'
+import { Route as AuthenticatedMistakesIndexRouteImport } from './routes/_authenticated/mistakes/index'
 import { Route as AuthenticatedCurrentAffairsIndexRouteImport } from './routes/_authenticated/current-affairs/index'
 import { Route as AuthenticatedAnalyserIndexRouteImport } from './routes/_authenticated/analyser/index'
 import { Route as AuthenticatedMockTestPracticeRouteImport } from './routes/_authenticated/mock-test/practice'
@@ -93,6 +94,12 @@ const AuthenticatedMockTestIndexRoute =
     path: '/mock-test/',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
+const AuthenticatedMistakesIndexRoute =
+  AuthenticatedMistakesIndexRouteImport.update({
+    id: '/mistakes/',
+    path: '/mistakes/',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
 const AuthenticatedCurrentAffairsIndexRoute =
   AuthenticatedCurrentAffairsIndexRouteImport.update({
     id: '/current-affairs/',
@@ -139,6 +146,7 @@ export interface FileRoutesByFullPath {
   '/mock-test/practice': typeof AuthenticatedMockTestPracticeRoute
   '/analyser/': typeof AuthenticatedAnalyserIndexRoute
   '/current-affairs/': typeof AuthenticatedCurrentAffairsIndexRoute
+  '/mistakes/': typeof AuthenticatedMistakesIndexRoute
   '/mock-test/': typeof AuthenticatedMockTestIndexRoute
   '/notes/': typeof AuthenticatedNotesIndexRoute
   '/performance/': typeof AuthenticatedPerformanceIndexRoute
@@ -158,6 +166,7 @@ export interface FileRoutesByTo {
   '/mock-test/practice': typeof AuthenticatedMockTestPracticeRoute
   '/analyser': typeof AuthenticatedAnalyserIndexRoute
   '/current-affairs': typeof AuthenticatedCurrentAffairsIndexRoute
+  '/mistakes': typeof AuthenticatedMistakesIndexRoute
   '/mock-test': typeof AuthenticatedMockTestIndexRoute
   '/notes': typeof AuthenticatedNotesIndexRoute
   '/performance': typeof AuthenticatedPerformanceIndexRoute
@@ -179,6 +188,7 @@ export interface FileRoutesById {
   '/_authenticated/mock-test/practice': typeof AuthenticatedMockTestPracticeRoute
   '/_authenticated/analyser/': typeof AuthenticatedAnalyserIndexRoute
   '/_authenticated/current-affairs/': typeof AuthenticatedCurrentAffairsIndexRoute
+  '/_authenticated/mistakes/': typeof AuthenticatedMistakesIndexRoute
   '/_authenticated/mock-test/': typeof AuthenticatedMockTestIndexRoute
   '/_authenticated/notes/': typeof AuthenticatedNotesIndexRoute
   '/_authenticated/performance/': typeof AuthenticatedPerformanceIndexRoute
@@ -200,6 +210,7 @@ export interface FileRouteTypes {
     | '/mock-test/practice'
     | '/analyser/'
     | '/current-affairs/'
+    | '/mistakes/'
     | '/mock-test/'
     | '/notes/'
     | '/performance/'
@@ -219,6 +230,7 @@ export interface FileRouteTypes {
     | '/mock-test/practice'
     | '/analyser'
     | '/current-affairs'
+    | '/mistakes'
     | '/mock-test'
     | '/notes'
     | '/performance'
@@ -239,6 +251,7 @@ export interface FileRouteTypes {
     | '/_authenticated/mock-test/practice'
     | '/_authenticated/analyser/'
     | '/_authenticated/current-affairs/'
+    | '/_authenticated/mistakes/'
     | '/_authenticated/mock-test/'
     | '/_authenticated/notes/'
     | '/_authenticated/performance/'
@@ -343,6 +356,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedMockTestIndexRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/mistakes/': {
+      id: '/_authenticated/mistakes/'
+      path: '/mistakes'
+      fullPath: '/mistakes/'
+      preLoaderRoute: typeof AuthenticatedMistakesIndexRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
     '/_authenticated/current-affairs/': {
       id: '/_authenticated/current-affairs/'
       path: '/current-affairs'
@@ -394,6 +414,7 @@ interface AuthenticatedRouteChildren {
   AuthenticatedMockTestPracticeRoute: typeof AuthenticatedMockTestPracticeRoute
   AuthenticatedAnalyserIndexRoute: typeof AuthenticatedAnalyserIndexRoute
   AuthenticatedCurrentAffairsIndexRoute: typeof AuthenticatedCurrentAffairsIndexRoute
+  AuthenticatedMistakesIndexRoute: typeof AuthenticatedMistakesIndexRoute
   AuthenticatedMockTestIndexRoute: typeof AuthenticatedMockTestIndexRoute
   AuthenticatedNotesIndexRoute: typeof AuthenticatedNotesIndexRoute
   AuthenticatedPerformanceIndexRoute: typeof AuthenticatedPerformanceIndexRoute
@@ -411,6 +432,7 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedMockTestPracticeRoute: AuthenticatedMockTestPracticeRoute,
   AuthenticatedAnalyserIndexRoute: AuthenticatedAnalyserIndexRoute,
   AuthenticatedCurrentAffairsIndexRoute: AuthenticatedCurrentAffairsIndexRoute,
+  AuthenticatedMistakesIndexRoute: AuthenticatedMistakesIndexRoute,
   AuthenticatedMockTestIndexRoute: AuthenticatedMockTestIndexRoute,
   AuthenticatedNotesIndexRoute: AuthenticatedNotesIndexRoute,
   AuthenticatedPerformanceIndexRoute: AuthenticatedPerformanceIndexRoute,

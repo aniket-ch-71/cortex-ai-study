@@ -35,6 +35,39 @@ export type Database = {
         }
         Relationships: []
       }
+      daily_challenges: {
+        Row: {
+          challenge_date: string
+          completed_count: number
+          created_at: string
+          id: string
+          kind: string
+          target_count: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          challenge_date?: string
+          completed_count?: number
+          created_at?: string
+          id?: string
+          kind?: string
+          target_count?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          challenge_date?: string
+          completed_count?: number
+          created_at?: string
+          id?: string
+          kind?: string
+          target_count?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       daily_usage: {
         Row: {
           ai_tests_used: number
@@ -82,6 +115,69 @@ export type Database = {
           language?: string
           question?: string
           subject?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      mistake_book: {
+        Row: {
+          chapter: string | null
+          concept: string | null
+          correct_index: number | null
+          created_at: string
+          difficulty: string | null
+          explanation: string | null
+          id: string
+          last_wrong_at: string
+          options: Json
+          question: string
+          question_id: string
+          status: string
+          subject: string | null
+          times_attempted: number
+          times_wrong: number
+          topic: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          chapter?: string | null
+          concept?: string | null
+          correct_index?: number | null
+          created_at?: string
+          difficulty?: string | null
+          explanation?: string | null
+          id?: string
+          last_wrong_at?: string
+          options?: Json
+          question: string
+          question_id: string
+          status?: string
+          subject?: string | null
+          times_attempted?: number
+          times_wrong?: number
+          topic?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          chapter?: string | null
+          concept?: string | null
+          correct_index?: number | null
+          created_at?: string
+          difficulty?: string | null
+          explanation?: string | null
+          id?: string
+          last_wrong_at?: string
+          options?: Json
+          question?: string
+          question_id?: string
+          status?: string
+          subject?: string | null
+          times_attempted?: number
+          times_wrong?: number
+          topic?: string | null
+          updated_at?: string
           user_id?: string
         }
         Relationships: []
@@ -319,6 +415,69 @@ export type Database = {
         }
         Relationships: []
       }
+      question_attempts: {
+        Row: {
+          attempt_id: string | null
+          chapter: string | null
+          concept: string | null
+          correct_index: number | null
+          created_at: string
+          difficulty: string | null
+          estimated_time_seconds: number | null
+          id: string
+          is_correct: boolean
+          is_skipped: boolean
+          marked_review: boolean
+          question_id: string
+          selected_index: number | null
+          subject: string | null
+          test_id: string | null
+          time_taken_seconds: number
+          topic: string | null
+          user_id: string
+        }
+        Insert: {
+          attempt_id?: string | null
+          chapter?: string | null
+          concept?: string | null
+          correct_index?: number | null
+          created_at?: string
+          difficulty?: string | null
+          estimated_time_seconds?: number | null
+          id?: string
+          is_correct?: boolean
+          is_skipped?: boolean
+          marked_review?: boolean
+          question_id: string
+          selected_index?: number | null
+          subject?: string | null
+          test_id?: string | null
+          time_taken_seconds?: number
+          topic?: string | null
+          user_id: string
+        }
+        Update: {
+          attempt_id?: string | null
+          chapter?: string | null
+          concept?: string | null
+          correct_index?: number | null
+          created_at?: string
+          difficulty?: string | null
+          estimated_time_seconds?: number | null
+          id?: string
+          is_correct?: boolean
+          is_skipped?: boolean
+          marked_review?: boolean
+          question_id?: string
+          selected_index?: number | null
+          subject?: string | null
+          test_id?: string | null
+          time_taken_seconds?: number
+          topic?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       question_bank: {
         Row: {
           correct_index: number
@@ -361,6 +520,36 @@ export type Database = {
           sub_exam?: string
           subject?: string
           topic?: string | null
+        }
+        Relationships: []
+      }
+      readiness_snapshots: {
+        Row: {
+          created_at: string
+          drivers: Json
+          id: string
+          overall: number
+          snapshot_date: string
+          subjects: Json
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          drivers?: Json
+          id?: string
+          overall?: number
+          snapshot_date?: string
+          subjects?: Json
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          drivers?: Json
+          id?: string
+          overall?: number
+          snapshot_date?: string
+          subjects?: Json
+          user_id?: string
         }
         Relationships: []
       }
@@ -447,6 +636,90 @@ export type Database = {
           plan?: Json
           subjects?: Json
           title?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      study_sessions: {
+        Row: {
+          created_at: string
+          duration_seconds: number
+          id: string
+          kind: string
+          meta: Json | null
+          questions_count: number
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          duration_seconds?: number
+          id?: string
+          kind: string
+          meta?: Json | null
+          questions_count?: number
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          duration_seconds?: number
+          id?: string
+          kind?: string
+          meta?: Json | null
+          questions_count?: number
+          user_id?: string
+        }
+        Relationships: []
+      }
+      topic_mastery: {
+        Row: {
+          accuracy: number
+          attempts: number
+          avg_time_seconds: number
+          chapter: string | null
+          correct: number
+          created_at: string
+          id: string
+          last_revised_at: string | null
+          last_studied_at: string | null
+          retention_score: number
+          strength: string
+          subject: string
+          topic: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          accuracy?: number
+          attempts?: number
+          avg_time_seconds?: number
+          chapter?: string | null
+          correct?: number
+          created_at?: string
+          id?: string
+          last_revised_at?: string | null
+          last_studied_at?: string | null
+          retention_score?: number
+          strength?: string
+          subject: string
+          topic: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          accuracy?: number
+          attempts?: number
+          avg_time_seconds?: number
+          chapter?: string | null
+          correct?: number
+          created_at?: string
+          id?: string
+          last_revised_at?: string | null
+          last_studied_at?: string | null
+          retention_score?: number
+          strength?: string
+          subject?: string
+          topic?: string
+          updated_at?: string
           user_id?: string
         }
         Relationships: []
