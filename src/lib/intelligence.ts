@@ -113,7 +113,7 @@ export async function recordAttemptIntelligence(input: RecordAttemptInput) {
         user_id: userId,
         question_id,
         question: q.question,
-        options: q.options as unknown as object,
+        options: q.options as unknown as never,
         correct_index: q.correct_index,
         explanation: q.explanation ?? "",
         subject: q.subject ?? defaultSubject ?? null,
