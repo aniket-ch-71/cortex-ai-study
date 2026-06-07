@@ -34,6 +34,11 @@ type Question = {
   explanation: string;
   section?: string;
   marks?: number;
+  subject?: string;
+  chapter?: string;
+  topic?: string;
+  concept?: string;
+  difficulty?: string;
 };
 
 type Pattern = {
