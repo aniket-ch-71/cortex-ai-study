@@ -217,6 +217,13 @@ function DashboardPage() {
           </div>
         </aside>
       </div>
+
+      {/* Intelligence row */}
+      <div className="mt-8 grid gap-4 lg:grid-cols-3">
+        <DailyChallengeCard />
+        <RevisionWidget />
+        <ActivityHeatmap />
+      </div>
     </div>
   );
 }
