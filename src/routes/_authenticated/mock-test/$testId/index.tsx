@@ -4,7 +4,7 @@ import { ArrowLeft, ArrowRight, Loader2, Clock, CheckCircle2, Flag, AlertTriangl
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { recordAttemptIntelligence } from "@/lib/intelligence";
+import { recordAttemptIntelligence, bumpDailyChallenge } from "@/lib/intelligence";
 
 export const Route = createFileRoute("/_authenticated/mock-test/$testId/")({
   head: () => ({ meta: [{ title: "Take Test — PARIKSHA" }] }),
