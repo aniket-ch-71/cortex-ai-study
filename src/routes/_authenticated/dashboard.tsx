@@ -226,6 +226,12 @@ function DashboardPage() {
         <RevisionWidget />
         <ActivityHeatmap />
       </div>
+
+      {/* Predictor + recommendations */}
+      <div className="mt-8 grid gap-4 lg:grid-cols-2">
+        <RankPredictor />
+        <RecommendedTopics />
+      </div>
     </div>
   );
 }
