@@ -23,6 +23,9 @@ import { getDailyQuote } from "@/lib/quotes";
 import { ReviewModal } from "@/components/ReviewModal";
 import { StatCard } from "@/components/ui-pro/StatCard";
 import { ReadinessRing } from "@/components/ReadinessRing";
+import { RevisionWidget } from "@/components/RevisionWidget";
+import { ActivityHeatmap } from "@/components/ActivityHeatmap";
+import { DailyChallengeCard } from "@/components/DailyChallengeCard";
 
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
