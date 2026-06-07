@@ -26,6 +26,8 @@ import { ReadinessRing } from "@/components/ReadinessRing";
 import { RevisionWidget } from "@/components/RevisionWidget";
 import { ActivityHeatmap } from "@/components/ActivityHeatmap";
 import { DailyChallengeCard } from "@/components/DailyChallengeCard";
+import { RankPredictor } from "@/components/RankPredictor";
+import { RecommendedTopics } from "@/components/RecommendedTopics";
 
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
@@ -223,6 +225,12 @@ function DashboardPage() {
         <DailyChallengeCard />
         <RevisionWidget />
         <ActivityHeatmap />
+      </div>
+
+      {/* Predictor + recommendations */}
+      <div className="mt-8 grid gap-4 lg:grid-cols-2">
+        <RankPredictor />
+        <RecommendedTopics />
       </div>
     </div>
   );
