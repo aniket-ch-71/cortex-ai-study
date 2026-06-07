@@ -300,3 +300,126 @@ export async function computeReadiness(userId: string): Promise<ReadinessResult>
     },
   };
 }
+
+// ---------- Revision Engine (SM-2 lite) ----------
+// retention_score decays ~5 pts per day since last_studied_at; revising resets it.
+export type RevisionItem = {
+  id: string;
+  subject: string;
+  chapter: string | null;
+  topic: string;
+  accuracy: number;
+  strength: string;
+  retention: number;
+  lastStudiedAt: string | null;
+  lastRevisedAt: string | null;
+  dueScore: number; // higher = more urgent
+};
+
+export async function getTodaysRevisions(userId: string, limit = 6): Promise<RevisionItem[]> {
+  const { data } = await supabase
+    .from("topic_mastery")
+    .select("id, subject, chapter, topic, accuracy, strength, retention_score, last_studied_at, last_revised_at")
+    .eq("user_id", userId);
+
+  const now = Date.now();
+  const items: RevisionItem[] = (data ?? []).map((r) => {
+    const lastRef = r.last_revised_at ?? r.last_studied_at;
+    const daysSince = lastRef ? (now - new Date(lastRef).getTime()) / 86_400_000 : 30;
+    const baseRet = Math.max(0, Math.min(100, Number(r.retention_score ?? 100) - Math.floor(daysSince * 5)));
+    // Weak topics + old retention are most due
+    const weakness = 100 - Number(r.accuracy ?? 0);
+    const dueScore = Math.round(weakness * 0.5 + (100 - baseRet) * 0.5);
+    return {
+      id: r.id,
+      subject: r.subject,
+      chapter: r.chapter,
+      topic: r.topic,
+      accuracy: Math.round(Number(r.accuracy ?? 0)),
+      strength: r.strength ?? "medium",
+      retention: baseRet,
+      lastStudiedAt: r.last_studied_at,
+      lastRevisedAt: r.last_revised_at,
+      dueScore,
+    };
+  });
+
+  return items.sort((a, b) => b.dueScore - a.dueScore).slice(0, limit);
+}
+
+export async function markRevised(masteryId: string) {
+  await supabase
+    .from("topic_mastery")
+    .update({ last_revised_at: new Date().toISOString(), retention_score: 100 })
+    .eq("id", masteryId);
+}
+
+// ---------- Heatmap ----------
+export type HeatCell = { date: string; count: number; minutes: number };
+
+export async function getActivityHeatmap(userId: string, weeks = 12): Promise<HeatCell[]> {
+  const days = weeks * 7;
+  const since = new Date(Date.now() - days * 86_400_000);
+  since.setHours(0, 0, 0, 0);
+  const { data } = await supabase
+    .from("study_sessions")
+    .select("created_at, duration_seconds, questions_count")
+    .eq("user_id", userId)
+    .gte("created_at", since.toISOString());
+
+  const map = new Map<string, HeatCell>();
+  for (let i = 0; i < days; i++) {
+    const d = new Date(since.getTime() + i * 86_400_000);
+    const key = d.toISOString().slice(0, 10);
+    map.set(key, { date: key, count: 0, minutes: 0 });
+  }
+  (data ?? []).forEach((r) => {
+    const key = r.created_at.slice(0, 10);
+    const cell = map.get(key);
+    if (!cell) return;
+    cell.count += r.questions_count ?? 0;
+    cell.minutes += Math.round((r.duration_seconds ?? 0) / 60);
+  });
+  return [...map.values()];
+}
+
+// ---------- Daily Challenge ----------
+export type DailyChallenge = {
+  id: string;
+  target_count: number;
+  completed_count: number;
+  kind: string;
+  challenge_date: string;
+};
+
+export async function getOrCreateDailyChallenge(userId: string): Promise<DailyChallenge | null> {
+  const today = new Date().toISOString().slice(0, 10);
+  const { data: existing } = await supabase
+    .from("daily_challenges")
+    .select("*")
+    .eq("user_id", userId)
+    .eq("challenge_date", today)
+    .maybeSingle();
+  if (existing) return existing as DailyChallenge;
+
+  const { data: created } = await supabase
+    .from("daily_challenges")
+    .insert({ user_id: userId, challenge_date: today, kind: "questions", target_count: 10 })
+    .select()
+    .maybeSingle();
+  return (created as DailyChallenge) ?? null;
+}
+
+export async function bumpDailyChallenge(userId: string, increment: number) {
+  const today = new Date().toISOString().slice(0, 10);
+  const ch = await getOrCreateDailyChallenge(userId);
+  if (!ch) return null;
+  const next = Math.min(ch.target_count, ch.completed_count + increment);
+  await supabase
+    .from("daily_challenges")
+    .update({ completed_count: next })
+    .eq("user_id", userId)
+    .eq("challenge_date", today);
+  return { ...ch, completed_count: next };
+}
+

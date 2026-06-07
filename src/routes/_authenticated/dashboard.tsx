@@ -23,6 +23,9 @@ import { getDailyQuote } from "@/lib/quotes";
 import { ReviewModal } from "@/components/ReviewModal";
 import { StatCard } from "@/components/ui-pro/StatCard";
 import { ReadinessRing } from "@/components/ReadinessRing";
+import { RevisionWidget } from "@/components/RevisionWidget";
+import { ActivityHeatmap } from "@/components/ActivityHeatmap";
+import { DailyChallengeCard } from "@/components/DailyChallengeCard";
 
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
@@ -213,6 +216,13 @@ function DashboardPage() {
             <ReadinessRing />
           </div>
         </aside>
+      </div>
+
+      {/* Intelligence row */}
+      <div className="mt-8 grid gap-4 lg:grid-cols-3">
+        <DailyChallengeCard />
+        <RevisionWidget />
+        <ActivityHeatmap />
       </div>
     </div>
   );

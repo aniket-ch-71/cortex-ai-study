@@ -4,7 +4,7 @@ import { ArrowLeft, ArrowRight, Loader2, Clock, CheckCircle2, Flag, AlertTriangl
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { recordAttemptIntelligence } from "@/lib/intelligence";
+import { recordAttemptIntelligence, bumpDailyChallenge } from "@/lib/intelligence";
 
 export const Route = createFileRoute("/_authenticated/mock-test/$testId/")({
   head: () => ({ meta: [{ title: "Take Test — PARIKSHA" }] }),
@@ -181,6 +181,12 @@ function TakeTestPage() {
           marked: marked as unknown as Record<string, boolean>,
           totalTimeSeconds: Math.floor((Date.now() - startedAt) / 1000),
         }).catch((e) => console.error("intelligence capture failed", e));
+
+        // Bump today's challenge by answered question count
+        const answeredCount = Object.keys(answers).length;
+        if (answeredCount > 0) {
+          void bumpDailyChallenge(u.user.id, answeredCount).catch(() => {});
+        }
 
         if (auto) toast.message("Time's up — test auto-submitted");
         navigate({
