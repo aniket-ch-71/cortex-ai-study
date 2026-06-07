@@ -408,8 +408,34 @@ function ResultsPage() {
                     <p className="font-medium">
                       <span className="text-muted-foreground">Q{i + 1}.</span> {q.question}
                     </p>
-                    {q.section && (
-                      <p className="mt-1 text-xs text-muted-foreground">{q.section}</p>
+                    {(q.section || q.chapter || q.topic || q.concept || q.difficulty) && (
+                      <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
+                        {q.section && (
+                          <span className="rounded-full bg-secondary px-2 py-0.5 text-[10px] font-medium text-muted-foreground">
+                            {q.section}
+                          </span>
+                        )}
+                        {q.chapter && (
+                          <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-medium text-primary ring-1 ring-inset ring-primary/20">
+                            {q.chapter}
+                          </span>
+                        )}
+                        {q.topic && q.topic !== q.section && (
+                          <span className="rounded-full bg-teal/10 px-2 py-0.5 text-[10px] font-medium text-teal ring-1 ring-inset ring-teal/20">
+                            {q.topic}
+                          </span>
+                        )}
+                        {q.concept && (
+                          <span className="rounded-full bg-purple/10 px-2 py-0.5 text-[10px] font-medium text-purple ring-1 ring-inset ring-purple/20">
+                            {q.concept}
+                          </span>
+                        )}
+                        {q.difficulty && (
+                          <span className="rounded-full bg-amber/10 px-2 py-0.5 text-[10px] font-medium text-amber ring-1 ring-inset ring-amber/20 capitalize">
+                            {q.difficulty}
+                          </span>
+                        )}
+                      </div>
                     )}
                     <ul className="mt-3 space-y-1.5 text-sm">
                       {q.options.map((opt, oi) => {
