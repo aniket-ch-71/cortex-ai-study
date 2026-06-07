@@ -182,6 +182,12 @@ function TakeTestPage() {
           totalTimeSeconds: Math.floor((Date.now() - startedAt) / 1000),
         }).catch((e) => console.error("intelligence capture failed", e));
 
+        // Bump today's challenge by answered question count
+        const answeredCount = Object.keys(answers).length;
+        if (answeredCount > 0) {
+          void bumpDailyChallenge(u.user.id, answeredCount).catch(() => {});
+        }
+
         if (auto) toast.message("Time's up — test auto-submitted");
         navigate({
           to: "/mock-test/$testId/results",
