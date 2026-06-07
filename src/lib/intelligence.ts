@@ -423,3 +423,145 @@ export async function bumpDailyChallenge(userId: string, increment: number) {
   return { ...ch, completed_count: next };
 }
 
+// ---------- Rank Predictor ----------
+// Uses readiness + mock avg to map to percentile bands per exam category.
+export type RankPrediction = {
+  exam: string;
+  percentile: number; // 0..100
+  band: string; // e.g. "Top 5%"
+  estimatedRankRange: string; // e.g. "1,200 – 3,500"
+  confidence: "low" | "medium" | "high";
+  insight: string;
+};
+
+// Seeded approx. candidate pools per exam (typical recent cycles)
+const EXAM_POOLS: Record<string, number> = {
+  JEE: 1_200_000,
+  NEET: 2_000_000,
+  UPSC: 1_000_000,
+  SSC: 3_000_000,
+  Bank: 2_500_000,
+  Railway: 12_000_000,
+  GATE: 800_000,
+  CAT: 300_000,
+  "NDA/CDS": 500_000,
+  Board: 1_500_000,
+};
+
+function poolFor(exam: string): number {
+  const k = Object.keys(EXAM_POOLS).find((e) => exam.toUpperCase().includes(e.toUpperCase()));
+  return k ? EXAM_POOLS[k] : 500_000;
+}
+
+export async function predictRank(userId: string, targetExam: string): Promise<RankPrediction> {
+  const readiness = await computeReadiness(userId);
+  const { data: mocks } = await supabase
+    .from("mock_attempts")
+    .select("score, total")
+    .eq("user_id", userId)
+    .order("completed_at", { ascending: false })
+    .limit(10);
+  const m = mocks ?? [];
+  const mockPct = m.length
+    ? m.reduce((s, r) => s + (r.total ? (r.score / r.total) * 100 : 0), 0) / m.length
+    : 0;
+
+  // Blend: readiness 60% + mock 40%
+  const composite = Math.round(readiness.overall * 0.6 + mockPct * 0.4);
+  // Map composite (0..100) to percentile via a soft curve.
+  // 50 → 50th, 70 → 85th, 80 → 95th, 90 → 99th
+  const percentile = Math.min(
+    99.5,
+    Math.max(1, Math.round(100 - Math.pow(1 - composite / 100, 1.8) * 100)),
+  );
+
+  const pool = poolFor(targetExam || "");
+  const topFraction = (100 - percentile) / 100;
+  const rankCenter = Math.max(1, Math.round(pool * topFraction));
+  const lo = Math.max(1, Math.round(rankCenter * 0.7));
+  const hi = Math.round(rankCenter * 1.3);
+
+  const band =
+    percentile >= 99
+      ? "Top 1%"
+      : percentile >= 95
+        ? "Top 5%"
+        : percentile >= 90
+          ? "Top 10%"
+          : percentile >= 75
+            ? "Top 25%"
+            : percentile >= 50
+              ? "Top 50%"
+              : "Below median";
+
+  const confidence: RankPrediction["confidence"] =
+    m.length >= 5 ? "high" : m.length >= 2 ? "medium" : "low";
+
+  const insight =
+    composite >= 80
+      ? "Exam-ready. Maintain mock frequency and refine weak chapters."
+      : composite >= 60
+        ? "On track. Push accuracy on weak topics to climb percentile."
+        : composite >= 40
+          ? "Building up. Daily revision + targeted practice will move you fast."
+          : "Foundations first — focus on coverage and consistency.";
+
+  return {
+    exam: targetExam || "your exam",
+    percentile,
+    band,
+    estimatedRankRange: `${lo.toLocaleString()} – ${hi.toLocaleString()}`,
+    confidence,
+    insight,
+  };
+}
+
+// ---------- Adaptive Recommendation Engine ----------
+export type RecommendedTopic = {
+  subject: string;
+  topic: string;
+  chapter: string | null;
+  reason: "weak" | "due-revision" | "never-attempted" | "high-weightage";
+  accuracy: number;
+  priority: number; // higher = recommend sooner
+};
+
+export async function recommendTopics(
+  userId: string,
+  limit = 6,
+): Promise<RecommendedTopic[]> {
+  const { data: mastery } = await supabase
+    .from("topic_mastery")
+    .select("subject, chapter, topic, accuracy, strength, last_revised_at, last_studied_at, retention_score")
+    .eq("user_id", userId);
+
+  const m = mastery ?? [];
+  const now = Date.now();
+  const items: RecommendedTopic[] = m.map((r) => {
+    const acc = Number(r.accuracy ?? 0);
+    const lastRef = r.last_revised_at ?? r.last_studied_at;
+    const daysSince = lastRef ? (now - new Date(lastRef).getTime()) / 86_400_000 : 30;
+    const retention = Math.max(0, Number(r.retention_score ?? 100) - Math.floor(daysSince * 5));
+    const isDue = retention < 60;
+    const isWeak = (r.strength ?? "medium") === "weak" || acc < 50;
+    const reason: RecommendedTopic["reason"] = isWeak
+      ? "weak"
+      : isDue
+        ? "due-revision"
+        : "high-weightage";
+    // Priority: weakness + decay
+    const priority = Math.round((100 - acc) * 0.6 + (100 - retention) * 0.4);
+    return {
+      subject: r.subject,
+      topic: r.topic,
+      chapter: r.chapter ?? null,
+      reason,
+      accuracy: Math.round(acc),
+      priority,
+    };
+  });
+
+  return items.sort((a, b) => b.priority - a.priority).slice(0, limit);
+}
+
+
