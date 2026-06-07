@@ -50,6 +50,7 @@ serve(async (req) => {
       `Match the real syllabus, style, and difficulty pattern of ${exam || "the exam"} for the ${subject} section. ` +
       `Each question must have exactly 4 options and one correct answer. ` +
       `Provide a concise explanation for each correct answer. ` +
+      `For every question, also include: chapter (syllabus chapter), topic (specific topic within chapter), concept (core idea tested), difficulty (easy|medium|hard), and estimated_time_seconds (20-180). ` +
       `Write all content in ${lang}. ` +
       `Use the submit_test tool to return the questions.`;
 
