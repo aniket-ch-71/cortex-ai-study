@@ -50,7 +50,12 @@ serve(async (req) => {
       `Match the real syllabus, style, and difficulty pattern of ${exam || "the exam"} for the ${subject} section. ` +
       `Each question must have exactly 4 options and one correct answer. ` +
       `Provide a concise explanation for each correct answer. ` +
-      `For every question, also include: chapter (syllabus chapter), topic (specific topic within chapter), concept (core idea tested), difficulty (easy|medium|hard), and estimated_time_seconds (20-180). ` +
+      `For every question, also include this intelligence metadata: ` +
+      `chapter (syllabus chapter), topic (specific topic), concept (core idea tested), ` +
+      `difficulty (easy|medium|hard), estimated_time_seconds (20-180), ` +
+      `weightage (low|medium|high — how heavily this chapter is weighted in ${exam || "the exam"}), ` +
+      `exam_frequency (low|medium|high|very_high — how often this concept appears in past papers), ` +
+      `concept_importance (supporting|important|core — how central this concept is to the syllabus). ` +
       `Write all content in ${lang}. ` +
       `Use the submit_test tool to return the questions.`;
 
@@ -83,6 +88,9 @@ serve(async (req) => {
                   concept: { type: "string", description: "Core concept being tested" },
                   difficulty: { type: "string", enum: ["easy", "medium", "hard"] },
                   estimated_time_seconds: { type: "integer", description: "Suggested seconds to solve (20-180)" },
+                  weightage: { type: "string", enum: ["low", "medium", "high"], description: "Chapter weightage in the exam" },
+                  exam_frequency: { type: "string", enum: ["low", "medium", "high", "very_high"], description: "How often this concept appears in past papers" },
+                  concept_importance: { type: "string", enum: ["supporting", "important", "core"], description: "Centrality of the concept in the syllabus" },
                 },
                 required: ["question", "options", "correct_index", "explanation", "chapter", "topic", "difficulty"],
               },
