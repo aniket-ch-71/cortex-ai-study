@@ -167,6 +167,39 @@ function SettingsPage() {
       </section>
 
       <section className="mt-6 rounded-xl border border-border bg-card p-6">
+        <h2 className="font-display text-lg font-semibold">Exam goal</h2>
+        <p className="mt-1 text-sm text-muted-foreground">
+          Set your target outcome so PARIKSHA can personalize recommendations.
+        </p>
+        <div className="mt-4 grid gap-4 md:grid-cols-3">
+          <Field label="Goal type">
+            <Select value={goalType} onValueChange={setGoalType}>
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="percentile">Percentile</SelectItem>
+                <SelectItem value="marks">Marks</SelectItem>
+                <SelectItem value="rank">Rank ≤</SelectItem>
+                <SelectItem value="qualify">Qualify exam</SelectItem>
+              </SelectContent>
+            </Select>
+          </Field>
+          <Field label="Target value">
+            <Input
+              type="number"
+              value={goalValue}
+              onChange={(e) => setGoalValue(e.target.value)}
+              placeholder={goalType === "percentile" ? "e.g. 99" : goalType === "marks" ? "e.g. 650" : "e.g. 1000"}
+              disabled={goalType === "qualify"}
+            />
+          </Field>
+          <Field label="Exam date">
+            <Input type="date" value={examDate} onChange={(e) => setExamDate(e.target.value)} />
+          </Field>
+        </div>
+        <p className="mt-3 text-xs text-muted-foreground">Click "Save profile" above to apply.</p>
+      </section>
+
+      <section className="mt-6 rounded-xl border border-border bg-card p-6">
         <h2 className="font-display text-lg font-semibold">Preferences</h2>
         <div className="mt-4 flex items-center justify-between gap-4">
           <div>
