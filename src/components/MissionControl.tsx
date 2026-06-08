@@ -6,8 +6,14 @@ import {
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { getMissionControl, type MissionControl as MC } from "@/lib/intelligence";
-import { weakTopicLink, revisionDrillLink, smartPracticeLink } from "@/lib/coach-actions";
 import { cn } from "@/lib/utils";
+
+function practiceHref(params: Record<string, string | number>): string {
+  const sp = new URLSearchParams();
+  for (const [k, v] of Object.entries(params)) sp.set(k, String(v));
+  sp.set("autostart", "1");
+  return `/mock-test?${sp.toString()}`;
+}
 
 export function MissionControl() {
   const [data, setData] = useState<MC | null>(null);
@@ -43,13 +49,12 @@ export function MissionControl() {
     ? Math.round((data.challenge.completed_count / Math.max(1, data.challenge.target_count)) * 100)
     : 0;
 
-  // Recommended next action — single most important click
   const reco = data.recommended;
-  const recoLink = reco
-    ? weakTopicLink(reco.subject, reco.topic)
+  const recoHref = reco
+    ? practiceHref({ subject: reco.subject, topic: reco.topic, count: 10, mode: "practice" })
     : data.weakest
-      ? weakTopicLink(data.weakest.subject, data.weakest.topic)
-      : smartPracticeLink();
+      ? practiceHref({ subject: data.weakest.subject, topic: data.weakest.topic, count: 10, mode: "practice" })
+      : practiceHref({ mode: "smart", count: 10 });
   const recoLabel = reco
     ? `Practice 10 ${reco.topic} questions`
     : data.weakest
@@ -58,7 +63,6 @@ export function MissionControl() {
 
   return (
     <section className="mt-6">
-      {/* Header */}
       <div className="mb-3 flex items-end justify-between gap-3">
         <div>
           <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-primary/80">
@@ -83,9 +87,8 @@ export function MissionControl() {
       </div>
 
       {/* Primary action card */}
-      <Link
-        to={recoLink.to}
-        search={recoLink.search}
+      <a
+        href={recoHref}
         className="group block rounded-2xl border border-primary/40 bg-gradient-to-br from-primary/15 via-primary/5 to-card p-6 shadow-elev-1 transition hover:border-primary/70 hover:shadow-elev-2"
       >
         <div className="flex flex-wrap items-center justify-between gap-3">
@@ -106,45 +109,36 @@ export function MissionControl() {
             <Sparkles className="h-3.5 w-3.5" /> Start now <ArrowRight className="h-4 w-4" />
           </span>
         </div>
-      </Link>
+      </a>
 
-      {/* Mission tiles */}
       <div className="mt-4 grid grid-cols-2 gap-3 md:grid-cols-4">
         <Tile
-          icon={Flame}
-          tone="amber"
-          label="Streak"
+          icon={Flame} tone="amber" label="Streak"
           value={`${data.streak}d`}
           sub={data.bestStreak > data.streak ? `Best ${data.bestStreak}` : "Keep going"}
           action={data.challenge && data.challenge.completed_count < data.challenge.target_count
-            ? { label: "Protect today", to: smartPracticeLink() }
+            ? { label: "Protect today", href: practiceHref({ mode: "smart", count: 5 }) }
             : null}
         />
         <Tile
-          icon={Repeat}
-          tone="purple"
-          label="Revision due"
+          icon={Repeat} tone="purple" label="Revision due"
           value={String(data.revisionDueCount)}
           sub={data.topRevision ? `Top: ${data.topRevision.topic}` : "All caught up"}
           action={data.topRevision
-            ? { label: "Revise now", to: revisionDrillLink(data.topRevision.subject, data.topRevision.topic) }
+            ? { label: "Revise now", href: practiceHref({ subject: data.topRevision.subject, topic: data.topRevision.topic, count: 5, mode: "revision" }) }
             : null}
         />
         <Tile
-          icon={Target}
-          tone="teal"
-          label="Daily challenge"
+          icon={Target} tone="teal" label="Daily challenge"
           value={data.challenge ? `${data.challenge.completed_count}/${data.challenge.target_count}` : "0/0"}
           sub={`${challengePct}% complete`}
           progress={challengePct}
           action={data.challenge && data.challenge.completed_count < data.challenge.target_count
-            ? { label: "Continue", to: smartPracticeLink() }
+            ? { label: "Continue", href: practiceHref({ mode: "smart", count: 5 }) }
             : null}
         />
         <Tile
-          icon={TrendingUp}
-          tone="primary"
-          label="Readiness"
+          icon={TrendingUp} tone="primary" label="Readiness"
           value={`${data.readiness.overall}%`}
           sub={
             data.readinessDelta == null
@@ -153,41 +147,33 @@ export function MissionControl() {
                 ? `Up ${data.readinessDelta} pts`
                 : `Down ${Math.abs(data.readinessDelta)} pts`
           }
-          action={{ label: "View drivers", to: { to: "/performance", search: {} } }}
+          link={{ label: "View drivers", to: "/performance" }}
         />
         <Tile
-          icon={AlertTriangle}
-          tone="coral"
-          label="Weakest topic"
+          icon={AlertTriangle} tone="coral" label="Weakest topic"
           value={data.weakest ? `${data.weakest.confidence}%` : "—"}
           sub={data.weakest ? data.weakest.topic : "Take a test to track"}
           action={data.weakest
-            ? { label: "Practice 10 Qs", to: weakTopicLink(data.weakest.subject, data.weakest.topic) }
+            ? { label: "Practice 10 Qs", href: practiceHref({ subject: data.weakest.subject, topic: data.weakest.topic, count: 10, mode: "practice" }) }
             : null}
         />
         <Tile
-          icon={Trophy}
-          tone="amber"
-          label="Exam goal"
+          icon={Trophy} tone="amber" label="Exam goal"
           value={data.examGoalLabel ?? "Set goal"}
           sub={data.examGoalGap ?? "Open settings to set"}
-          action={{ label: "Edit goal", to: { to: "/settings", search: {} } }}
+          link={{ label: "Edit goal", to: "/settings" }}
         />
         <Tile
-          icon={CalendarDays}
-          tone="purple"
-          label="Exam countdown"
+          icon={CalendarDays} tone="purple" label="Exam countdown"
           value={data.daysToExam != null ? `${data.daysToExam}d` : "—"}
           sub={data.examDate ? new Date(data.examDate).toDateString() : "Add exam date"}
-          action={{ label: "Open planner", to: { to: "/planner", search: {} } }}
+          link={{ label: "Open planner", to: "/planner" }}
         />
         <Tile
-          icon={Sparkles}
-          tone="primary"
-          label="Smart practice"
+          icon={Sparkles} tone="primary" label="Smart practice"
           value="10 Qs"
           sub="From your weakest concepts"
-          action={{ label: "Start drill", to: smartPracticeLink() }}
+          action={{ label: "Start drill", href: practiceHref({ mode: "smart", count: 10 }) }}
         />
       </div>
     </section>
@@ -202,9 +188,12 @@ const TONE: Record<Tone, string> = {
   amber: "text-amber bg-amber/10 ring-amber/20",
   coral: "text-coral bg-coral/10 ring-coral/20",
 };
+const BAR_TONE: Record<Tone, string> = {
+  primary: "bg-primary", teal: "bg-teal", purple: "bg-purple", amber: "bg-amber", coral: "bg-coral",
+};
 
 function Tile({
-  icon: Icon, tone, label, value, sub, action, progress,
+  icon: Icon, tone, label, value, sub, action, link, progress,
 }: {
   icon: React.ComponentType<{ className?: string }>;
   tone: Tone;
@@ -212,8 +201,8 @@ function Tile({
   value: string;
   sub: string;
   progress?: number;
-  // action.to is the result of practiceLink() / a static path object
-  action: { label: string; to: { to: string; search: Record<string, string> } } | null;
+  action?: { label: string; href: string } | null;
+  link?: { label: string; to: "/performance" | "/settings" | "/planner" | "/mistakes" } | null;
 }) {
   return (
     <div className="group relative flex flex-col rounded-xl border border-border/70 bg-card p-4 transition hover:border-primary/40 hover:shadow-elev-1">
@@ -225,23 +214,29 @@ function Tile({
           {label}
         </span>
       </div>
-      <div className="mt-3 font-display text-xl font-bold tracking-tight tabular-nums">{value}</div>
+      <div className="mt-3 line-clamp-1 font-display text-xl font-bold tracking-tight tabular-nums">
+        {value}
+      </div>
       <div className="mt-0.5 line-clamp-1 text-[11px] text-muted-foreground">{sub}</div>
       {progress != null && (
         <div className="mt-2 h-1 overflow-hidden rounded-full bg-secondary">
-          <div
-            className={cn("h-full transition-all", TONE[tone].split(" ")[0].replace("text-", "bg-"))}
-            style={{ width: `${Math.min(100, progress)}%` }}
-          />
+          <div className={cn("h-full transition-all", BAR_TONE[tone])} style={{ width: `${Math.min(100, progress)}%` }} />
         </div>
       )}
       {action && (
-        <Link
-          to={action.to.to as never}
-          search={action.to.search as never}
+        <a
+          href={action.href}
           className="mt-3 inline-flex items-center gap-1 text-[11px] font-semibold text-primary transition hover:gap-2"
         >
           {action.label} <ArrowRight className="h-3 w-3" />
+        </a>
+      )}
+      {link && (
+        <Link
+          to={link.to}
+          className="mt-3 inline-flex items-center gap-1 text-[11px] font-semibold text-primary transition hover:gap-2"
+        >
+          {link.label} <ArrowRight className="h-3 w-3" />
         </Link>
       )}
     </div>
