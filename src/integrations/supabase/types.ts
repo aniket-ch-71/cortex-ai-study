@@ -351,6 +351,9 @@ export type Database = {
           best_streak: number
           city: string | null
           created_at: string
+          exam_date: string | null
+          exam_goal_type: string | null
+          exam_goal_value: number | null
           exams: Json
           full_name: string | null
           has_reviewed: boolean
@@ -365,6 +368,8 @@ export type Database = {
           show_current_affairs: boolean
           state: string | null
           streak: number
+          streak_freeze_week_start: string | null
+          streak_freezes_used_week: number
           target_exam: string | null
           updated_at: string
           username: string | null
@@ -373,6 +378,9 @@ export type Database = {
           best_streak?: number
           city?: string | null
           created_at?: string
+          exam_date?: string | null
+          exam_goal_type?: string | null
+          exam_goal_value?: number | null
           exams?: Json
           full_name?: string | null
           has_reviewed?: boolean
@@ -387,6 +395,8 @@ export type Database = {
           show_current_affairs?: boolean
           state?: string | null
           streak?: number
+          streak_freeze_week_start?: string | null
+          streak_freezes_used_week?: number
           target_exam?: string | null
           updated_at?: string
           username?: string | null
@@ -395,6 +405,9 @@ export type Database = {
           best_streak?: number
           city?: string | null
           created_at?: string
+          exam_date?: string | null
+          exam_goal_type?: string | null
+          exam_goal_value?: number | null
           exams?: Json
           full_name?: string | null
           has_reviewed?: boolean
@@ -409,6 +422,8 @@ export type Database = {
           show_current_affairs?: boolean
           state?: string | null
           streak?: number
+          streak_freeze_week_start?: string | null
+          streak_freezes_used_week?: number
           target_exam?: string | null
           updated_at?: string
           username?: string | null
@@ -420,10 +435,12 @@ export type Database = {
           attempt_id: string | null
           chapter: string | null
           concept: string | null
+          concept_importance: string | null
           correct_index: number | null
           created_at: string
           difficulty: string | null
           estimated_time_seconds: number | null
+          exam_frequency: string | null
           id: string
           is_correct: boolean
           is_skipped: boolean
@@ -435,15 +452,18 @@ export type Database = {
           time_taken_seconds: number
           topic: string | null
           user_id: string
+          weightage: string | null
         }
         Insert: {
           attempt_id?: string | null
           chapter?: string | null
           concept?: string | null
+          concept_importance?: string | null
           correct_index?: number | null
           created_at?: string
           difficulty?: string | null
           estimated_time_seconds?: number | null
+          exam_frequency?: string | null
           id?: string
           is_correct?: boolean
           is_skipped?: boolean
@@ -455,15 +475,18 @@ export type Database = {
           time_taken_seconds?: number
           topic?: string | null
           user_id: string
+          weightage?: string | null
         }
         Update: {
           attempt_id?: string | null
           chapter?: string | null
           concept?: string | null
+          concept_importance?: string | null
           correct_index?: number | null
           created_at?: string
           difficulty?: string | null
           estimated_time_seconds?: number | null
+          exam_frequency?: string | null
           id?: string
           is_correct?: boolean
           is_skipped?: boolean
@@ -475,6 +498,7 @@ export type Database = {
           time_taken_seconds?: number
           topic?: string | null
           user_id?: string
+          weightage?: string | null
         }
         Relationships: []
       }
@@ -676,6 +700,7 @@ export type Database = {
           attempts: number
           avg_time_seconds: number
           chapter: string | null
+          confidence_score: number
           correct: number
           created_at: string
           id: string
@@ -693,6 +718,7 @@ export type Database = {
           attempts?: number
           avg_time_seconds?: number
           chapter?: string | null
+          confidence_score?: number
           correct?: number
           created_at?: string
           id?: string
@@ -710,6 +736,7 @@ export type Database = {
           attempts?: number
           avg_time_seconds?: number
           chapter?: string | null
+          confidence_score?: number
           correct?: number
           created_at?: string
           id?: string
@@ -742,6 +769,48 @@ export type Database = {
           id?: string
           role?: Database["public"]["Enums"]["app_role"]
           user_id?: string
+        }
+        Relationships: []
+      }
+      weekly_goals: {
+        Row: {
+          completed_minutes: number
+          completed_mocks: number
+          completed_questions: number
+          created_at: string
+          id: string
+          target_minutes: number
+          target_mocks: number
+          target_questions: number
+          updated_at: string
+          user_id: string
+          week_start: string
+        }
+        Insert: {
+          completed_minutes?: number
+          completed_mocks?: number
+          completed_questions?: number
+          created_at?: string
+          id?: string
+          target_minutes?: number
+          target_mocks?: number
+          target_questions?: number
+          updated_at?: string
+          user_id: string
+          week_start: string
+        }
+        Update: {
+          completed_minutes?: number
+          completed_mocks?: number
+          completed_questions?: number
+          created_at?: string
+          id?: string
+          target_minutes?: number
+          target_mocks?: number
+          target_questions?: number
+          updated_at?: string
+          user_id?: string
+          week_start?: string
         }
         Relationships: []
       }
