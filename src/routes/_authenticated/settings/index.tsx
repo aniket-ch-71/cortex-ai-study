@@ -73,7 +73,15 @@ function SettingsPage() {
     if (!u.user) return setSaving(false);
     const { error } = await supabase
       .from("profiles")
-      .update({ full_name: fullName, target_exam: targetExam, language, show_current_affairs: showCA } as any)
+      .update({
+        full_name: fullName,
+        target_exam: targetExam,
+        language,
+        show_current_affairs: showCA,
+        exam_goal_type: goalType || null,
+        exam_goal_value: goalValue ? Number(goalValue) : null,
+        exam_date: examDate || null,
+      } as any)
       .eq("id", u.user.id);
     setSaving(false);
     if (error) return toast.error(error.message);
