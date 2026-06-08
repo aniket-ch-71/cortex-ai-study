@@ -121,6 +121,9 @@ function DashboardPage() {
         </div>
       </div>
 
+      {/* Mission Control — primary student experience */}
+      <MissionControl />
+
       <StreakCard profile={profile} />
 
       {/* Daily quote */}
