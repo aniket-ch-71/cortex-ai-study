@@ -32,6 +32,9 @@ function SettingsPage() {
   const [doubtsToday, setDoubtsToday] = useState(0);
   const [email, setEmail] = useState("");
   const [newPw, setNewPw] = useState("");
+  const [goalType, setGoalType] = useState<string>("percentile");
+  const [goalValue, setGoalValue] = useState<string>("");
+  const [examDate, setExamDate] = useState<string>("");
 
   useEffect(() => {
     (async () => {
