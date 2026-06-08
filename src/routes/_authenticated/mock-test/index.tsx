@@ -309,6 +309,22 @@ function MockTestIndex() {
         </TabsList>
 
         <TabsContent value="ai" className="mt-6">
+          {/* Smart Practice — one-tap drill from weakest concepts */}
+          <a
+            href="/mock-test?mode=smart&count=10&autostart=1"
+            className="mb-5 flex items-center justify-between gap-3 rounded-xl border border-primary/40 bg-gradient-to-r from-primary/15 via-primary/5 to-card p-4 transition hover:border-primary/70"
+          >
+            <div>
+              <p className="font-display text-sm font-semibold">⚡ Practice What Matters Most</p>
+              <p className="text-xs text-muted-foreground">
+                10 questions from your weakest topics, frequent mistakes, and high-weightage chapters.
+              </p>
+            </div>
+            <span className="shrink-0 rounded-md bg-primary px-3 py-2 text-xs font-semibold text-primary-foreground">
+              Smart Practice →
+            </span>
+          </a>
+
           {/* AI Generator */}
           <section className="rounded-xl border border-border bg-card p-6">
             <div className="flex flex-wrap items-center justify-between gap-3">
