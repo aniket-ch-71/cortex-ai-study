@@ -57,6 +57,10 @@ function SettingsPage() {
           );
           if (cat) setCategory(cat);
         }
+        const p = prof as any;
+        if (p.exam_goal_type) setGoalType(p.exam_goal_type);
+        if (p.exam_goal_value != null) setGoalValue(String(p.exam_goal_value));
+        if (p.exam_date) setExamDate(p.exam_date);
       }
       setDoubtsToday(usage?.doubts_used ?? 0);
       setLoading(false);
