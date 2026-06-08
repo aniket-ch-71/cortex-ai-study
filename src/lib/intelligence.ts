@@ -16,6 +16,9 @@ export type AttemptQuestion = {
   concept?: string;
   difficulty?: string;
   estimated_time_seconds?: number;
+  weightage?: string;
+  exam_frequency?: string;
+  concept_importance?: string;
 };
 
 export type RecordAttemptInput = {
