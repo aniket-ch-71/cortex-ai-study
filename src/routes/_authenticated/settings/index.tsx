@@ -32,6 +32,9 @@ function SettingsPage() {
   const [doubtsToday, setDoubtsToday] = useState(0);
   const [email, setEmail] = useState("");
   const [newPw, setNewPw] = useState("");
+  const [goalType, setGoalType] = useState<string>("percentile");
+  const [goalValue, setGoalValue] = useState<string>("");
+  const [examDate, setExamDate] = useState<string>("");
 
   useEffect(() => {
     (async () => {
@@ -54,6 +57,10 @@ function SettingsPage() {
           );
           if (cat) setCategory(cat);
         }
+        const p = prof as any;
+        if (p.exam_goal_type) setGoalType(p.exam_goal_type);
+        if (p.exam_goal_value != null) setGoalValue(String(p.exam_goal_value));
+        if (p.exam_date) setExamDate(p.exam_date);
       }
       setDoubtsToday(usage?.doubts_used ?? 0);
       setLoading(false);
@@ -66,7 +73,15 @@ function SettingsPage() {
     if (!u.user) return setSaving(false);
     const { error } = await supabase
       .from("profiles")
-      .update({ full_name: fullName, target_exam: targetExam, language, show_current_affairs: showCA } as any)
+      .update({
+        full_name: fullName,
+        target_exam: targetExam,
+        language,
+        show_current_affairs: showCA,
+        exam_goal_type: goalType || null,
+        exam_goal_value: goalValue ? Number(goalValue) : null,
+        exam_date: examDate || null,
+      } as any)
       .eq("id", u.user.id);
     setSaving(false);
     if (error) return toast.error(error.message);
@@ -149,6 +164,39 @@ function SettingsPage() {
         <Button onClick={onSave} disabled={saving} className="mt-6">
           {saving ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Saving…</> : <><Save className="mr-2 h-4 w-4" /> Save profile</>}
         </Button>
+      </section>
+
+      <section className="mt-6 rounded-xl border border-border bg-card p-6">
+        <h2 className="font-display text-lg font-semibold">Exam goal</h2>
+        <p className="mt-1 text-sm text-muted-foreground">
+          Set your target outcome so PARIKSHA can personalize recommendations.
+        </p>
+        <div className="mt-4 grid gap-4 md:grid-cols-3">
+          <Field label="Goal type">
+            <Select value={goalType} onValueChange={setGoalType}>
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="percentile">Percentile</SelectItem>
+                <SelectItem value="marks">Marks</SelectItem>
+                <SelectItem value="rank">Rank ≤</SelectItem>
+                <SelectItem value="qualify">Qualify exam</SelectItem>
+              </SelectContent>
+            </Select>
+          </Field>
+          <Field label="Target value">
+            <Input
+              type="number"
+              value={goalValue}
+              onChange={(e) => setGoalValue(e.target.value)}
+              placeholder={goalType === "percentile" ? "e.g. 99" : goalType === "marks" ? "e.g. 650" : "e.g. 1000"}
+              disabled={goalType === "qualify"}
+            />
+          </Field>
+          <Field label="Exam date">
+            <Input type="date" value={examDate} onChange={(e) => setExamDate(e.target.value)} />
+          </Field>
+        </div>
+        <p className="mt-3 text-xs text-muted-foreground">Click "Save profile" above to apply.</p>
       </section>
 
       <section className="mt-6 rounded-xl border border-border bg-card p-6">

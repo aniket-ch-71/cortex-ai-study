@@ -16,6 +16,9 @@ export type AttemptQuestion = {
   concept?: string;
   difficulty?: string;
   estimated_time_seconds?: number;
+  weightage?: string;
+  exam_frequency?: string;
+  concept_importance?: string;
 };
 
 export type RecordAttemptInput = {
@@ -74,6 +77,9 @@ export async function recordAttemptIntelligence(input: RecordAttemptInput) {
       marked_review: !!marked[key] || !!marked[i as unknown as string],
       selected_index: isSkipped ? null : (selected as number),
       correct_index: q.correct_index,
+      weightage: q.weightage ?? null,
+      exam_frequency: q.exam_frequency ?? null,
+      concept_importance: q.concept_importance ?? null,
     };
   });
 
@@ -563,5 +569,176 @@ export async function recommendTopics(
 
   return items.sort((a, b) => b.priority - a.priority).slice(0, limit);
 }
+
+// ---------- Confidence Score ----------
+// Per-topic 0–100. Blends accuracy, retention decay, recency, and last-3 tests.
+export type TopicConfidence = {
+  id: string;
+  subject: string;
+  chapter: string | null;
+  topic: string;
+  accuracy: number;
+  confidence: number;
+  retention: number;
+  lastStudiedAt: string | null;
+};
+
+function recencyBoost(lastStudiedAt: string | null): number {
+  if (!lastStudiedAt) return 0;
+  const days = (Date.now() - new Date(lastStudiedAt).getTime()) / 86_400_000;
+  if (days < 1) return 100;
+  if (days < 3) return 85;
+  if (days < 7) return 60;
+  if (days < 14) return 35;
+  return 10;
+}
+
+export async function getTopicConfidence(userId: string): Promise<TopicConfidence[]> {
+  const { data } = await supabase
+    .from("topic_mastery")
+    .select("id, subject, chapter, topic, accuracy, retention_score, last_studied_at, last_revised_at")
+    .eq("user_id", userId);
+  return (data ?? []).map((r) => {
+    const acc = Number(r.accuracy ?? 0);
+    const lastRef = r.last_revised_at ?? r.last_studied_at;
+    const days = lastRef ? (Date.now() - new Date(lastRef).getTime()) / 86_400_000 : 30;
+    const retention = Math.max(0, Math.min(100, Number(r.retention_score ?? 100) - Math.floor(days * 5)));
+    const recency = recencyBoost(lastRef);
+    const confidence = Math.round(acc * 0.55 + retention * 0.30 + recency * 0.15);
+    return {
+      id: r.id,
+      subject: r.subject,
+      chapter: r.chapter ?? null,
+      topic: r.topic,
+      accuracy: Math.round(acc),
+      confidence: Math.max(0, Math.min(100, confidence)),
+      retention,
+      lastStudiedAt: r.last_studied_at,
+    };
+  }).sort((a, b) => a.confidence - b.confidence);
+}
+
+// ---------- Mission Control aggregator ----------
+// One call to gather every signal the dashboard hero needs.
+export type MissionControl = {
+  streak: number;
+  bestStreak: number;
+  revisionDueCount: number;
+  topRevision: RevisionItem | null;
+  challenge: DailyChallenge | null;
+  readiness: ReadinessResult;
+  readinessDelta: number | null;
+  weakest: TopicConfidence | null;
+  examGoalLabel: string | null;
+  examGoalGap: string | null;
+  examDate: string | null;
+  daysToExam: number | null;
+  recommended: RecommendedTopic | null;
+  rank: RankPrediction | null;
+};
+
+function formatGoal(type: string | null, value: number | null, exam: string | null): string | null {
+  if (!type || value == null) return null;
+  switch (type) {
+    case "percentile": return `${value} percentile`;
+    case "marks": return `${value} marks`;
+    case "rank": return `Rank ≤ ${value.toLocaleString()}`;
+    case "qualify": return exam ? `Qualify ${exam}` : "Qualify";
+    default: return `${value}`;
+  }
+}
+
+export async function getMissionControl(userId: string): Promise<MissionControl> {
+  const today = new Date().toISOString().slice(0, 10);
+  const sevenAgo = new Date(Date.now() - 7 * 86_400_000).toISOString().slice(0, 10);
+
+  const [
+    { data: prof },
+    revisions,
+    challenge,
+    readiness,
+    { data: oldSnap },
+    confidences,
+    recos,
+  ] = await Promise.all([
+    supabase
+      .from("profiles")
+      .select("streak, best_streak, target_exam, exam_goal_type, exam_goal_value, exam_date")
+      .eq("id", userId)
+      .maybeSingle(),
+    getTodaysRevisions(userId, 5),
+    getOrCreateDailyChallenge(userId),
+    computeReadiness(userId),
+    supabase
+      .from("readiness_snapshots")
+      .select("overall, snapshot_date")
+      .eq("user_id", userId)
+      .lte("snapshot_date", sevenAgo)
+      .order("snapshot_date", { ascending: false })
+      .limit(1)
+      .maybeSingle(),
+    getTopicConfidence(userId),
+    recommendTopics(userId, 1),
+  ]);
+
+  // Snapshot today's readiness (idempotent per day)
+  void supabase
+    .from("readiness_snapshots")
+    .upsert(
+      {
+        user_id: userId,
+        snapshot_date: today,
+        overall: readiness.overall,
+        subjects: readiness.subjects as unknown as never,
+        drivers: readiness.drivers as unknown as never,
+      },
+      { onConflict: "user_id,snapshot_date" } as never,
+    );
+
+  const examGoalLabel = formatGoal(
+    (prof as { exam_goal_type?: string } | null)?.exam_goal_type ?? null,
+    (prof as { exam_goal_value?: number } | null)?.exam_goal_value ?? null,
+    prof?.target_exam ?? null,
+  );
+
+  let rank: RankPrediction | null = null;
+  if (prof?.target_exam) {
+    try {
+      rank = await predictRank(userId, prof.target_exam);
+    } catch (e) {
+      console.error("predictRank", e);
+    }
+  }
+
+  let examGoalGap: string | null = null;
+  if (examGoalLabel && rank && (prof as { exam_goal_type?: string } | null)?.exam_goal_type === "percentile") {
+    const target = Number((prof as { exam_goal_value?: number } | null)?.exam_goal_value);
+    const gap = Math.max(0, target - rank.percentile);
+    examGoalGap = gap > 0 ? `+${gap.toFixed(1)} to goal` : "On track";
+  }
+
+  const examDate = (prof as { exam_date?: string } | null)?.exam_date ?? null;
+  const daysToExam = examDate
+    ? Math.max(0, Math.ceil((new Date(examDate).getTime() - Date.now()) / 86_400_000))
+    : null;
+
+  return {
+    streak: prof?.streak ?? 0,
+    bestStreak: (prof as { best_streak?: number } | null)?.best_streak ?? 0,
+    revisionDueCount: revisions.length,
+    topRevision: revisions[0] ?? null,
+    challenge,
+    readiness,
+    readinessDelta: oldSnap ? readiness.overall - oldSnap.overall : null,
+    weakest: confidences[0] ?? null,
+    examGoalLabel,
+    examGoalGap,
+    examDate,
+    daysToExam,
+    recommended: recos[0] ?? null,
+    rank,
+  };
+}
+
 
 

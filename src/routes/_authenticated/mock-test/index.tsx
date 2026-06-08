@@ -145,6 +145,32 @@ function MockTestIndex() {
     load();
   }, []);
 
+  // Auto-start from coach deep-links: /mock-test?subject=&topic=&count=&mode=&autostart=1
+  const [autoStarted, setAutoStarted] = useState(false);
+  useEffect(() => {
+    if (typeof window === "undefined" || autoStarted || loading) return;
+    const sp = new URLSearchParams(window.location.search);
+    const qTopic = sp.get("topic");
+    const qSubject = sp.get("subject");
+    const qCount = sp.get("count");
+    const qDifficulty = sp.get("difficulty");
+    const qMode = sp.get("mode");
+    const qAuto = sp.get("autostart");
+    if (qTopic) setTopic(qTopic);
+    if (qSubject && subjectsForExam.includes(qSubject)) setSubject(qSubject);
+    if (qCount) {
+      const n = Math.max(5, Math.min(50, Number(qCount) || 10));
+      setNumQuestions(n);
+    }
+    if (qDifficulty && ["easy", "medium", "hard"].includes(qDifficulty)) setDifficulty(qDifficulty);
+    if (qAuto === "1" || qMode === "smart" || qMode === "revision" || qMode === "drill") {
+      setAutoStarted(true);
+      // Defer one tick so state updates settle
+      setTimeout(() => { void onGenerate(); }, 50);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [loading, subjectsForExam, autoStarted]);
+
   const onGenerate = async () => {
     if (aiRemaining <= 0) {
       toast.error("Daily limit reached. Try the Practice Bank, or come back tomorrow.");
@@ -283,6 +309,22 @@ function MockTestIndex() {
         </TabsList>
 
         <TabsContent value="ai" className="mt-6">
+          {/* Smart Practice — one-tap drill from weakest concepts */}
+          <a
+            href="/mock-test?mode=smart&count=10&autostart=1"
+            className="mb-5 flex items-center justify-between gap-3 rounded-xl border border-primary/40 bg-gradient-to-r from-primary/15 via-primary/5 to-card p-4 transition hover:border-primary/70"
+          >
+            <div>
+              <p className="font-display text-sm font-semibold">⚡ Practice What Matters Most</p>
+              <p className="text-xs text-muted-foreground">
+                10 questions from your weakest topics, frequent mistakes, and high-weightage chapters.
+              </p>
+            </div>
+            <span className="shrink-0 rounded-md bg-primary px-3 py-2 text-xs font-semibold text-primary-foreground">
+              Smart Practice →
+            </span>
+          </a>
+
           {/* AI Generator */}
           <section className="rounded-xl border border-border bg-card p-6">
             <div className="flex flex-wrap items-center justify-between gap-3">

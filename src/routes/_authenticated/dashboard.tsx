@@ -28,6 +28,7 @@ import { ActivityHeatmap } from "@/components/ActivityHeatmap";
 import { DailyChallengeCard } from "@/components/DailyChallengeCard";
 import { RankPredictor } from "@/components/RankPredictor";
 import { RecommendedTopics } from "@/components/RecommendedTopics";
+import { MissionControl } from "@/components/MissionControl";
 
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
@@ -119,6 +120,9 @@ function DashboardPage() {
           </button>
         </div>
       </div>
+
+      {/* Mission Control — primary student experience */}
+      <MissionControl />
 
       <StreakCard profile={profile} />
 
