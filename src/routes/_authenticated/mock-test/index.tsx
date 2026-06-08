@@ -145,6 +145,32 @@ function MockTestIndex() {
     load();
   }, []);
 
+  // Auto-start from coach deep-links: /mock-test?subject=&topic=&count=&mode=&autostart=1
+  const [autoStarted, setAutoStarted] = useState(false);
+  useEffect(() => {
+    if (typeof window === "undefined" || autoStarted || loading) return;
+    const sp = new URLSearchParams(window.location.search);
+    const qTopic = sp.get("topic");
+    const qSubject = sp.get("subject");
+    const qCount = sp.get("count");
+    const qDifficulty = sp.get("difficulty");
+    const qMode = sp.get("mode");
+    const qAuto = sp.get("autostart");
+    if (qTopic) setTopic(qTopic);
+    if (qSubject && subjectsForExam.includes(qSubject)) setSubject(qSubject);
+    if (qCount) {
+      const n = Math.max(5, Math.min(50, Number(qCount) || 10));
+      setNumQuestions(n);
+    }
+    if (qDifficulty && ["easy", "medium", "hard"].includes(qDifficulty)) setDifficulty(qDifficulty);
+    if (qAuto === "1" || qMode === "smart" || qMode === "revision" || qMode === "drill") {
+      setAutoStarted(true);
+      // Defer one tick so state updates settle
+      setTimeout(() => { void onGenerate(); }, 50);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [loading, subjectsForExam, autoStarted]);
+
   const onGenerate = async () => {
     if (aiRemaining <= 0) {
       toast.error("Daily limit reached. Try the Practice Bank, or come back tomorrow.");
