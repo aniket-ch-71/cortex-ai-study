@@ -77,6 +77,9 @@ export async function recordAttemptIntelligence(input: RecordAttemptInput) {
       marked_review: !!marked[key] || !!marked[i as unknown as string],
       selected_index: isSkipped ? null : (selected as number),
       correct_index: q.correct_index,
+      weightage: q.weightage ?? null,
+      exam_frequency: q.exam_frequency ?? null,
+      concept_importance: q.concept_importance ?? null,
     };
   });
 
