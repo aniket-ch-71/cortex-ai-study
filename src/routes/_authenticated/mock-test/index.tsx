@@ -419,6 +419,17 @@ function MockTestIndex() {
               placeholder="e.g. Trigonometry, Mughal Empire…"
             />
           </Field>
+          <Field label="Source">
+            <Select value={sourceMode} onValueChange={(v) => setSourceMode(v as typeof sourceMode)}>
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Standard (mixed)</SelectItem>
+                <SelectItem value="pyq">Previous Year Questions only</SelectItem>
+                <SelectItem value="pyq_similar">Similar to PYQs</SelectItem>
+                <SelectItem value="high_weightage">High-weightage chapters</SelectItem>
+              </SelectContent>
+            </Select>
+          </Field>
         </div>
 
         {/* Pattern info card */}
