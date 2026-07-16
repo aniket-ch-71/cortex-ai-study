@@ -28,6 +28,7 @@ serve(async (req) => {
       topic = "",
       marksPerQuestion = 1,
       negativeMarking = 0,
+      sourceMode = "all", // all | pyq | pyq_similar | high_weightage
     } = await req.json();
 
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
