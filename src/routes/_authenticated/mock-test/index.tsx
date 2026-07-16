@@ -71,6 +71,7 @@ function MockTestIndex() {
   const [language, setLanguage] = useState("en");
   const [topic, setTopic] = useState("");
   const [numQuestions, setNumQuestions] = useState<number>(25);
+  const [sourceMode, setSourceMode] = useState<"all" | "pyq" | "pyq_similar" | "high_weightage">("all");
   const [primarySeeded, setPrimarySeeded] = useState(false);
   const [aiUsed, setAiUsed] = useState(0);
   const aiRemaining = Math.max(0, AI_TEST_DAILY_LIMIT - aiUsed);
@@ -221,6 +222,7 @@ function MockTestIndex() {
               topic,
               marksPerQuestion: sec.marks,
               negativeMarking: pattern.negativeMarking,
+              sourceMode,
             },
           },
         );
