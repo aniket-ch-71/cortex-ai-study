@@ -13,6 +13,8 @@ import {
   Zap,
   Gift,
   BookX,
+  Bookmark,
+  Sparkles,
 } from "lucide-react";
 import {
   Sidebar,
@@ -54,6 +56,8 @@ const GROUPS: { label: string; items: NavItem[] }[] = [
     items: [
       { title: "My Performance", url: "/performance", icon: TrendingUp },
       { title: "Mistake Book", url: "/mistakes", icon: BookX },
+      { title: "Vault", url: "/vault", icon: Bookmark },
+      { title: "Revision Packs", url: "/revision-packs", icon: Sparkles },
     ],
   },
   {
