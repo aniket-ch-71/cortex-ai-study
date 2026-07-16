@@ -15,11 +15,16 @@ import {
   Download,
   Zap,
   BookX,
+  Sparkles,
 } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { InlineReviewPrompt } from "@/components/InlineReviewPrompt";
+import { QuestionBadges } from "@/components/QuestionBadges";
+import { SaveQuestionMenu } from "@/components/SaveQuestionMenu";
+import { ReportQuestionDialog } from "@/components/ReportQuestionDialog";
+import { buildRevisionPack } from "@/lib/revision-packs";
 
 export const Route = createFileRoute("/_authenticated/mock-test/$testId/results")({
   head: () => ({ meta: [{ title: "Results — PARIKSHA" }] }),
@@ -408,6 +413,13 @@ function ResultsPage() {
                     <p className="font-medium">
                       <span className="text-muted-foreground">Q{i + 1}.</span> {q.question}
                     </p>
+                    <div className="mt-2 flex flex-wrap items-center justify-between gap-2">
+                      <QuestionBadges q={q} compact />
+                      <div className="flex gap-1.5">
+                        <SaveQuestionMenu q={q} compact />
+                        <ReportQuestionDialog q={q} compact />
+                      </div>
+                    </div>
                     {(q.section || q.chapter || q.topic || q.concept || q.difficulty) && (
                       <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
                         {q.section && (
