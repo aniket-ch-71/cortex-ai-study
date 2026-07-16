@@ -345,6 +345,8 @@ function ResultsPage() {
             subject={data.subject}
             topic={data.questions.find((qq, i) => data.answers[i] !== undefined && data.answers[i] !== qq.correct_index)?.topic}
           />
+        )}
+
 
         {/* Share Results */}
         <ShareResultsSection
