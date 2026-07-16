@@ -71,6 +71,7 @@ function MockTestIndex() {
   const [language, setLanguage] = useState("en");
   const [topic, setTopic] = useState("");
   const [numQuestions, setNumQuestions] = useState<number>(25);
+  const [sourceMode, setSourceMode] = useState<"all" | "pyq" | "pyq_similar" | "high_weightage">("all");
   const [primarySeeded, setPrimarySeeded] = useState(false);
   const [aiUsed, setAiUsed] = useState(0);
   const aiRemaining = Math.max(0, AI_TEST_DAILY_LIMIT - aiUsed);
@@ -221,6 +222,7 @@ function MockTestIndex() {
               topic,
               marksPerQuestion: sec.marks,
               negativeMarking: pattern.negativeMarking,
+              sourceMode,
             },
           },
         );
@@ -416,6 +418,17 @@ function MockTestIndex() {
               onChange={(e) => setTopic(e.target.value)}
               placeholder="e.g. Trigonometry, Mughal Empire…"
             />
+          </Field>
+          <Field label="Source">
+            <Select value={sourceMode} onValueChange={(v) => setSourceMode(v as typeof sourceMode)}>
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Standard (mixed)</SelectItem>
+                <SelectItem value="pyq">Previous Year Questions only</SelectItem>
+                <SelectItem value="pyq_similar">Similar to PYQs</SelectItem>
+                <SelectItem value="high_weightage">High-weightage chapters</SelectItem>
+              </SelectContent>
+            </Select>
           </Field>
         </div>
 

@@ -15,11 +15,16 @@ import {
   Download,
   Zap,
   BookX,
+  Sparkles,
 } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { InlineReviewPrompt } from "@/components/InlineReviewPrompt";
+import { QuestionBadges } from "@/components/QuestionBadges";
+import { SaveQuestionMenu } from "@/components/SaveQuestionMenu";
+import { ReportQuestionDialog } from "@/components/ReportQuestionDialog";
+import { buildRevisionPack } from "@/lib/revision-packs";
 
 export const Route = createFileRoute("/_authenticated/mock-test/$testId/results")({
   head: () => ({ meta: [{ title: "Results — PARIKSHA" }] }),
@@ -335,6 +340,14 @@ function ResultsPage() {
           </Link>
         )}
 
+        {data.total - data.score >= 3 && (
+          <BuildPackBanner
+            subject={data.subject}
+            topic={data.questions.find((qq, i) => data.answers[i] !== undefined && data.answers[i] !== qq.correct_index)?.topic}
+          />
+        )}
+
+
         {/* Share Results */}
         <ShareResultsSection
           show={showShare}
@@ -408,6 +421,13 @@ function ResultsPage() {
                     <p className="font-medium">
                       <span className="text-muted-foreground">Q{i + 1}.</span> {q.question}
                     </p>
+                    <div className="mt-2 flex flex-wrap items-center justify-between gap-2">
+                      <QuestionBadges q={q} compact />
+                      <div className="flex gap-1.5">
+                        <SaveQuestionMenu q={q} compact />
+                        <ReportQuestionDialog q={q} compact />
+                      </div>
+                    </div>
                     {(q.section || q.chapter || q.topic || q.concept || q.difficulty) && (
                       <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
                         {q.section && (
@@ -529,6 +549,46 @@ function formatTime(s: number) {
   const m = Math.floor(s / 60);
   const r = s % 60;
   return `${m}m ${r}s`;
+}
+
+function BuildPackBanner({ subject, topic }: { subject?: string; topic?: string }) {
+  const [busy, setBusy] = useState(false);
+  const onBuild = async () => {
+    setBusy(true);
+    try {
+      const { data: u } = await supabase.auth.getUser();
+      if (!u.user) return;
+      const pack = await buildRevisionPack(u.user.id, {
+        seed: "mistakes", count: 10, subject, topic,
+      });
+      if (!pack) throw new Error("Could not build pack");
+      window.location.href = `/revision-packs/${pack.id}`;
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Failed");
+    } finally {
+      setBusy(false);
+    }
+  };
+  return (
+    <button
+      onClick={onBuild}
+      disabled={busy}
+      className="flex w-full items-center justify-between gap-3 rounded-xl border border-primary/40 bg-gradient-to-r from-primary/15 via-primary/5 to-card px-5 py-4 text-left transition hover:border-primary/70 disabled:opacity-60"
+    >
+      <div className="flex items-center gap-3">
+        <span className="grid h-9 w-9 place-items-center rounded-lg bg-primary/15 text-primary">
+          <Sparkles className="h-4 w-4" />
+        </span>
+        <div>
+          <p className="font-display text-sm font-semibold">Build a revision pack from today's mistakes</p>
+          <p className="text-xs text-muted-foreground">10-question drill on the concepts you missed.</p>
+        </div>
+      </div>
+      <span className="shrink-0 rounded-md bg-primary px-3 py-2 text-xs font-semibold text-primary-foreground">
+        {busy ? "Building…" : "Build pack →"}
+      </span>
+    </button>
+  );
 }
 
 function ShareResultsSection({

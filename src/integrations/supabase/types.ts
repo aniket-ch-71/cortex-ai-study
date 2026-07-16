@@ -443,10 +443,12 @@ export type Database = {
           exam_frequency: string | null
           id: string
           is_correct: boolean
+          is_pyq: boolean | null
           is_skipped: boolean
           marked_review: boolean
           question_id: string
           selected_index: number | null
+          source_type: string | null
           subject: string | null
           test_id: string | null
           time_taken_seconds: number
@@ -466,10 +468,12 @@ export type Database = {
           exam_frequency?: string | null
           id?: string
           is_correct?: boolean
+          is_pyq?: boolean | null
           is_skipped?: boolean
           marked_review?: boolean
           question_id: string
           selected_index?: number | null
+          source_type?: string | null
           subject?: string | null
           test_id?: string | null
           time_taken_seconds?: number
@@ -489,10 +493,12 @@ export type Database = {
           exam_frequency?: string | null
           id?: string
           is_correct?: boolean
+          is_pyq?: boolean | null
           is_skipped?: boolean
           marked_review?: boolean
           question_id?: string
           selected_index?: number | null
+          source_type?: string | null
           subject?: string | null
           test_id?: string | null
           time_taken_seconds?: number
@@ -504,46 +510,106 @@ export type Database = {
       }
       question_bank: {
         Row: {
+          concept_importance: string | null
           correct_index: number
           created_at: string
+          diagram_url: string | null
           difficulty: string
           exam: string
+          exam_frequency: string | null
           explanation: string
           id: string
+          is_pyq: boolean
           language: string
           options: Json
+          pyq_year: number | null
           question: string
+          question_hash: string | null
+          source_type: string
           sub_exam: string
           subject: string
+          svg_diagram: string | null
           topic: string | null
+          weightage: string | null
         }
         Insert: {
+          concept_importance?: string | null
           correct_index: number
           created_at?: string
+          diagram_url?: string | null
           difficulty?: string
           exam: string
+          exam_frequency?: string | null
           explanation?: string
           id?: string
+          is_pyq?: boolean
           language?: string
           options: Json
+          pyq_year?: number | null
           question: string
+          question_hash?: string | null
+          source_type?: string
           sub_exam: string
           subject: string
+          svg_diagram?: string | null
           topic?: string | null
+          weightage?: string | null
         }
         Update: {
+          concept_importance?: string | null
           correct_index?: number
           created_at?: string
+          diagram_url?: string | null
           difficulty?: string
           exam?: string
+          exam_frequency?: string | null
           explanation?: string
           id?: string
+          is_pyq?: boolean
           language?: string
           options?: Json
+          pyq_year?: number | null
           question?: string
+          question_hash?: string | null
+          source_type?: string
           sub_exam?: string
           subject?: string
+          svg_diagram?: string | null
           topic?: string | null
+          weightage?: string | null
+        }
+        Relationships: []
+      }
+      question_reports: {
+        Row: {
+          created_at: string
+          details: string | null
+          id: string
+          question_hash: string
+          question_snapshot: Json
+          reason: Database["public"]["Enums"]["report_reason"]
+          status: Database["public"]["Enums"]["report_status"]
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          details?: string | null
+          id?: string
+          question_hash: string
+          question_snapshot: Json
+          reason: Database["public"]["Enums"]["report_reason"]
+          status?: Database["public"]["Enums"]["report_status"]
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          details?: string | null
+          id?: string
+          question_hash?: string
+          question_snapshot?: Json
+          reason?: Database["public"]["Enums"]["report_reason"]
+          status?: Database["public"]["Enums"]["report_status"]
+          user_id?: string
         }
         Relationships: []
       }
@@ -625,6 +691,126 @@ export type Database = {
           rating?: number
           review_text?: string | null
           user_id?: string
+        }
+        Relationships: []
+      }
+      revision_packs: {
+        Row: {
+          completed_at: string | null
+          created_at: string
+          estimated_minutes: number
+          id: string
+          payload: Json
+          question_count: number
+          score: number | null
+          seed_params: Json
+          seed_type: Database["public"]["Enums"]["pack_seed"]
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          completed_at?: string | null
+          created_at?: string
+          estimated_minutes?: number
+          id?: string
+          payload: Json
+          question_count: number
+          score?: number | null
+          seed_params?: Json
+          seed_type: Database["public"]["Enums"]["pack_seed"]
+          title: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          completed_at?: string | null
+          created_at?: string
+          estimated_minutes?: number
+          id?: string
+          payload?: Json
+          question_count?: number
+          score?: number | null
+          seed_params?: Json
+          seed_type?: Database["public"]["Enums"]["pack_seed"]
+          title?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      saved_questions: {
+        Row: {
+          chapter: string | null
+          concept: string | null
+          correct_index: number
+          created_at: string
+          difficulty: string | null
+          exam_frequency: string | null
+          explanation: string | null
+          id: string
+          is_pyq: boolean | null
+          next_review_at: string | null
+          note: string | null
+          options: Json
+          pyq_year: number | null
+          question: string
+          question_hash: string
+          source_type: string | null
+          subject: string | null
+          tag: Database["public"]["Enums"]["vault_tag"]
+          topic: string | null
+          updated_at: string
+          user_id: string
+          weightage: string | null
+        }
+        Insert: {
+          chapter?: string | null
+          concept?: string | null
+          correct_index: number
+          created_at?: string
+          difficulty?: string | null
+          exam_frequency?: string | null
+          explanation?: string | null
+          id?: string
+          is_pyq?: boolean | null
+          next_review_at?: string | null
+          note?: string | null
+          options: Json
+          pyq_year?: number | null
+          question: string
+          question_hash: string
+          source_type?: string | null
+          subject?: string | null
+          tag?: Database["public"]["Enums"]["vault_tag"]
+          topic?: string | null
+          updated_at?: string
+          user_id: string
+          weightage?: string | null
+        }
+        Update: {
+          chapter?: string | null
+          concept?: string | null
+          correct_index?: number
+          created_at?: string
+          difficulty?: string | null
+          exam_frequency?: string | null
+          explanation?: string | null
+          id?: string
+          is_pyq?: boolean | null
+          next_review_at?: string | null
+          note?: string | null
+          options?: Json
+          pyq_year?: number | null
+          question?: string
+          question_hash?: string
+          source_type?: string | null
+          subject?: string | null
+          tag?: Database["public"]["Enums"]["vault_tag"]
+          topic?: string | null
+          updated_at?: string
+          user_id?: string
+          weightage?: string | null
         }
         Relationships: []
       }
@@ -836,6 +1022,15 @@ export type Database = {
     }
     Enums: {
       app_role: "admin" | "user"
+      pack_seed: "mistakes" | "weak" | "confidence" | "due" | "topic" | "mixed"
+      report_reason:
+        | "wrong_answer"
+        | "wrong_explanation"
+        | "wrong_diagram"
+        | "duplicate"
+        | "outdated"
+      report_status: "open" | "reviewed" | "dismissed"
+      vault_tag: "save" | "important" | "revise_later" | "favorite"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -964,6 +1159,16 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["admin", "user"],
+      pack_seed: ["mistakes", "weak", "confidence", "due", "topic", "mixed"],
+      report_reason: [
+        "wrong_answer",
+        "wrong_explanation",
+        "wrong_diagram",
+        "duplicate",
+        "outdated",
+      ],
+      report_status: ["open", "reviewed", "dismissed"],
+      vault_tag: ["save", "important", "revise_later", "favorite"],
     },
   },
 } as const

@@ -15,7 +15,9 @@ import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedDoubtSolverRouteImport } from './routes/_authenticated/doubt-solver'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
+import { Route as AuthenticatedVaultIndexRouteImport } from './routes/_authenticated/vault/index'
 import { Route as AuthenticatedSettingsIndexRouteImport } from './routes/_authenticated/settings/index'
+import { Route as AuthenticatedRevisionPacksIndexRouteImport } from './routes/_authenticated/revision-packs/index'
 import { Route as AuthenticatedReferralIndexRouteImport } from './routes/_authenticated/referral/index'
 import { Route as AuthenticatedPlannerIndexRouteImport } from './routes/_authenticated/planner/index'
 import { Route as AuthenticatedPerformanceIndexRouteImport } from './routes/_authenticated/performance/index'
@@ -24,6 +26,7 @@ import { Route as AuthenticatedMockTestIndexRouteImport } from './routes/_authen
 import { Route as AuthenticatedMistakesIndexRouteImport } from './routes/_authenticated/mistakes/index'
 import { Route as AuthenticatedCurrentAffairsIndexRouteImport } from './routes/_authenticated/current-affairs/index'
 import { Route as AuthenticatedAnalyserIndexRouteImport } from './routes/_authenticated/analyser/index'
+import { Route as AuthenticatedRevisionPacksPackIdRouteImport } from './routes/_authenticated/revision-packs/$packId'
 import { Route as AuthenticatedMockTestPracticeRouteImport } from './routes/_authenticated/mock-test/practice'
 import { Route as AuthenticatedNotesNoteIdIndexRouteImport } from './routes/_authenticated/notes/$noteId/index'
 import { Route as AuthenticatedMockTestTestIdIndexRouteImport } from './routes/_authenticated/mock-test/$testId/index'
@@ -59,10 +62,21 @@ const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
   path: '/dashboard',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
+const AuthenticatedVaultIndexRoute = AuthenticatedVaultIndexRouteImport.update({
+  id: '/vault/',
+  path: '/vault/',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
 const AuthenticatedSettingsIndexRoute =
   AuthenticatedSettingsIndexRouteImport.update({
     id: '/settings/',
     path: '/settings/',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
+const AuthenticatedRevisionPacksIndexRoute =
+  AuthenticatedRevisionPacksIndexRouteImport.update({
+    id: '/revision-packs/',
+    path: '/revision-packs/',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
 const AuthenticatedReferralIndexRoute =
@@ -112,6 +126,12 @@ const AuthenticatedAnalyserIndexRoute =
     path: '/analyser/',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
+const AuthenticatedRevisionPacksPackIdRoute =
+  AuthenticatedRevisionPacksPackIdRouteImport.update({
+    id: '/revision-packs/$packId',
+    path: '/revision-packs/$packId',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
 const AuthenticatedMockTestPracticeRoute =
   AuthenticatedMockTestPracticeRouteImport.update({
     id: '/mock-test/practice',
@@ -144,6 +164,7 @@ export interface FileRoutesByFullPath {
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/doubt-solver': typeof AuthenticatedDoubtSolverRoute
   '/mock-test/practice': typeof AuthenticatedMockTestPracticeRoute
+  '/revision-packs/$packId': typeof AuthenticatedRevisionPacksPackIdRoute
   '/analyser/': typeof AuthenticatedAnalyserIndexRoute
   '/current-affairs/': typeof AuthenticatedCurrentAffairsIndexRoute
   '/mistakes/': typeof AuthenticatedMistakesIndexRoute
@@ -152,7 +173,9 @@ export interface FileRoutesByFullPath {
   '/performance/': typeof AuthenticatedPerformanceIndexRoute
   '/planner/': typeof AuthenticatedPlannerIndexRoute
   '/referral/': typeof AuthenticatedReferralIndexRoute
+  '/revision-packs/': typeof AuthenticatedRevisionPacksIndexRoute
   '/settings/': typeof AuthenticatedSettingsIndexRoute
+  '/vault/': typeof AuthenticatedVaultIndexRoute
   '/mock-test/$testId/results': typeof AuthenticatedMockTestTestIdResultsRoute
   '/mock-test/$testId/': typeof AuthenticatedMockTestTestIdIndexRoute
   '/notes/$noteId/': typeof AuthenticatedNotesNoteIdIndexRoute
@@ -164,6 +187,7 @@ export interface FileRoutesByTo {
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/doubt-solver': typeof AuthenticatedDoubtSolverRoute
   '/mock-test/practice': typeof AuthenticatedMockTestPracticeRoute
+  '/revision-packs/$packId': typeof AuthenticatedRevisionPacksPackIdRoute
   '/analyser': typeof AuthenticatedAnalyserIndexRoute
   '/current-affairs': typeof AuthenticatedCurrentAffairsIndexRoute
   '/mistakes': typeof AuthenticatedMistakesIndexRoute
@@ -172,7 +196,9 @@ export interface FileRoutesByTo {
   '/performance': typeof AuthenticatedPerformanceIndexRoute
   '/planner': typeof AuthenticatedPlannerIndexRoute
   '/referral': typeof AuthenticatedReferralIndexRoute
+  '/revision-packs': typeof AuthenticatedRevisionPacksIndexRoute
   '/settings': typeof AuthenticatedSettingsIndexRoute
+  '/vault': typeof AuthenticatedVaultIndexRoute
   '/mock-test/$testId/results': typeof AuthenticatedMockTestTestIdResultsRoute
   '/mock-test/$testId': typeof AuthenticatedMockTestTestIdIndexRoute
   '/notes/$noteId': typeof AuthenticatedNotesNoteIdIndexRoute
@@ -186,6 +212,7 @@ export interface FileRoutesById {
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/_authenticated/doubt-solver': typeof AuthenticatedDoubtSolverRoute
   '/_authenticated/mock-test/practice': typeof AuthenticatedMockTestPracticeRoute
+  '/_authenticated/revision-packs/$packId': typeof AuthenticatedRevisionPacksPackIdRoute
   '/_authenticated/analyser/': typeof AuthenticatedAnalyserIndexRoute
   '/_authenticated/current-affairs/': typeof AuthenticatedCurrentAffairsIndexRoute
   '/_authenticated/mistakes/': typeof AuthenticatedMistakesIndexRoute
@@ -194,7 +221,9 @@ export interface FileRoutesById {
   '/_authenticated/performance/': typeof AuthenticatedPerformanceIndexRoute
   '/_authenticated/planner/': typeof AuthenticatedPlannerIndexRoute
   '/_authenticated/referral/': typeof AuthenticatedReferralIndexRoute
+  '/_authenticated/revision-packs/': typeof AuthenticatedRevisionPacksIndexRoute
   '/_authenticated/settings/': typeof AuthenticatedSettingsIndexRoute
+  '/_authenticated/vault/': typeof AuthenticatedVaultIndexRoute
   '/_authenticated/mock-test/$testId/results': typeof AuthenticatedMockTestTestIdResultsRoute
   '/_authenticated/mock-test/$testId/': typeof AuthenticatedMockTestTestIdIndexRoute
   '/_authenticated/notes/$noteId/': typeof AuthenticatedNotesNoteIdIndexRoute
@@ -208,6 +237,7 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/doubt-solver'
     | '/mock-test/practice'
+    | '/revision-packs/$packId'
     | '/analyser/'
     | '/current-affairs/'
     | '/mistakes/'
@@ -216,7 +246,9 @@ export interface FileRouteTypes {
     | '/performance/'
     | '/planner/'
     | '/referral/'
+    | '/revision-packs/'
     | '/settings/'
+    | '/vault/'
     | '/mock-test/$testId/results'
     | '/mock-test/$testId/'
     | '/notes/$noteId/'
@@ -228,6 +260,7 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/doubt-solver'
     | '/mock-test/practice'
+    | '/revision-packs/$packId'
     | '/analyser'
     | '/current-affairs'
     | '/mistakes'
@@ -236,7 +269,9 @@ export interface FileRouteTypes {
     | '/performance'
     | '/planner'
     | '/referral'
+    | '/revision-packs'
     | '/settings'
+    | '/vault'
     | '/mock-test/$testId/results'
     | '/mock-test/$testId'
     | '/notes/$noteId'
@@ -249,6 +284,7 @@ export interface FileRouteTypes {
     | '/_authenticated/dashboard'
     | '/_authenticated/doubt-solver'
     | '/_authenticated/mock-test/practice'
+    | '/_authenticated/revision-packs/$packId'
     | '/_authenticated/analyser/'
     | '/_authenticated/current-affairs/'
     | '/_authenticated/mistakes/'
@@ -257,7 +293,9 @@ export interface FileRouteTypes {
     | '/_authenticated/performance/'
     | '/_authenticated/planner/'
     | '/_authenticated/referral/'
+    | '/_authenticated/revision-packs/'
     | '/_authenticated/settings/'
+    | '/_authenticated/vault/'
     | '/_authenticated/mock-test/$testId/results'
     | '/_authenticated/mock-test/$testId/'
     | '/_authenticated/notes/$noteId/'
@@ -314,11 +352,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedDashboardRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/vault/': {
+      id: '/_authenticated/vault/'
+      path: '/vault'
+      fullPath: '/vault/'
+      preLoaderRoute: typeof AuthenticatedVaultIndexRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
     '/_authenticated/settings/': {
       id: '/_authenticated/settings/'
       path: '/settings'
       fullPath: '/settings/'
       preLoaderRoute: typeof AuthenticatedSettingsIndexRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/revision-packs/': {
+      id: '/_authenticated/revision-packs/'
+      path: '/revision-packs'
+      fullPath: '/revision-packs/'
+      preLoaderRoute: typeof AuthenticatedRevisionPacksIndexRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
     '/_authenticated/referral/': {
@@ -377,6 +429,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAnalyserIndexRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/revision-packs/$packId': {
+      id: '/_authenticated/revision-packs/$packId'
+      path: '/revision-packs/$packId'
+      fullPath: '/revision-packs/$packId'
+      preLoaderRoute: typeof AuthenticatedRevisionPacksPackIdRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
     '/_authenticated/mock-test/practice': {
       id: '/_authenticated/mock-test/practice'
       path: '/mock-test/practice'
@@ -412,6 +471,7 @@ interface AuthenticatedRouteChildren {
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
   AuthenticatedDoubtSolverRoute: typeof AuthenticatedDoubtSolverRoute
   AuthenticatedMockTestPracticeRoute: typeof AuthenticatedMockTestPracticeRoute
+  AuthenticatedRevisionPacksPackIdRoute: typeof AuthenticatedRevisionPacksPackIdRoute
   AuthenticatedAnalyserIndexRoute: typeof AuthenticatedAnalyserIndexRoute
   AuthenticatedCurrentAffairsIndexRoute: typeof AuthenticatedCurrentAffairsIndexRoute
   AuthenticatedMistakesIndexRoute: typeof AuthenticatedMistakesIndexRoute
@@ -420,7 +480,9 @@ interface AuthenticatedRouteChildren {
   AuthenticatedPerformanceIndexRoute: typeof AuthenticatedPerformanceIndexRoute
   AuthenticatedPlannerIndexRoute: typeof AuthenticatedPlannerIndexRoute
   AuthenticatedReferralIndexRoute: typeof AuthenticatedReferralIndexRoute
+  AuthenticatedRevisionPacksIndexRoute: typeof AuthenticatedRevisionPacksIndexRoute
   AuthenticatedSettingsIndexRoute: typeof AuthenticatedSettingsIndexRoute
+  AuthenticatedVaultIndexRoute: typeof AuthenticatedVaultIndexRoute
   AuthenticatedMockTestTestIdResultsRoute: typeof AuthenticatedMockTestTestIdResultsRoute
   AuthenticatedMockTestTestIdIndexRoute: typeof AuthenticatedMockTestTestIdIndexRoute
   AuthenticatedNotesNoteIdIndexRoute: typeof AuthenticatedNotesNoteIdIndexRoute
@@ -430,6 +492,7 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
   AuthenticatedDoubtSolverRoute: AuthenticatedDoubtSolverRoute,
   AuthenticatedMockTestPracticeRoute: AuthenticatedMockTestPracticeRoute,
+  AuthenticatedRevisionPacksPackIdRoute: AuthenticatedRevisionPacksPackIdRoute,
   AuthenticatedAnalyserIndexRoute: AuthenticatedAnalyserIndexRoute,
   AuthenticatedCurrentAffairsIndexRoute: AuthenticatedCurrentAffairsIndexRoute,
   AuthenticatedMistakesIndexRoute: AuthenticatedMistakesIndexRoute,
@@ -438,7 +501,9 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedPerformanceIndexRoute: AuthenticatedPerformanceIndexRoute,
   AuthenticatedPlannerIndexRoute: AuthenticatedPlannerIndexRoute,
   AuthenticatedReferralIndexRoute: AuthenticatedReferralIndexRoute,
+  AuthenticatedRevisionPacksIndexRoute: AuthenticatedRevisionPacksIndexRoute,
   AuthenticatedSettingsIndexRoute: AuthenticatedSettingsIndexRoute,
+  AuthenticatedVaultIndexRoute: AuthenticatedVaultIndexRoute,
   AuthenticatedMockTestTestIdResultsRoute:
     AuthenticatedMockTestTestIdResultsRoute,
   AuthenticatedMockTestTestIdIndexRoute: AuthenticatedMockTestTestIdIndexRoute,
@@ -458,13 +523,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}

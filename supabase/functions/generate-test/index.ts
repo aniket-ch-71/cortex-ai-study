@@ -28,6 +28,7 @@ serve(async (req) => {
       topic = "",
       marksPerQuestion = 1,
       negativeMarking = 0,
+      sourceMode = "all", // all | pyq | pyq_similar | high_weightage
     } = await req.json();
 
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
@@ -42,12 +43,22 @@ serve(async (req) => {
         ? `This exam uses negative marking of ${negativeMarking} per wrong answer, so make distractors plausible (no obvious throwaways).`
         : `This exam has no negative marking.`;
 
+    const sourceInstruction =
+      sourceMode === "pyq"
+        ? `Every question MUST be a real Previous Year Question (PYQ) from ${exam || "the exam"}. Set source_type="pyq", is_pyq=true, and pyq_year to the actual year. Preserve the original phrasing where possible. `
+        : sourceMode === "pyq_similar"
+          ? `Every question MUST closely mimic the style, phrasing and difficulty of past ${exam || "the exam"} papers (last 10 years). Set source_type="ai_generated" and is_pyq=false. `
+          : sourceMode === "high_weightage"
+            ? `Restrict questions to chapters/topics with HIGH weightage in ${exam || "the exam"} syllabus. Set weightage="high" for each. `
+            : `Set source_type="ai_generated" and is_pyq=false unless the question is a verbatim past paper item. `;
+
     const systemPrompt =
       `You are PARIKSHA AI, an expert exam-question setter for Indian competitive exams. ` +
       `Generate exactly ${n} high-quality multiple-choice questions for the "${exam || "general study"}" exam ` +
       `from the section "${subject}"${topic ? ` (topic focus: ${topic})` : ""} at ${difficulty} difficulty. ` +
       `Each question is worth ${marksPerQuestion} marks. ${negInfo} ` +
       `Match the real syllabus, style, and difficulty pattern of ${exam || "the exam"} for the ${subject} section. ` +
+      `${sourceInstruction}` +
       `Each question must have exactly 4 options and one correct answer. ` +
       `Provide a concise explanation for each correct answer. ` +
       `For every question, also include this intelligence metadata: ` +
@@ -55,7 +66,8 @@ serve(async (req) => {
       `difficulty (easy|medium|hard), estimated_time_seconds (20-180), ` +
       `weightage (low|medium|high — how heavily this chapter is weighted in ${exam || "the exam"}), ` +
       `exam_frequency (low|medium|high|very_high — how often this concept appears in past papers), ` +
-      `concept_importance (supporting|important|core — how central this concept is to the syllabus). ` +
+      `concept_importance (supporting|important|core — how central this concept is to the syllabus), ` +
+      `source_type (pyq|ai_generated|verified), is_pyq (boolean), pyq_year (integer or null). ` +
       `Write all content in ${lang}. ` +
       `Use the submit_test tool to return the questions.`;
 
@@ -91,6 +103,9 @@ serve(async (req) => {
                   weightage: { type: "string", enum: ["low", "medium", "high"], description: "Chapter weightage in the exam" },
                   exam_frequency: { type: "string", enum: ["low", "medium", "high", "very_high"], description: "How often this concept appears in past papers" },
                   concept_importance: { type: "string", enum: ["supporting", "important", "core"], description: "Centrality of the concept in the syllabus" },
+                  source_type: { type: "string", enum: ["pyq", "ai_generated", "verified"], description: "Where this question came from" },
+                  is_pyq: { type: "boolean", description: "true when this is a verbatim past-year question" },
+                  pyq_year: { type: "integer", description: "Year of the past paper if is_pyq is true" },
                 },
                 required: ["question", "options", "correct_index", "explanation", "chapter", "topic", "difficulty"],
               },
