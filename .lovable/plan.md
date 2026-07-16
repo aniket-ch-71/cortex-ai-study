@@ -1,158 +1,160 @@
+# Phase 4 — Question Quality System
 
-# PARIKSHA AI — Coach Mode Upgrade
+Goal: turn PARIKSHA from an AI mock-test site into a proper exam-prep platform by giving every question durable metadata, letting students save/report/revise from any test, and generating one-click revision packs from their own weak areas.
 
-Turn the dashboard into a personal AI exam coach. Every insight links to an action. No new decorative pages.
-
----
-
-## 1. "Today's Mission" — Mission Control (top of dashboard)
-
-A single premium hero section that replaces the current top row on `src/routes/_authenticated/dashboard.tsx`. New component `src/components/MissionControl.tsx`.
-
-Eight tiles in a responsive grid (4 × 2 on desktop, 2 × 4 on tablet, stacked on mobile):
-
-| Tile | Source | Action button |
-|---|---|---|
-| 🔥 Streak | `profiles.streak` / `best_streak` | "Protect streak" → today's challenge |
-| 📚 Revision Due | `getTodaysRevisions()` count | "Start revision" → `/mistakes` or revision flow |
-| 🎯 Daily Challenge | `daily_challenges` progress | "Continue" → practice |
-| 📈 Readiness | `computeReadiness().overall` + 7-day delta | "View drivers" → `/performance` |
-| ⚠ Weakest Topic | lowest accuracy from `topic_mastery` | "Practice 10 Qs" → seeded practice |
-| 🏆 Exam Goal | new `profiles.exam_goal` (see §5) | "Edit goal" → settings |
-| ⏳ Exam Countdown | new `profiles.exam_date` | "Open planner" → `/planner` |
-| 📍 Recommended Action | top item from `recommendTopics()` | Primary CTA (deep-link to practice) |
-
-The Recommended Action tile is visually emphasized (gradient ring, larger) and is always the single most important next click.
-
-Readiness delta uses a new helper that snapshots into `readiness_snapshots` once per day on dashboard load (table already exists).
+No new analytics dashboards, no decorative UI. Everything plugs into surfaces that already exist (Mission Control, Mistake Book, Revision Engine, Daily Challenge, Results, Practice).
 
 ---
 
-## 2. Action-First Insight Pattern
+## 1. Data model (single migration)
 
-Refactor existing widgets so every analytics surface carries a CTA:
+New tables (all with GRANT + RLS on `auth.uid() = user_id`):
 
-- `RecommendedTopics` → each row gets "Practice 10" button that pre-seeds `/mock-test` with `{subject, topic, count: 10}`.
-- `RevisionWidget` → "Revise now" launches a 5-question mini drill on that topic, then auto-calls `markRevised`.
-- `ReadinessRing` → if drop ≥ 5 pts in 7 days, surfaces "Recovery Plan" banner that opens a 3-step checklist (weakest topic practice + one mock + 2 revisions).
-- `RankPredictor` → "Close the gap" CTA jumps to the highest-priority weak topic.
+- `saved_questions` — user's vault
+  - `id, user_id, question_hash, question, options jsonb, correct_index, explanation`
+  - `subject, chapter, topic, concept, difficulty, weightage, exam_frequency, source_type`
+  - `tag` — `save | important | revise_later | favorite` (enum)
+  - `note` (optional user note), `next_review_at` (for revise_later), `created_at`
+  - unique(`user_id, question_hash, tag`)
+- `question_reports` — moderation queue
+  - `id, user_id, question_hash, question_snapshot jsonb`
+  - `reason` — `wrong_answer | wrong_explanation | wrong_diagram | duplicate | outdated`
+  - `details text, status` (`open|reviewed|dismissed`), `created_at`
+- `revision_packs` — generated packs (so users can resume)
+  - `id, user_id, title, seed_type` (`mistakes|weak|confidence|due|mixed`), `question_count`, `estimated_minutes`, `payload jsonb` (the seeded questions), `completed_at`, `created_at`
 
-New small util `src/lib/coach-actions.ts` centralizes deep-link builders so CTAs stay consistent.
+Extend existing tables:
 
-Mock-test route accepts new query params `?subject=&topic=&count=&mode=practice|revision|drill` and auto-generates via existing `generate-test` edge function.
+- `question_bank`: add `is_pyq bool default false`, `pyq_year int`, `source_type text default 'verified'`, `weightage text`, `exam_frequency text`, `concept_importance text` (nullable — bulk import fills later).
+- `question_attempts`: add `source_type text`, `is_pyq bool` (denormalized so results & mistake book can show badges cheaply).
 
----
+`question_hash` is a stable sha256 of `lower(trim(question)) || correct_index` — used to dedupe saves, link reports, and match a saved AI question back if it's regenerated.
 
-## 3. Question Bank Intelligence — Extended Metadata
+Indexes: `saved_questions(user_id, tag, created_at desc)`, `saved_questions(user_id, subject, topic)`, `question_reports(status, created_at)`, `question_bank(is_pyq, subject)`.
 
-Extend the generated-question schema (already has subject/chapter/topic/concept/difficulty/estimated_time) with:
+## 2. AI generator (PYQ mode + full metadata)
 
-- `weightage`: "low" | "medium" | "high"
-- `exam_frequency`: "low" | "medium" | "high" | "very_high"
-- `concept_importance`: "supporting" | "important" | "core"
+`supabase/functions/generate-test/index.ts`:
 
-Changes:
+- Accept new params: `sourceMode` (`all|pyq|pyq_similar|high_weightage`), and pass through to the prompt.
+- Extend the tool schema so every question also carries `source_type` (`pyq|ai_generated|verified`), `is_pyq`, `pyq_year` (nullable). `weightage / exam_frequency / concept_importance` are already there.
+- When `sourceMode = pyq` or `pyq_similar`, prompt instructs the model to mirror past-paper style for the selected exam and mark `is_pyq=true` / `pyq_year` when the question is a direct PYQ, `false` for similar.
+- When `high_weightage`, restrict to chapters marked high weightage.
 
-- `supabase/functions/generate-test/index.ts` — extend JSON schema + prompt so every question carries these three fields.
-- `question_attempts` table — add columns `weightage`, `exam_frequency`, `concept_importance` (text, nullable). **Migration required.**
-- `src/lib/intelligence.ts` — propagate fields when persisting attempts; surface in `results.tsx` chips.
-- `recommendTopics()` priority becomes: `weakness*0.45 + retention_decay*0.30 + weightage*0.15 + exam_frequency*0.10`.
+Practice tab (`question_bank`) gets the same source filter (SQL where `is_pyq = true` etc.).
 
----
+## 3. Question metadata surfacing
 
-## 4. "Practice What Matters Most" — Adaptive Practice
+Small shared `QuestionBadges` component renders chips from any question:
+- `PYQ 2022` (if `is_pyq`)
+- `High Weightage` / `Very Frequent`
+- `Core Concept`
+- `Verified` (if `source_type = verified`)
 
-New section on dashboard (replaces or augments current `RecommendedTopics`) and a single CTA on `/mock-test`:
+Used in:
+- Mock test player (below the question)
+- Results review
+- Mistake Book row
+- Vault list
+- Revision pack player
 
-- One-tap "Smart Practice" button generates a 10-Q set drawn from: weakest topic, most-repeated mistakes (from `mistake_book.times_wrong`), highest-weightage chapters, very-high-frequency concepts.
-- Implemented as a new server fn / direct call that builds the prompt for `generate-test` with these constraints. No new route — uses existing test player.
+## 4. Vault (save / important / revise later / favorite)
 
----
+New route: `/vault` (under `_authenticated`), sidebar link under Insights.
 
-## 5. Confidence Score per Topic
+- Top: tag tabs — All · ⭐ Saved · 🔺 Important · 🕘 Revise Later · ❤ Favorite.
+- Filters: subject, chapter, topic, difficulty, source (PYQ / AI / Verified), sort (recent, difficulty, weightage).
+- Search box (server ilike on question + topic + concept).
+- Row actions: Preview, Add note, Change tag, Remove, "Practice these" (seeds a revision pack from current filter).
 
-Add computed `confidence` (0–100) per `topic_mastery` row:
+New `saveQuestion(userId, q, tag)` helper in `src/lib/intelligence.ts` (upsert by hash+tag). Also `unsaveQuestion`, `listVault`, `moveTag`.
 
-```
-confidence = round(
-  accuracy * 0.45 +
-  retention_score * 0.25 +
-  recencyBoost * 0.15 +     // 100 if studied <3d, decays
-  recentTestPct * 0.15      // last 3 attempts on this topic
-)
-```
+Save UI:
+- In test player: star icon next to each question with a small popover (Save / Important / Revise later / Favorite).
+- Same popover on results review + mistake book row.
 
-- Add column `confidence_score int default 0` to `topic_mastery`. **Migration required.**
-- Update in `recordAttemptIntelligence` and `markRevised`.
-- Display:
-  - New "Confidence Map" panel on `/performance` (sorted list with colored bars: red <50, amber 50–74, green ≥75).
-  - Inline confidence chip on every topic in `RecommendedTopics` and `RevisionWidget`.
+Mission Control gets a new tile "🗂 Vault" showing `savedCount` + `dueForRevision` (saves tagged `revise_later` where `next_review_at <= now()`), CTA "Start revision" → seeds a revision pack from those.
 
----
+## 5. Report a question
 
-## 6. Exam Goals
+Icon (flag) next to save in every question surface (test player, results, vault, mistake book).
 
-Let students declare a target outcome.
+Modal with radio list (5 reasons) + optional details textarea. Inserts into `question_reports` with a snapshot of the question so moderation isn't broken if the source changes. Toast "Thanks — we'll review this."
 
-- New columns on `profiles`: `exam_goal_type` (text: percentile|marks|rank|qualify), `exam_goal_value` (numeric), `exam_date` (date). **Migration required.**
-- Settings page (`src/routes/_authenticated/settings/index.tsx`) gets a "Exam Goal" card to set/edit.
-- Onboarding picks them up too (`src/routes/onboarding.tsx`).
-- `predictRank()` extended to return `gapToGoal` (e.g., "+6 percentile to reach 99"). Mission Control's Exam Goal tile shows this gap.
-- Recommendations weight increases for subjects that hurt goal attainment the most.
+No admin UI this phase; reports sit in the moderation queue for later.
 
----
+## 6. Smart Revision Packs
 
-## 7. Retention System (professional, no childish gamification)
+New page: `/revision-packs` (Insights sidebar).
 
-- **Streak Protection**: if user has a streak ≥ 7 and misses a day, grant one auto-freeze per week. New `profiles.streak_freezes_used_week` + `streak_freeze_week_start`. Subtle banner on dashboard: "Streak protected — practice today to extend."
-- **Weekly Goals**: new `weekly_goals` table (user_id, week_start, target_questions, target_mocks, target_minutes, completed_*). Mission Control collapses into a "This Week" mini-ring on Sundays.
-- **Achievement Milestones**: derived, not stored — render on dashboard when crossed (10/50/100/500 questions, 1/5/10 mocks, 7/30/100-day streaks). Toast + persistent "Recent milestone" chip for 48h.
-- **Consistency Tracking**: already have heatmap; add a "Consistency" stat (active days / last 14) under it.
-- **Progress Celebrations**: refined toast (no confetti spam) when readiness crosses 60/75/90 or weak topic moves to medium/strong.
+Top: "Generate a pack" card with seed selector:
+- From my mistakes (uses `mistake_book` sorted by `times_wrong`)
+- From weak topics (lowest confidence)
+- From due revisions (`saved_questions` with `tag=revise_later, next_review_at<=now`)
+- From a specific topic (subject/topic picker)
 
-All retention UI uses existing design tokens. No mascots, no badges with cartoon art — text + iconography only.
+Options: question count (10/20/30), difficulty (easy/mixed/hard), time budget (auto = count × avg estimated_time).
 
----
+`buildRevisionPack(userId, opts)` in intelligence.ts:
+- Pulls candidate question hashes from the seed source.
+- Uses `generate-test` in "revision" mode passing the topics + weightage constraints when there aren't enough saved originals.
+- Persists pack in `revision_packs` with the full question payload so it's resumable.
 
-## 8. Performance Hygiene
+Pack player reuses the mock-test question UI (no separate component) but with per-question feedback + "Save to vault" always visible. On complete: writes attempts as usual, marks pack `completed_at`, updates SM-2 fields on any `revise_later` saves it consumed.
 
-- Mission Control loads via a single `Promise.all` aggregator in `src/lib/intelligence.ts` (`getMissionControl(userId)`) to avoid 8 round-trips.
-- Memoize readiness for 60s on the client.
-- Lazy-load `/performance` charts (already heavy).
-- No new routes; no decorative pages added.
+Below the generator: list of user's packs (title, seed, count, status, resume/replay).
 
----
+Mission Control's existing revision tile shows next pack instead of the raw revision list once packs exist.
 
-## Technical Section
+## 7. Integration touch points
 
-### Files to create
-- `src/components/MissionControl.tsx`
-- `src/components/ConfidenceMap.tsx`
-- `src/components/SmartPracticeCard.tsx`
-- `src/lib/coach-actions.ts`
+- Mission Control: add Vault tile; existing Revision tile now links to `/revision-packs` when saved-revise-later items exist.
+- Daily Challenge: when a challenge is topic-scoped and the user has due saves for that topic, prefer them.
+- Mistake Book row: add Save-to-Vault, Report, and "Add to next pack" buttons.
+- Results: after submit, if ≥3 wrong answers, banner "Build a revision pack from today's mistakes →".
 
-### Files to edit
-- `src/routes/_authenticated/dashboard.tsx` — replace top section with Mission Control; reorder
-- `src/routes/_authenticated/performance/index.tsx` — add Confidence Map
-- `src/routes/_authenticated/settings/index.tsx` — add Exam Goal card
-- `src/routes/onboarding.tsx` — capture exam_date + goal
-- `src/routes/_authenticated/mock-test/index.tsx` and `practice.tsx` — accept deep-link params, add Smart Practice button
-- `src/routes/_authenticated/mock-test/$testId/results.tsx` — show new metadata chips
-- `src/components/RecommendedTopics.tsx`, `RevisionWidget.tsx`, `RankPredictor.tsx`, `ReadinessRing.tsx` — action CTAs
-- `src/lib/intelligence.ts` — `getMissionControl`, `computeConfidence`, snapshot helper, updated `recommendTopics` scoring, streak-freeze logic
-- `supabase/functions/generate-test/index.ts` — extended metadata in schema + prompt
+## 8. Bulk import readiness (architecture only, no admin UI this phase)
 
-### Migration (single)
-- `profiles`: add `exam_goal_type text`, `exam_goal_value numeric`, `exam_date date`, `streak_freezes_used_week int default 0`, `streak_freeze_week_start date`
-- `topic_mastery`: add `confidence_score int default 0`
-- `question_attempts`: add `weightage text`, `exam_frequency text`, `concept_importance text`
-- new `weekly_goals` table with full GRANT + RLS (auth.uid() = user_id)
+- Question shape standardized (single TS type `CanonicalQuestion` in `src/lib/question-schema.ts`) — used by AI generator output, saved_questions, revision_packs payload, and future bulk import.
+- Add `svg_diagram text` and `diagram_url text` columns to `question_bank` so future imports can carry diagrams; renderer already renders markdown, we just pass through raw SVG when present (sanitized via DOMPurify — new dep).
+- Storage bucket `question-diagrams` (public read) created via storage tool — for future diagram uploads. No UI wired to it this phase.
+- Utility `parseBulkQuestions(json | csv): CanonicalQuestion[]` (pure function, no route) so an admin importer can be added later without reshaping data.
 
-### Out of scope
-- No new top-level routes
-- No badge art, mascots, or confetti systems
-- No changes to auth, billing, or edge-function infra beyond the generate-test schema
+## 9. Out of scope this phase
+
+- Admin moderation UI for reports & bulk import UI (arch is ready, no page).
+- Community-shared vaults / social features.
+- Diagram editor.
+- Rewriting analytics dashboards, Rank Predictor, Mission Control layout.
 
 ---
 
-Approve and I'll implement in this order: migration → intelligence helpers → Mission Control → action CTAs → confidence + goals → retention layer.
+## Technical section
+
+### New files
+- `src/lib/question-schema.ts` — `CanonicalQuestion` type, `hashQuestion()`, `parseBulkQuestions()`.
+- `src/components/QuestionBadges.tsx`
+- `src/components/SaveQuestionMenu.tsx`
+- `src/components/ReportQuestionDialog.tsx`
+- `src/routes/_authenticated/vault/index.tsx`
+- `src/routes/_authenticated/revision-packs/index.tsx`
+- `src/routes/_authenticated/revision-packs/$packId.tsx` (player)
+
+### Edited files
+- `src/lib/intelligence.ts` — vault helpers, `buildRevisionPack`, extend `getMissionControl` with vault counts.
+- `src/routes/_authenticated/mock-test/index.tsx` — source-mode selector for AI + PYQ filter for Practice.
+- `src/routes/_authenticated/mock-test/$testId/index.tsx` and `results.tsx` — save/report buttons, badges, revision-pack banner.
+- `src/routes/_authenticated/mistakes/index.tsx` — save/report/add-to-pack.
+- `src/components/MissionControl.tsx` — Vault tile, updated Revision tile.
+- `src/components/AppSidebar.tsx` — Vault + Revision Packs links.
+- `supabase/functions/generate-test/index.ts` — `sourceMode`, PYQ prompt, extended schema.
+
+### Migrations
+Single migration for the three new tables + `question_bank` / `question_attempts` column additions + indexes + policies + GRANTs.
+
+### New deps
+- `dompurify` (SVG sanitization for future diagrams)
+
+Ship order: migration → schema/helpers → save/report components → vault route → PYQ generator → revision packs → integrations.
+
+Approve and I'll build it in that order.
