@@ -5,6 +5,9 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { recordAttemptIntelligence, bumpDailyChallenge } from "@/lib/intelligence";
+import { QuestionBadges } from "@/components/QuestionBadges";
+import { SaveQuestionMenu } from "@/components/SaveQuestionMenu";
+import { ReportQuestionDialog } from "@/components/ReportQuestionDialog";
 
 export const Route = createFileRoute("/_authenticated/mock-test/$testId/")({
   head: () => ({ meta: [{ title: "Take Test — PARIKSHA" }] }),
@@ -329,12 +332,21 @@ function TakeTestPage() {
       {/* Question */}
       <div className="no-select mt-6 rounded-xl border border-border bg-card p-6">
         <div className="flex items-start justify-between gap-4">
-          <p className="font-medium leading-relaxed">{q.question}</p>
-          {q.marks ? (
-            <span className="shrink-0 rounded-md border border-border bg-background px-2 py-0.5 text-xs text-muted-foreground">
-              +{q.marks}
-            </span>
-          ) : null}
+          <div className="min-w-0 flex-1">
+            <QuestionBadges q={q} compact />
+            <p className="mt-2 font-medium leading-relaxed">{q.question}</p>
+          </div>
+          <div className="flex shrink-0 flex-col items-end gap-1.5">
+            {q.marks ? (
+              <span className="rounded-md border border-border bg-background px-2 py-0.5 text-xs text-muted-foreground">
+                +{q.marks}
+              </span>
+            ) : null}
+            <div className="flex gap-1.5">
+              <SaveQuestionMenu q={q} compact />
+              <ReportQuestionDialog q={q} compact />
+            </div>
+          </div>
         </div>
         <div className="mt-5 space-y-2">
           {q.options.map((opt, i) => {
