@@ -699,9 +699,31 @@ function MockTestIndex() {
           </section>
         </TabsContent>
       </Tabs>
+
+      <GenerationOverlay
+        open={generating}
+        progress={genProgress}
+        etaSeconds={genEta}
+        detail={genDetail}
+      />
+      <GenerationSuccess
+        open={!!successSummary && !generating}
+        summary={successSummary}
+        onStart={() => {
+          if (pendingTestId) {
+            navigate({ to: "/mock-test/$testId", params: { testId: pendingTestId } });
+          }
+        }}
+        onClose={() => {
+          setSuccessSummary(null);
+          setPendingTestId(null);
+          void load();
+        }}
+      />
     </div>
   );
 }
+
 
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
