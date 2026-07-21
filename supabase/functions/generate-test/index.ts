@@ -141,7 +141,8 @@ serve(async (req) => {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: "google/gemini-2.5-flash",
+        model,
+
         messages: [
           { role: "system", content: systemPrompt },
           { role: "user", content: `Generate the test now.` },
