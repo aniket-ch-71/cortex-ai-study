@@ -585,14 +585,27 @@ function MockTestIndex() {
           </div>
         </div>
 
-        <Button onClick={onGenerate} disabled={generating} className="mt-6" size="lg">
-          {generating ? (
-            <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Generating…</>
-          ) : (
-            <><Plus className="mr-2 h-4 w-4" /> Generate test</>
-          )}
-        </Button>
+        <div className="mt-6 flex flex-wrap items-center gap-3">
+          <Button onClick={onGenerate} disabled={generating} size="lg" className="group">
+            {generating ? (
+              <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Generating…</>
+            ) : (
+              <><Plus className="mr-2 h-4 w-4" /> Generate test</>
+            )}
+          </Button>
+          <p className="inline-flex items-center gap-1.5 text-xs text-muted-foreground">
+            <Zap className="h-3.5 w-3.5 text-primary" />
+            Estimated ~
+            {(() => {
+              const total = allSections ? pattern.totalQuestions : numQuestions;
+              const chunks = Math.max(1, Math.ceil(total / CHUNK_SIZE));
+              const eta = Math.ceil((chunks / Math.min(MAX_PARALLEL, chunks)) * (QUALITY_ETA[quality] ?? 10));
+              return `${eta}s`;
+            })()} · {allSections ? pattern.totalQuestions : numQuestions} Qs · {quality}
+          </p>
+        </div>
       </section>
+
 
       {/* History */}
       <section className="mt-10">
