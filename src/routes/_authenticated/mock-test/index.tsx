@@ -345,7 +345,7 @@ function MockTestIndex() {
           difficulty,
           language,
           num_questions: allQuestions.length,
-          questions: allQuestions,
+          questions: allQuestions as never,
           pattern: {
             subExam,
             category,
