@@ -29,6 +29,7 @@ serve(async (req) => {
       marksPerQuestion = 1,
       negativeMarking = 0,
       sourceMode = "all", // all | pyq | pyq_similar | high_weightage
+      quality = "premium", // standard | premium | advanced
     } = await req.json();
 
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
@@ -36,12 +37,26 @@ serve(async (req) => {
 
     const lang = LANG_LABEL[language] ?? LANG_LABEL.en;
     // Hard cap: max 25 questions per AI call to keep generation reliable.
-    const n = Math.max(5, Math.min(100, Number(numQuestions) || 10));
+    const n = Math.max(5, Math.min(25, Number(numQuestions) || 10));
+
+    // Map quality tier -> model. Standard = fastest, Advanced = highest quality.
+    const model =
+      quality === "advanced"
+        ? "google/gemini-2.5-pro"
+        : quality === "standard"
+          ? "google/gemini-2.5-flash-lite"
+          : "google/gemini-2.5-flash";
+
+    const difficultyInstruction =
+      difficulty === "mixed"
+        ? `Distribute difficulty across questions: ~30% easy, ~50% medium, ~20% hard. Set the "difficulty" field per question accordingly.`
+        : `All questions at ${difficulty} difficulty.`;
 
     const negInfo =
       Number(negativeMarking) !== 0
         ? `This exam uses negative marking of ${negativeMarking} per wrong answer, so make distractors plausible (no obvious throwaways).`
         : `This exam has no negative marking.`;
+
 
     const sourceInstruction =
       sourceMode === "pyq"
