@@ -192,12 +192,62 @@ function MockTestIndex() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [loading, subjectsForExam, autoStarted]);
 
+  // Build the chunk plan: split each section into ≤CHUNK_SIZE calls.
+  type ChunkTask = { section: string; marks: number; count: number; index: number };
+  const planChunks = (): ChunkTask[] => {
+    const sections = allSections
+      ? pattern.sections
+      : [
+          {
+            name: subject,
+            questions: numQuestions,
+            marks:
+              pattern.sections.find((s) => s.name === subject)?.marks ??
+              pattern.sections[0]?.marks ??
+              1,
+          },
+        ];
+    const chunks: ChunkTask[] = [];
+    let idx = 0;
+    for (const sec of sections) {
+      let remaining = sec.questions;
+      while (remaining > 0) {
+        const c = Math.min(CHUNK_SIZE, remaining);
+        chunks.push({ section: sec.name, marks: sec.marks, count: c, index: idx++ });
+        remaining -= c;
+      }
+    }
+    return chunks;
+  };
+
+  const runWithConcurrency = async <T,>(
+    tasks: Array<() => Promise<T>>,
+    limit: number,
+    onEach: () => void,
+  ): Promise<T[]> => {
+    const results: T[] = new Array(tasks.length);
+    let cursor = 0;
+    const workers = Array.from({ length: Math.min(limit, tasks.length) }, async () => {
+      while (true) {
+        const i = cursor++;
+        if (i >= tasks.length) return;
+        results[i] = await tasks[i]();
+        onEach();
+      }
+    });
+    await Promise.all(workers);
+    return results;
+  };
+
   const onGenerate = async () => {
     if (aiRemaining <= 0) {
       toast.error("Daily limit reached. Try the Practice Bank, or come back tomorrow.");
       return;
     }
     setGenerating(true);
+    setGenProgress(0);
+    setGenDetail("");
+    genStartRef.current = Date.now();
     try {
       const { data: u } = await supabase.auth.getUser();
       if (!u.user) {
@@ -205,54 +255,85 @@ function MockTestIndex() {
         return;
       }
 
-      // Build per-section requests for All Sections, else one request
-      const sectionsToGenerate = allSections
-        ? pattern.sections
-        : [
-            {
-              name: subject,
-              questions: numQuestions,
-              marks:
-                pattern.sections.find((s) => s.name === subject)?.marks ??
-                pattern.sections[0]?.marks ??
-                1,
-            },
-          ];
+      const chunks = planChunks();
+      const perChunkEta = QUALITY_ETA[quality] ?? 10;
+      const totalEta = Math.ceil((chunks.length / Math.min(MAX_PARALLEL, chunks.length || 1)) * perChunkEta);
+      setGenEta(totalEta);
+      setGenDetail(
+        chunks.length > 1
+          ? `Generating ${chunks.length} batches in parallel · ${quality} quality`
+          : `Generating ${chunks[0]?.count ?? 0} questions · ${quality} quality`,
+      );
 
-      const allQuestions: Array<{
-        question: string;
-        options: string[];
-        correct_index: number;
-        explanation: string;
-        section: string;
-        marks: number;
-      }> = [];
+      let completed = 0;
+      const bumpProgress = () => {
+        completed += 1;
+        const pct = Math.min(95, Math.round((completed / chunks.length) * 92));
+        setGenProgress(pct);
+        const elapsed = (Date.now() - genStartRef.current) / 1000;
+        const remainingRatio = 1 - completed / chunks.length;
+        setGenEta(Math.max(2, Math.round((elapsed / Math.max(1, completed)) * chunks.length * remainingRatio)));
+      };
 
-      let title = "";
-      for (const sec of sectionsToGenerate) {
+      // Kick a soft progress tick so the ring animates while waiting for first response.
+      const softTick = setInterval(() => {
+        setGenProgress((p) => (p < 88 ? Math.min(88, p + 1) : p));
+      }, Math.max(400, (perChunkEta * 1000) / 30));
+
+      const tasks = chunks.map((ch) => async () => {
         const { data: payload, error: fnErr } = await supabase.functions.invoke(
           "generate-test",
           {
             body: {
-              subject: sec.name,
+              subject: ch.section,
               exam: subExam,
               difficulty,
-              numQuestions: sec.questions,
+              numQuestions: ch.count,
               language,
               topic,
-              marksPerQuestion: sec.marks,
+              marksPerQuestion: ch.marks,
               negativeMarking: pattern.negativeMarking,
               sourceMode,
+              quality,
+              chunkIndex: ch.index, // only chunk 0 charges quota
             },
           },
         );
         if (fnErr) throw new Error(fnErr.message || "Failed to generate test");
+        return { chunk: ch, payload };
+      });
+
+      let results: Array<{ chunk: ChunkTask; payload: { title?: string; questions: unknown[] } }>;
+      try {
+        results = await runWithConcurrency(tasks, MAX_PARALLEL, bumpProgress);
+      } finally {
+        clearInterval(softTick);
+      }
+
+      // Assemble, de-duplicate by question text.
+      const seen = new Set<string>();
+      const allQuestions: Array<Record<string, unknown>> = [];
+      let title = "";
+      for (const { chunk, payload } of results) {
         if (!title) title = payload.title || `${subExam} Mock Test`;
-        for (const q of payload.questions) {
-          allQuestions.push({ ...q, section: sec.name, marks: sec.marks });
+        for (const q of payload.questions as Array<Record<string, unknown>>) {
+          const key = String((q.question ?? "")).trim().toLowerCase().slice(0, 160);
+          if (!key || seen.has(key)) continue;
+          seen.add(key);
+          allQuestions.push({ ...q, section: chunk.section, marks: chunk.marks });
         }
       }
 
+      if (allQuestions.length === 0) {
+        throw new Error("Generation returned no valid questions. Please retry.");
+      }
+
+      setGenProgress(97);
+      setGenDetail("Saving your test…");
+
+      const sectionsUsed = allSections
+        ? pattern.sections
+        : [{ name: subject, questions: numQuestions, marks: pattern.sections.find((s) => s.name === subject)?.marks ?? 1 }];
 
       const { data: inserted, error } = await supabase
         .from("mock_tests")
@@ -270,7 +351,7 @@ function MockTestIndex() {
             category,
             timeMinutes: pattern.timeMinutes,
             negativeMarking: pattern.negativeMarking,
-            sections: sectionsToGenerate,
+            sections: sectionsUsed,
             cutoffPct: pattern.cutoffPct,
             allSections,
           },
@@ -279,25 +360,40 @@ function MockTestIndex() {
         .single();
       if (error) throw error;
 
-      // Increment AI test usage counter
-      const today = new Date().toISOString().slice(0, 10);
-      const newCount = aiUsed + 1;
-      await supabase
-        .from("daily_usage")
-        .upsert(
-          { user_id: u.user.id, usage_date: today, ai_tests_used: newCount },
-          { onConflict: "user_id,usage_date" },
-        );
-      setAiUsed(newCount);
+      setGenProgress(100);
+      setAiUsed((n) => n + 1);
 
-      toast.success("Test generated!");
-      navigate({ to: "/mock-test/$testId", params: { testId: inserted.id } });
+      // Build difficulty-mix summary from returned metadata.
+      const mix = { easy: 0, medium: 0, hard: 0 };
+      for (const q of allQuestions) {
+        const d = String((q as { difficulty?: string }).difficulty ?? difficulty).toLowerCase();
+        if (d in mix) mix[d as keyof typeof mix] += 1;
+      }
+      const total = allQuestions.length;
+      const mixStr =
+        difficulty === "mixed"
+          ? `${Math.round((mix.easy / total) * 100)}% easy · ${Math.round((mix.medium / total) * 100)}% medium · ${Math.round((mix.hard / total) * 100)}% hard`
+          : difficulty.charAt(0).toUpperCase() + difficulty.slice(1);
+
+      setPendingTestId(inserted.id);
+      setSuccessSummary({
+        exam: subExam,
+        subject: allSections ? "All sections" : subject,
+        topics: topic || undefined,
+        count: total,
+        difficultyMix: mixStr,
+        estimatedMinutes: Math.max(
+          5,
+          Math.round(allSections ? pattern.timeMinutes : (total * 60) / 60),
+        ),
+      });
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Failed to generate test");
     } finally {
       setGenerating(false);
     }
   };
+
 
   const onDelete = async (id: string) => {
     if (!confirm("Delete this test and its attempts?")) return;
