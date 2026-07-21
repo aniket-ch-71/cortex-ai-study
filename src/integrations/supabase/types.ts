@@ -1018,6 +1018,7 @@ export type Database = {
         Returns: boolean
       }
       public_stats: { Args: never; Returns: Json }
+      redeem_referral: { Args: { _code: string }; Returns: boolean }
       username_available: { Args: { uname: string }; Returns: boolean }
     }
     Enums: {
