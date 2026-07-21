@@ -16,9 +16,8 @@ serve(async (req) => {
   try {
     const auth = await requireUser(req);
     if (auth instanceof Response) return auth;
-    const quota = await enforceDailyQuota(auth.admin, auth.userId, "tests", AI_TEST_DAILY_LIMIT);
-    if (quota) return quota;
 
+    const body = await req.json();
     const {
       subject,
       exam = "",
@@ -30,7 +29,16 @@ serve(async (req) => {
       negativeMarking = 0,
       sourceMode = "all", // all | pyq | pyq_similar | high_weightage
       quality = "premium", // standard | premium | advanced
-    } = await req.json();
+      chunkIndex = 0, // used by client to skip re-billing chunked calls
+    } = body;
+
+    // Only charge quota once per user-initiated test generation. Clients issuing
+    // parallel chunks for large tests set chunkIndex > 0 on follow-up requests.
+    if (Number(chunkIndex) === 0) {
+      const quota = await enforceDailyQuota(auth.admin, auth.userId, "tests", AI_TEST_DAILY_LIMIT);
+      if (quota) return quota;
+    }
+
 
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
