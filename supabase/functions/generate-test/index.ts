@@ -16,9 +16,8 @@ serve(async (req) => {
   try {
     const auth = await requireUser(req);
     if (auth instanceof Response) return auth;
-    const quota = await enforceDailyQuota(auth.admin, auth.userId, "tests", AI_TEST_DAILY_LIMIT);
-    if (quota) return quota;
 
+    const body = await req.json();
     const {
       subject,
       exam = "",
@@ -29,19 +28,43 @@ serve(async (req) => {
       marksPerQuestion = 1,
       negativeMarking = 0,
       sourceMode = "all", // all | pyq | pyq_similar | high_weightage
-    } = await req.json();
+      quality = "premium", // standard | premium | advanced
+      chunkIndex = 0, // used by client to skip re-billing chunked calls
+    } = body;
+
+    // Only charge quota once per user-initiated test generation. Clients issuing
+    // parallel chunks for large tests set chunkIndex > 0 on follow-up requests.
+    if (Number(chunkIndex) === 0) {
+      const quota = await enforceDailyQuota(auth.admin, auth.userId, "tests", AI_TEST_DAILY_LIMIT);
+      if (quota) return quota;
+    }
+
 
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
 
     const lang = LANG_LABEL[language] ?? LANG_LABEL.en;
     // Hard cap: max 25 questions per AI call to keep generation reliable.
-    const n = Math.max(5, Math.min(100, Number(numQuestions) || 10));
+    const n = Math.max(5, Math.min(25, Number(numQuestions) || 10));
+
+    // Map quality tier -> model. Standard = fastest, Advanced = highest quality.
+    const model =
+      quality === "advanced"
+        ? "google/gemini-2.5-pro"
+        : quality === "standard"
+          ? "google/gemini-2.5-flash-lite"
+          : "google/gemini-2.5-flash";
+
+    const difficultyInstruction =
+      difficulty === "mixed"
+        ? `Distribute difficulty across questions: ~30% easy, ~50% medium, ~20% hard. Set the "difficulty" field per question accordingly.`
+        : `All questions at ${difficulty} difficulty.`;
 
     const negInfo =
       Number(negativeMarking) !== 0
         ? `This exam uses negative marking of ${negativeMarking} per wrong answer, so make distractors plausible (no obvious throwaways).`
         : `This exam has no negative marking.`;
+
 
     const sourceInstruction =
       sourceMode === "pyq"
@@ -55,11 +78,13 @@ serve(async (req) => {
     const systemPrompt =
       `You are PARIKSHA AI, an expert exam-question setter for Indian competitive exams. ` +
       `Generate exactly ${n} high-quality multiple-choice questions for the "${exam || "general study"}" exam ` +
-      `from the section "${subject}"${topic ? ` (topic focus: ${topic})` : ""} at ${difficulty} difficulty. ` +
+      `from the section "${subject}"${topic ? ` (topic focus: ${topic})` : ""}. ` +
+      `${difficultyInstruction} ` +
       `Each question is worth ${marksPerQuestion} marks. ${negInfo} ` +
       `Match the real syllabus, style, and difficulty pattern of ${exam || "the exam"} for the ${subject} section. ` +
       `${sourceInstruction}` +
       `Each question must have exactly 4 options and one correct answer. ` +
+      `Ensure no two questions are duplicates or trivial rephrasings of each other. ` +
       `Provide a concise explanation for each correct answer. ` +
       `For every question, also include this intelligence metadata: ` +
       `chapter (syllabus chapter), topic (specific topic), concept (core idea tested), ` +
@@ -70,6 +95,7 @@ serve(async (req) => {
       `source_type (pyq|ai_generated|verified), is_pyq (boolean), pyq_year (integer or null). ` +
       `Write all content in ${lang}. ` +
       `Use the submit_test tool to return the questions.`;
+
 
     const tool = {
       type: "function",
@@ -123,7 +149,8 @@ serve(async (req) => {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: "google/gemini-2.5-flash",
+        model,
+
         messages: [
           { role: "system", content: systemPrompt },
           { role: "user", content: `Generate the test now.` },

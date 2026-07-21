@@ -1,6 +1,6 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useEffect, useMemo, useState } from "react";
-import { Brain, Loader2, Plus, Trash2, Trophy, ArrowRight, Info, Sparkles, Library } from "lucide-react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { Brain, Loader2, Plus, Trash2, Trophy, ArrowRight, Info, Sparkles, Library, Zap } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -25,8 +25,18 @@ import {
   type ExamCategory,
 } from "@/lib/exam-patterns";
 import { useProfile } from "@/hooks/useProfile";
+import { GenerationOverlay } from "@/components/mock-test/GenerationOverlay";
+import { GenerationSuccess, type GenerationSummary } from "@/components/mock-test/GenerationSuccess";
 
 const AI_TEST_DAILY_LIMIT = 3;
+const CHUNK_SIZE = 25; // edge function hard cap per call
+const MAX_PARALLEL = 3; // gateway-friendly concurrency
+
+// Estimated per-chunk latency (seconds) by quality tier.
+const QUALITY_ETA: Record<string, number> = { standard: 6, premium: 10, advanced: 18 };
+
+type Quality = "standard" | "premium" | "advanced";
+
 
 export const Route = createFileRoute("/_authenticated/mock-test/")({
   head: () => ({ meta: [{ title: "Mock Tests — PARIKSHA" }] }),
@@ -67,14 +77,24 @@ function MockTestIndex() {
     [subExam],
   );
   const [subject, setSubject] = useState<string>(subjectsForExam[0]);
-  const [difficulty, setDifficulty] = useState("medium");
+  const [difficulty, setDifficulty] = useState("mixed");
+  const [quality, setQuality] = useState<Quality>("premium");
   const [language, setLanguage] = useState("en");
   const [topic, setTopic] = useState("");
-  const [numQuestions, setNumQuestions] = useState<number>(25);
+  const [numQuestions, setNumQuestions] = useState<number>(20);
   const [sourceMode, setSourceMode] = useState<"all" | "pyq" | "pyq_similar" | "high_weightage">("all");
   const [primarySeeded, setPrimarySeeded] = useState(false);
   const [aiUsed, setAiUsed] = useState(0);
   const aiRemaining = Math.max(0, AI_TEST_DAILY_LIMIT - aiUsed);
+
+  // Generation progress state
+  const [genProgress, setGenProgress] = useState(0);
+  const [genEta, setGenEta] = useState(0);
+  const [genDetail, setGenDetail] = useState<string>("");
+  const [successSummary, setSuccessSummary] = useState<GenerationSummary | null>(null);
+  const [pendingTestId, setPendingTestId] = useState<string | null>(null);
+  const genStartRef = useRef<number>(0);
+
 
   // Seed once from profile primary exam
   useEffect(() => {
@@ -172,12 +192,62 @@ function MockTestIndex() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [loading, subjectsForExam, autoStarted]);
 
+  // Build the chunk plan: split each section into ≤CHUNK_SIZE calls.
+  type ChunkTask = { section: string; marks: number; count: number; index: number };
+  const planChunks = (): ChunkTask[] => {
+    const sections = allSections
+      ? pattern.sections
+      : [
+          {
+            name: subject,
+            questions: numQuestions,
+            marks:
+              pattern.sections.find((s) => s.name === subject)?.marks ??
+              pattern.sections[0]?.marks ??
+              1,
+          },
+        ];
+    const chunks: ChunkTask[] = [];
+    let idx = 0;
+    for (const sec of sections) {
+      let remaining = sec.questions;
+      while (remaining > 0) {
+        const c = Math.min(CHUNK_SIZE, remaining);
+        chunks.push({ section: sec.name, marks: sec.marks, count: c, index: idx++ });
+        remaining -= c;
+      }
+    }
+    return chunks;
+  };
+
+  const runWithConcurrency = async <T,>(
+    tasks: Array<() => Promise<T>>,
+    limit: number,
+    onEach: () => void,
+  ): Promise<T[]> => {
+    const results: T[] = new Array(tasks.length);
+    let cursor = 0;
+    const workers = Array.from({ length: Math.min(limit, tasks.length) }, async () => {
+      while (true) {
+        const i = cursor++;
+        if (i >= tasks.length) return;
+        results[i] = await tasks[i]();
+        onEach();
+      }
+    });
+    await Promise.all(workers);
+    return results;
+  };
+
   const onGenerate = async () => {
     if (aiRemaining <= 0) {
       toast.error("Daily limit reached. Try the Practice Bank, or come back tomorrow.");
       return;
     }
     setGenerating(true);
+    setGenProgress(0);
+    setGenDetail("");
+    genStartRef.current = Date.now();
     try {
       const { data: u } = await supabase.auth.getUser();
       if (!u.user) {
@@ -185,54 +255,85 @@ function MockTestIndex() {
         return;
       }
 
-      // Build per-section requests for All Sections, else one request
-      const sectionsToGenerate = allSections
-        ? pattern.sections
-        : [
-            {
-              name: subject,
-              questions: numQuestions,
-              marks:
-                pattern.sections.find((s) => s.name === subject)?.marks ??
-                pattern.sections[0]?.marks ??
-                1,
-            },
-          ];
+      const chunks = planChunks();
+      const perChunkEta = QUALITY_ETA[quality] ?? 10;
+      const totalEta = Math.ceil((chunks.length / Math.min(MAX_PARALLEL, chunks.length || 1)) * perChunkEta);
+      setGenEta(totalEta);
+      setGenDetail(
+        chunks.length > 1
+          ? `Generating ${chunks.length} batches in parallel · ${quality} quality`
+          : `Generating ${chunks[0]?.count ?? 0} questions · ${quality} quality`,
+      );
 
-      const allQuestions: Array<{
-        question: string;
-        options: string[];
-        correct_index: number;
-        explanation: string;
-        section: string;
-        marks: number;
-      }> = [];
+      let completed = 0;
+      const bumpProgress = () => {
+        completed += 1;
+        const pct = Math.min(95, Math.round((completed / chunks.length) * 92));
+        setGenProgress(pct);
+        const elapsed = (Date.now() - genStartRef.current) / 1000;
+        const remainingRatio = 1 - completed / chunks.length;
+        setGenEta(Math.max(2, Math.round((elapsed / Math.max(1, completed)) * chunks.length * remainingRatio)));
+      };
 
-      let title = "";
-      for (const sec of sectionsToGenerate) {
+      // Kick a soft progress tick so the ring animates while waiting for first response.
+      const softTick = setInterval(() => {
+        setGenProgress((p) => (p < 88 ? Math.min(88, p + 1) : p));
+      }, Math.max(400, (perChunkEta * 1000) / 30));
+
+      const tasks = chunks.map((ch) => async () => {
         const { data: payload, error: fnErr } = await supabase.functions.invoke(
           "generate-test",
           {
             body: {
-              subject: sec.name,
+              subject: ch.section,
               exam: subExam,
               difficulty,
-              numQuestions: sec.questions,
+              numQuestions: ch.count,
               language,
               topic,
-              marksPerQuestion: sec.marks,
+              marksPerQuestion: ch.marks,
               negativeMarking: pattern.negativeMarking,
               sourceMode,
+              quality,
+              chunkIndex: ch.index, // only chunk 0 charges quota
             },
           },
         );
         if (fnErr) throw new Error(fnErr.message || "Failed to generate test");
+        return { chunk: ch, payload };
+      });
+
+      let results: Array<{ chunk: ChunkTask; payload: { title?: string; questions: unknown[] } }>;
+      try {
+        results = await runWithConcurrency(tasks, MAX_PARALLEL, bumpProgress);
+      } finally {
+        clearInterval(softTick);
+      }
+
+      // Assemble, de-duplicate by question text.
+      const seen = new Set<string>();
+      const allQuestions: Array<Record<string, unknown>> = [];
+      let title = "";
+      for (const { chunk, payload } of results) {
         if (!title) title = payload.title || `${subExam} Mock Test`;
-        for (const q of payload.questions) {
-          allQuestions.push({ ...q, section: sec.name, marks: sec.marks });
+        for (const q of payload.questions as Array<Record<string, unknown>>) {
+          const key = String((q.question ?? "")).trim().toLowerCase().slice(0, 160);
+          if (!key || seen.has(key)) continue;
+          seen.add(key);
+          allQuestions.push({ ...q, section: chunk.section, marks: chunk.marks });
         }
       }
 
+      if (allQuestions.length === 0) {
+        throw new Error("Generation returned no valid questions. Please retry.");
+      }
+
+      setGenProgress(97);
+      setGenDetail("Saving your test…");
+
+      const sectionsUsed = allSections
+        ? pattern.sections
+        : [{ name: subject, questions: numQuestions, marks: pattern.sections.find((s) => s.name === subject)?.marks ?? 1 }];
 
       const { data: inserted, error } = await supabase
         .from("mock_tests")
@@ -244,13 +345,13 @@ function MockTestIndex() {
           difficulty,
           language,
           num_questions: allQuestions.length,
-          questions: allQuestions,
+          questions: allQuestions as never,
           pattern: {
             subExam,
             category,
             timeMinutes: pattern.timeMinutes,
             negativeMarking: pattern.negativeMarking,
-            sections: sectionsToGenerate,
+            sections: sectionsUsed,
             cutoffPct: pattern.cutoffPct,
             allSections,
           },
@@ -259,25 +360,40 @@ function MockTestIndex() {
         .single();
       if (error) throw error;
 
-      // Increment AI test usage counter
-      const today = new Date().toISOString().slice(0, 10);
-      const newCount = aiUsed + 1;
-      await supabase
-        .from("daily_usage")
-        .upsert(
-          { user_id: u.user.id, usage_date: today, ai_tests_used: newCount },
-          { onConflict: "user_id,usage_date" },
-        );
-      setAiUsed(newCount);
+      setGenProgress(100);
+      setAiUsed((n) => n + 1);
 
-      toast.success("Test generated!");
-      navigate({ to: "/mock-test/$testId", params: { testId: inserted.id } });
+      // Build difficulty-mix summary from returned metadata.
+      const mix = { easy: 0, medium: 0, hard: 0 };
+      for (const q of allQuestions) {
+        const d = String((q as { difficulty?: string }).difficulty ?? difficulty).toLowerCase();
+        if (d in mix) mix[d as keyof typeof mix] += 1;
+      }
+      const total = allQuestions.length;
+      const mixStr =
+        difficulty === "mixed"
+          ? `${Math.round((mix.easy / total) * 100)}% easy · ${Math.round((mix.medium / total) * 100)}% medium · ${Math.round((mix.hard / total) * 100)}% hard`
+          : difficulty.charAt(0).toUpperCase() + difficulty.slice(1);
+
+      setPendingTestId(inserted.id);
+      setSuccessSummary({
+        exam: subExam,
+        subject: allSections ? "All sections" : subject,
+        topics: topic || undefined,
+        count: total,
+        difficultyMix: mixStr,
+        estimatedMinutes: Math.max(
+          5,
+          Math.round(allSections ? pattern.timeMinutes : (total * 60) / 60),
+        ),
+      });
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Failed to generate test");
     } finally {
       setGenerating(false);
     }
   };
+
 
   const onDelete = async (id: string) => {
     if (!confirm("Delete this test and its attempts?")) return;
@@ -385,9 +501,14 @@ function MockTestIndex() {
                     {pattern.totalQuestions} (full exam)
                   </SelectItem>
                 ) : (
-                  QUESTION_COUNT_OPTIONS.map((n) => (
-                    <SelectItem key={n} value={String(n)}>{n}</SelectItem>
-                  ))
+                  <>
+                    {QUESTION_COUNT_OPTIONS.map((n) => (
+                      <SelectItem key={n} value={String(n)}>{n}</SelectItem>
+                    ))}
+                    <SelectItem value={String(pattern.totalQuestions)}>
+                      Full Mock Test ({pattern.totalQuestions})
+                    </SelectItem>
+                  </>
                 )}
               </SelectContent>
             </Select>
@@ -396,12 +517,24 @@ function MockTestIndex() {
             <Select value={difficulty} onValueChange={setDifficulty}>
               <SelectTrigger><SelectValue /></SelectTrigger>
               <SelectContent>
+                <SelectItem value="mixed">Mixed (Recommended)</SelectItem>
                 <SelectItem value="easy">Easy</SelectItem>
                 <SelectItem value="medium">Medium</SelectItem>
                 <SelectItem value="hard">Hard</SelectItem>
               </SelectContent>
             </Select>
           </Field>
+          <Field label="Generation quality">
+            <Select value={quality} onValueChange={(v) => setQuality(v as Quality)}>
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="standard">⚡ Standard (fastest)</SelectItem>
+                <SelectItem value="premium">✨ Premium (balanced)</SelectItem>
+                <SelectItem value="advanced">🎯 Advanced (highest quality)</SelectItem>
+              </SelectContent>
+            </Select>
+          </Field>
+
           <Field label="Language">
             <Select value={language} onValueChange={setLanguage}>
               <SelectTrigger><SelectValue /></SelectTrigger>
@@ -452,14 +585,27 @@ function MockTestIndex() {
           </div>
         </div>
 
-        <Button onClick={onGenerate} disabled={generating} className="mt-6" size="lg">
-          {generating ? (
-            <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Generating…</>
-          ) : (
-            <><Plus className="mr-2 h-4 w-4" /> Generate test</>
-          )}
-        </Button>
+        <div className="mt-6 flex flex-wrap items-center gap-3">
+          <Button onClick={onGenerate} disabled={generating} size="lg" className="group">
+            {generating ? (
+              <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Generating…</>
+            ) : (
+              <><Plus className="mr-2 h-4 w-4" /> Generate test</>
+            )}
+          </Button>
+          <p className="inline-flex items-center gap-1.5 text-xs text-muted-foreground">
+            <Zap className="h-3.5 w-3.5 text-primary" />
+            Estimated ~
+            {(() => {
+              const total = allSections ? pattern.totalQuestions : numQuestions;
+              const chunks = Math.max(1, Math.ceil(total / CHUNK_SIZE));
+              const eta = Math.ceil((chunks / Math.min(MAX_PARALLEL, chunks)) * (QUALITY_ETA[quality] ?? 10));
+              return `${eta}s`;
+            })()} · {allSections ? pattern.totalQuestions : numQuestions} Qs · {quality}
+          </p>
+        </div>
       </section>
+
 
       {/* History */}
       <section className="mt-10">
@@ -553,9 +699,31 @@ function MockTestIndex() {
           </section>
         </TabsContent>
       </Tabs>
+
+      <GenerationOverlay
+        open={generating}
+        progress={genProgress}
+        etaSeconds={genEta}
+        detail={genDetail}
+      />
+      <GenerationSuccess
+        open={!!successSummary && !generating}
+        summary={successSummary}
+        onStart={() => {
+          if (pendingTestId) {
+            navigate({ to: "/mock-test/$testId", params: { testId: pendingTestId } });
+          }
+        }}
+        onClose={() => {
+          setSuccessSummary(null);
+          setPendingTestId(null);
+          void load();
+        }}
+      />
     </div>
   );
 }
+
 
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
