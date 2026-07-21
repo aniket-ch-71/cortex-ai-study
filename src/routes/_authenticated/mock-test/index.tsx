@@ -501,9 +501,14 @@ function MockTestIndex() {
                     {pattern.totalQuestions} (full exam)
                   </SelectItem>
                 ) : (
-                  QUESTION_COUNT_OPTIONS.map((n) => (
-                    <SelectItem key={n} value={String(n)}>{n}</SelectItem>
-                  ))
+                  <>
+                    {QUESTION_COUNT_OPTIONS.map((n) => (
+                      <SelectItem key={n} value={String(n)}>{n}</SelectItem>
+                    ))}
+                    <SelectItem value={String(pattern.totalQuestions)}>
+                      Full Mock Test ({pattern.totalQuestions})
+                    </SelectItem>
+                  </>
                 )}
               </SelectContent>
             </Select>
@@ -512,12 +517,24 @@ function MockTestIndex() {
             <Select value={difficulty} onValueChange={setDifficulty}>
               <SelectTrigger><SelectValue /></SelectTrigger>
               <SelectContent>
+                <SelectItem value="mixed">Mixed (Recommended)</SelectItem>
                 <SelectItem value="easy">Easy</SelectItem>
                 <SelectItem value="medium">Medium</SelectItem>
                 <SelectItem value="hard">Hard</SelectItem>
               </SelectContent>
             </Select>
           </Field>
+          <Field label="Generation quality">
+            <Select value={quality} onValueChange={(v) => setQuality(v as Quality)}>
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="standard">⚡ Standard (fastest)</SelectItem>
+                <SelectItem value="premium">✨ Premium (balanced)</SelectItem>
+                <SelectItem value="advanced">🎯 Advanced (highest quality)</SelectItem>
+              </SelectContent>
+            </Select>
+          </Field>
+
           <Field label="Language">
             <Select value={language} onValueChange={setLanguage}>
               <SelectTrigger><SelectValue /></SelectTrigger>
