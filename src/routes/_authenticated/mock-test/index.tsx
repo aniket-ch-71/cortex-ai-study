@@ -77,14 +77,24 @@ function MockTestIndex() {
     [subExam],
   );
   const [subject, setSubject] = useState<string>(subjectsForExam[0]);
-  const [difficulty, setDifficulty] = useState("medium");
+  const [difficulty, setDifficulty] = useState("mixed");
+  const [quality, setQuality] = useState<Quality>("premium");
   const [language, setLanguage] = useState("en");
   const [topic, setTopic] = useState("");
-  const [numQuestions, setNumQuestions] = useState<number>(25);
+  const [numQuestions, setNumQuestions] = useState<number>(20);
   const [sourceMode, setSourceMode] = useState<"all" | "pyq" | "pyq_similar" | "high_weightage">("all");
   const [primarySeeded, setPrimarySeeded] = useState(false);
   const [aiUsed, setAiUsed] = useState(0);
   const aiRemaining = Math.max(0, AI_TEST_DAILY_LIMIT - aiUsed);
+
+  // Generation progress state
+  const [genProgress, setGenProgress] = useState(0);
+  const [genEta, setGenEta] = useState(0);
+  const [genDetail, setGenDetail] = useState<string>("");
+  const [successSummary, setSuccessSummary] = useState<GenerationSummary | null>(null);
+  const [pendingTestId, setPendingTestId] = useState<string | null>(null);
+  const genStartRef = useRef<number>(0);
+
 
   // Seed once from profile primary exam
   useEffect(() => {
