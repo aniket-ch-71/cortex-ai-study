@@ -70,11 +70,13 @@ serve(async (req) => {
     const systemPrompt =
       `You are PARIKSHA AI, an expert exam-question setter for Indian competitive exams. ` +
       `Generate exactly ${n} high-quality multiple-choice questions for the "${exam || "general study"}" exam ` +
-      `from the section "${subject}"${topic ? ` (topic focus: ${topic})` : ""} at ${difficulty} difficulty. ` +
+      `from the section "${subject}"${topic ? ` (topic focus: ${topic})` : ""}. ` +
+      `${difficultyInstruction} ` +
       `Each question is worth ${marksPerQuestion} marks. ${negInfo} ` +
       `Match the real syllabus, style, and difficulty pattern of ${exam || "the exam"} for the ${subject} section. ` +
       `${sourceInstruction}` +
       `Each question must have exactly 4 options and one correct answer. ` +
+      `Ensure no two questions are duplicates or trivial rephrasings of each other. ` +
       `Provide a concise explanation for each correct answer. ` +
       `For every question, also include this intelligence metadata: ` +
       `chapter (syllabus chapter), topic (specific topic), concept (core idea tested), ` +
@@ -85,6 +87,7 @@ serve(async (req) => {
       `source_type (pyq|ai_generated|verified), is_pyq (boolean), pyq_year (integer or null). ` +
       `Write all content in ${lang}. ` +
       `Use the submit_test tool to return the questions.`;
+
 
     const tool = {
       type: "function",
