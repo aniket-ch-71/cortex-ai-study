@@ -1,6 +1,6 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useEffect, useMemo, useState } from "react";
-import { Brain, Loader2, Plus, Trash2, Trophy, ArrowRight, Info, Sparkles, Library } from "lucide-react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { Brain, Loader2, Plus, Trash2, Trophy, ArrowRight, Info, Sparkles, Library, Zap } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -25,8 +25,18 @@ import {
   type ExamCategory,
 } from "@/lib/exam-patterns";
 import { useProfile } from "@/hooks/useProfile";
+import { GenerationOverlay } from "@/components/mock-test/GenerationOverlay";
+import { GenerationSuccess, type GenerationSummary } from "@/components/mock-test/GenerationSuccess";
 
 const AI_TEST_DAILY_LIMIT = 3;
+const CHUNK_SIZE = 25; // edge function hard cap per call
+const MAX_PARALLEL = 3; // gateway-friendly concurrency
+
+// Estimated per-chunk latency (seconds) by quality tier.
+const QUALITY_ETA: Record<string, number> = { standard: 6, premium: 10, advanced: 18 };
+
+type Quality = "standard" | "premium" | "advanced";
+
 
 export const Route = createFileRoute("/_authenticated/mock-test/")({
   head: () => ({ meta: [{ title: "Mock Tests — PARIKSHA" }] }),
