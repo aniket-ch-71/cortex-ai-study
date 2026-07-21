@@ -435,4 +435,4 @@ export function isAllSections(subject: string): boolean {
   return /^All( Sections| Subjects| Topics)?$/i.test(subject.trim());
 }
 
-export const QUESTION_COUNT_OPTIONS = [10, 25, 50, 100] as const;
+export const QUESTION_COUNT_OPTIONS = [10, 20, 30, 40, 50, 80, 100] as const;
