@@ -100,7 +100,7 @@ function AdminUsers() {
       .from("user_roles")
       .delete()
       .eq("user_id", user_id)
-      .eq("role", role);
+      .eq("role", role as any);
     if (error) return toast.error(error.message);
     toast.success("Revoked");
     load();
