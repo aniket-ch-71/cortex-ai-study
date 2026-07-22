@@ -15,6 +15,7 @@ import {
   BookX,
   Bookmark,
   Sparkles,
+  Shield,
 } from "lucide-react";
 import {
   Sidebar,
@@ -32,8 +33,9 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useProfile } from "@/hooks/useProfile";
+import { useStaffRole } from "@/hooks/useStaffRole";
 
-type NavItem = { title: string; url: string; icon: any; gate?: "currentAffairs" };
+type NavItem = { title: string; url: string; icon: any; gate?: "currentAffairs" | "staff" };
 
 const GROUPS: { label: string; items: NavItem[] }[] = [
   {
@@ -67,6 +69,10 @@ const GROUPS: { label: string; items: NavItem[] }[] = [
       { title: "Settings", url: "/settings", icon: Settings },
     ],
   },
+  {
+    label: "Staff",
+    items: [{ title: "Admin CMS", url: "/admin", icon: Shield, gate: "staff" }],
+  },
 ];
 
 export function AppSidebar() {
@@ -75,6 +81,7 @@ export function AppSidebar() {
   const path = useRouterState({ select: (r) => r.location.pathname });
   const navigate = useNavigate();
   const { profile } = useProfile();
+  const { isStaff } = useStaffRole();
   const showCurrentAffairs = (profile as any)?.show_current_affairs !== false;
 
   const onLogout = async () => {
@@ -110,6 +117,7 @@ export function AppSidebar() {
               <SidebarMenu>
                 {group.items.map((item) => {
                   if (item.gate === "currentAffairs" && !showCurrentAffairs) return null;
+                  if (item.gate === "staff" && !isStaff) return null;
                   const active = path === item.url;
                   return (
                     <SidebarMenuItem key={item.title}>
