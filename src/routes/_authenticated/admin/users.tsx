@@ -81,7 +81,7 @@ function AdminUsers() {
       }
       const { error } = await supabase
         .from("user_roles")
-        .insert({ user_id: prof.id, role: grantRole });
+        .insert({ user_id: prof.id, role: grantRole as any });
       if (error) {
         toast.error(error.message);
         return;

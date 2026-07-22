@@ -45,10 +45,10 @@ function AdminOverview() {
       />
 
       <div className="mt-6 grid grid-cols-2 gap-3 md:grid-cols-4">
-        <StatCard label="Questions" value={stats.questions.toLocaleString()} icon={FileQuestion} />
-        <StatCard label="Open reports" value={stats.reports.toLocaleString()} icon={Flag} />
-        <StatCard label="Staff members" value={stats.staff.toLocaleString()} icon={Users} />
-        <StatCard label="Audit events" value={stats.logs.toLocaleString()} icon={ScrollText} />
+        <StatCard label="Questions" value={stats.questions} icon={FileQuestion} />
+        <StatCard label="Open reports" value={stats.reports} icon={Flag} tone="coral" />
+        <StatCard label="Staff members" value={stats.staff} icon={Users} tone="teal" />
+        <StatCard label="Audit events" value={stats.logs} icon={ScrollText} tone="purple" />
       </div>
 
       <div className="mt-6 grid gap-4 md:grid-cols-2">
