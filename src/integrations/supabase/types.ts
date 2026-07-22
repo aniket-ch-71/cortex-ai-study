@@ -1022,7 +1022,13 @@ export type Database = {
       username_available: { Args: { uname: string }; Returns: boolean }
     }
     Enums: {
-      app_role: "admin" | "user"
+      app_role:
+        | "admin"
+        | "user"
+        | "super_admin"
+        | "moderator"
+        | "content_creator"
+        | "reviewer"
       pack_seed: "mistakes" | "weak" | "confidence" | "due" | "topic" | "mixed"
       report_reason:
         | "wrong_answer"
@@ -1159,7 +1165,14 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      app_role: ["admin", "user"],
+      app_role: [
+        "admin",
+        "user",
+        "super_admin",
+        "moderator",
+        "content_creator",
+        "reviewer",
+      ],
       pack_seed: ["mistakes", "weak", "confidence", "due", "topic", "mixed"],
       report_reason: [
         "wrong_answer",
