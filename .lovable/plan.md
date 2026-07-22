@@ -1,160 +1,109 @@
-# Phase 4 — Question Quality System
 
-Goal: turn PARIKSHA from an AI mock-test site into a proper exam-prep platform by giving every question durable metadata, letting students save/report/revise from any test, and generating one-click revision packs from their own weak areas.
+# Phase 6 — Enterprise Admin CMS
 
-No new analytics dashboards, no decorative UI. Everything plugs into surfaces that already exist (Mission Control, Mistake Book, Revision Engine, Daily Challenge, Results, Practice).
+Scope is very large. I'll ship it in 4 sequenced stages so each stage lands stable, secure, and reviewable. Nothing student-facing changes.
 
 ---
 
-## 1. Data model (single migration)
+## Stage 1 — Foundation: RBAC + Admin Shell + Audit Log
 
-New tables (all with GRANT + RLS on `auth.uid() = user_id`):
+**Database**
+- Extend `app_role` enum: add `super_admin`, `moderator`, `content_creator`, `reviewer` (keep existing `admin`, `user`).
+- `audit_logs` table: actor_id, action, entity_type, entity_id, diff (jsonb), ip, ua, created_at. Indexed on (entity_type, entity_id), (actor_id, created_at).
+- Helper fns: `has_any_role(uuid, app_role[])`, `is_staff(uuid)` (any non-`user` role).
+- Grants + RLS: only `super_admin`/`admin` can read audit_logs.
 
-- `saved_questions` — user's vault
-  - `id, user_id, question_hash, question, options jsonb, correct_index, explanation`
-  - `subject, chapter, topic, concept, difficulty, weightage, exam_frequency, source_type`
-  - `tag` — `save | important | revise_later | favorite` (enum)
-  - `note` (optional user note), `next_review_at` (for revise_later), `created_at`
-  - unique(`user_id, question_hash, tag`)
-- `question_reports` — moderation queue
-  - `id, user_id, question_hash, question_snapshot jsonb`
-  - `reason` — `wrong_answer | wrong_explanation | wrong_diagram | duplicate | outdated`
-  - `details text, status` (`open|reviewed|dismissed`), `created_at`
-- `revision_packs` — generated packs (so users can resume)
-  - `id, user_id, title, seed_type` (`mistakes|weak|confidence|due|mixed`), `question_count`, `estimated_minutes`, `payload jsonb` (the seeded questions), `completed_at`, `created_at`
+**Routes / UI**
+- New gate `src/routes/_authenticated/_admin/route.tsx` — `beforeLoad` checks `is_staff` via server fn; else redirect to `/dashboard`.
+- Admin shell: sidebar (Overview, Questions, Media, Reports, Imports, Users & Roles, Audit Log), topbar, breadcrumbs. Reuses existing tokens/`ui-pro`.
+- `/admin` overview page (empty stats scaffolded).
+- `/admin/users` — list staff, grant/revoke roles (super_admin only).
+- `/admin/audit` — paginated audit log viewer with filters.
 
-Extend existing tables:
+**Server**
+- `logAudit` helper used by all admin server fns.
+- `requireStaff` / `requireRole([...])` server-fn middleware built on `requireSupabaseAuth`.
 
-- `question_bank`: add `is_pyq bool default false`, `pyq_year int`, `source_type text default 'verified'`, `weightage text`, `exam_frequency text`, `concept_importance text` (nullable — bulk import fills later).
-- `question_attempts`: add `source_type text`, `is_pyq bool` (denormalized so results & mistake book can show badges cheaply).
+---
 
-`question_hash` is a stable sha256 of `lower(trim(question)) || correct_index` — used to dedupe saves, link reports, and match a saved AI question back if it's regenerated.
+## Stage 2 — Question Management + Editor + Advanced Search
 
-Indexes: `saved_questions(user_id, tag, created_at desc)`, `saved_questions(user_id, subject, topic)`, `question_reports(status, created_at)`, `question_bank(is_pyq, subject)`.
+**Database**
+- Extend `question_bank`: `status` enum (`draft`,`under_review`,`approved`,`published`,`archived`), `author_id`, `reviewer_id`, `version`, `quality_score` (0–100), `question_type` (`mcq`,`multi`,`numerical`,`assertion_reason`,`matrix_match`,`paragraph`,`diagram`), `tags text[]`, `parent_id` (for paragraph groups), `latex jsonb` optional.
+- `question_versions` table (immutable snapshots on edit/publish).
+- `question_comments` table (review comments/change requests).
+- Composite indexes: (exam, subject, status), (status, updated_at), GIN on tags, trigram on question text for search.
+- RLS: staff-only writes; students only see `status='published'` (student queries already filter — will confirm).
 
-## 2. AI generator (PYQ mode + full metadata)
+**Editor**
+- `/admin/questions` — enterprise list: server-side pagination (cursor), column filters (exam/subject/chapter/topic/difficulty/status/type/weightage/frequency/PYQ/tags/quality/author/date), full-text search, bulk actions (publish, unpublish, archive, delete, tag, assign reviewer), keyboard shortcuts (`/` focus search, `j/k` nav, `e` edit, `p` preview, `⌘K` command palette).
+- `/admin/questions/new`, `/admin/questions/$id/edit` — rich editor:
+  - Markdown + LaTeX (KaTeX render), Mermaid/SVG paste, chem via `mhchem` KaTeX extension, code blocks.
+  - Image/SVG upload → Media Library (Stage 3), inline preview.
+  - Type-aware forms (MCQ, multi-correct, numerical range, assertion-reason, matrix match, paragraph with children, diagram-based).
+  - Live student-view preview pane.
+  - Version history drawer, draft/publish/unpublish/archive, duplicate.
 
-`supabase/functions/generate-test/index.ts`:
+---
 
-- Accept new params: `sourceMode` (`all|pyq|pyq_similar|high_weightage`), and pass through to the prompt.
-- Extend the tool schema so every question also carries `source_type` (`pyq|ai_generated|verified`), `is_pyq`, `pyq_year` (nullable). `weightage / exam_frequency / concept_importance` are already there.
-- When `sourceMode = pyq` or `pyq_similar`, prompt instructs the model to mirror past-paper style for the selected exam and mark `is_pyq=true` / `pyq_year` when the question is a direct PYQ, `false` for similar.
-- When `high_weightage`, restrict to chapters marked high weightage.
+## Stage 3 — Media Library + Bulk Import + Review Workflow
 
-Practice tab (`question_bank`) gets the same source filter (SQL where `is_pyq = true` etc.).
+**Media Library**
+- Supabase Storage bucket `cms-media` (private, signed URLs). Table `media_assets`: url, kind, tags, categories, alt, uploaded_by, size, width, height, sha256 (dedupe).
+- `/admin/media` — grid with search, tag filter, category filter, click-to-insert into editor, reuse-existing surfacing via sha256.
 
-## 3. Question metadata surfacing
+**Bulk Import**
+- `/admin/import` — upload CSV/JSON/XLSX (client parse via `papaparse` + `xlsx`).
+- Pre-validate: schema check, required fields, duplicate detection (question hash), warnings.
+- Preview grid with row-level errors; user confirms.
+- Server fn imports in a single transaction (`import_batches` table); rollback = mark batch reverted + soft-delete rows.
+- Import summary UI (success/warn/error counts, download error CSV).
 
-Small shared `QuestionBadges` component renders chips from any question:
-- `PYQ 2022` (if `is_pyq`)
-- `High Weightage` / `Very Frequent`
-- `Core Concept`
-- `Verified` (if `source_type = verified`)
+**Review Workflow**
+- Status transitions gated by role:
+  - Content Creator: draft → under_review
+  - Reviewer/Moderator: under_review → approved / rejected / changes_requested (+ comment)
+  - Admin/Super Admin: approved → published; any → archived
+- Comments panel in editor. All transitions audited.
 
-Used in:
-- Mock test player (below the question)
-- Results review
-- Mistake Book row
-- Vault list
-- Revision pack player
+---
 
-## 4. Vault (save / important / revise later / favorite)
+## Stage 4 — Reports Moderation + Quality Score + Analytics + AI Assistant
 
-New route: `/vault` (under `_authenticated`), sidebar link under Insights.
+**Report Moderation**
+- `/admin/reports` — list `question_reports` with filters, inline question preview, actions: resolve, reject, edit-question, merge-duplicate (points hash → canonical id).
 
-- Top: tag tabs — All · ⭐ Saved · 🔺 Important · 🕘 Revise Later · ❤ Favorite.
-- Filters: subject, chapter, topic, difficulty, source (PYQ / AI / Verified), sort (recent, difficulty, weightage).
-- Search box (server ilike on question + topic + concept).
-- Row actions: Preview, Add note, Change tag, Remove, "Practice these" (seeds a revision pack from current filter).
+**Quality Score**
+- Server fn recomputes on edit/report/attempt aggregate:
+  - explanation length/structure, has diagram, metadata completeness, student accuracy from `question_attempts`, open reports, PYQ status, difficulty validation (predicted vs observed accuracy).
+- Badge on lists + filter.
 
-New `saveQuestion(userId, q, tag)` helper in `src/lib/intelligence.ts` (upsert by hash+tag). Also `unsaveQuestion`, `listVault`, `moveTag`.
+**Content Analytics**
+- `/admin/analytics` — totals, per-exam, per-subject, drafts vs published, reported, top weak topics (from `topic_mastery`/`mistake_book`), missing chapters (patterns vs coverage), quality distribution histogram.
+- Materialized view refreshed by trigger + on-demand button.
 
-Save UI:
-- In test player: star icon next to each question with a small popover (Save / Important / Revise later / Favorite).
-- Same popover on results review + mistake book row.
-
-Mission Control gets a new tile "🗂 Vault" showing `savedCount` + `dueForRevision` (saves tagged `revise_later` where `next_review_at <= now()`), CTA "Start revision" → seeds a revision pack from those.
-
-## 5. Report a question
-
-Icon (flag) next to save in every question surface (test player, results, vault, mistake book).
-
-Modal with radio list (5 reasons) + optional details textarea. Inserts into `question_reports` with a snapshot of the question so moderation isn't broken if the source changes. Toast "Thanks — we'll review this."
-
-No admin UI this phase; reports sit in the moderation queue for later.
-
-## 6. Smart Revision Packs
-
-New page: `/revision-packs` (Insights sidebar).
-
-Top: "Generate a pack" card with seed selector:
-- From my mistakes (uses `mistake_book` sorted by `times_wrong`)
-- From weak topics (lowest confidence)
-- From due revisions (`saved_questions` with `tag=revise_later, next_review_at<=now`)
-- From a specific topic (subject/topic picker)
-
-Options: question count (10/20/30), difficulty (easy/mixed/hard), time budget (auto = count × avg estimated_time).
-
-`buildRevisionPack(userId, opts)` in intelligence.ts:
-- Pulls candidate question hashes from the seed source.
-- Uses `generate-test` in "revision" mode passing the topics + weightage constraints when there aren't enough saved originals.
-- Persists pack in `revision_packs` with the full question payload so it's resumable.
-
-Pack player reuses the mock-test question UI (no separate component) but with per-question feedback + "Save to vault" always visible. On complete: writes attempts as usual, marks pack `completed_at`, updates SM-2 fields on any `revise_later` saves it consumed.
-
-Below the generator: list of user's packs (title, seed, count, status, resume/replay).
-
-Mission Control's existing revision tile shows next pack instead of the raw revision list once packs exist.
-
-## 7. Integration touch points
-
-- Mission Control: add Vault tile; existing Revision tile now links to `/revision-packs` when saved-revise-later items exist.
-- Daily Challenge: when a challenge is topic-scoped and the user has due saves for that topic, prefer them.
-- Mistake Book row: add Save-to-Vault, Report, and "Add to next pack" buttons.
-- Results: after submit, if ≥3 wrong answers, banner "Build a revision pack from today's mistakes →".
-
-## 8. Bulk import readiness (architecture only, no admin UI this phase)
-
-- Question shape standardized (single TS type `CanonicalQuestion` in `src/lib/question-schema.ts`) — used by AI generator output, saved_questions, revision_packs payload, and future bulk import.
-- Add `svg_diagram text` and `diagram_url text` columns to `question_bank` so future imports can carry diagrams; renderer already renders markdown, we just pass through raw SVG when present (sanitized via DOMPurify — new dep).
-- Storage bucket `question-diagrams` (public read) created via storage tool — for future diagram uploads. No UI wired to it this phase.
-- Utility `parseBulkQuestions(json | csv): CanonicalQuestion[]` (pure function, no route) so an admin importer can be added later without reshaping data.
-
-## 9. Out of scope this phase
-
-- Admin moderation UI for reports & bulk import UI (arch is ready, no page).
-- Community-shared vaults / social features.
-- Diagram editor.
-- Rewriting analytics dashboards, Rank Predictor, Mission Control layout.
+**AI Content Assistant**
+- Panel inside editor, admin-only server fn using Lovable AI Gateway:
+  - Generate similar, improve explanation, rewrite options, adjust difficulty, generate diagram prompt, hint, alternate solution.
+- Output stages as suggestions requiring human approval before saving; audited.
 
 ---
 
 ## Technical section
 
-### New files
-- `src/lib/question-schema.ts` — `CanonicalQuestion` type, `hashQuestion()`, `parseBulkQuestions()`.
-- `src/components/QuestionBadges.tsx`
-- `src/components/SaveQuestionMenu.tsx`
-- `src/components/ReportQuestionDialog.tsx`
-- `src/routes/_authenticated/vault/index.tsx`
-- `src/routes/_authenticated/revision-packs/index.tsx`
-- `src/routes/_authenticated/revision-packs/$packId.tsx` (player)
+- Server functions live in `src/lib/admin/*.functions.ts`; admin-only middleware via `requireSupabaseAuth` + role check calling `has_any_role` RPC through `context.supabase` (never `supabaseAdmin` for authz). `supabaseAdmin` only for role grants + import transaction control.
+- All admin tables: explicit `GRANT` to `authenticated` + `service_role`, RLS scoped via `has_any_role`.
+- Student reads unchanged: existing routes already filter to published/AI-generated content; will add `status='published'` filter where reading `question_bank` directly.
+- Pagination: keyset (created_at, id) for questions list; server-side sort/filter only.
+- Indexes tuned for 100k+ rows; `EXPLAIN` verified on filter combos.
+- Cache: React Query with 30s stale on list views, invalidated on mutations.
+- Keyboard shortcuts via a small hook; `⌘K` command palette using `cmdk`.
+- No changes to student UI or existing edge functions.
 
-### Edited files
-- `src/lib/intelligence.ts` — vault helpers, `buildRevisionPack`, extend `getMissionControl` with vault counts.
-- `src/routes/_authenticated/mock-test/index.tsx` — source-mode selector for AI + PYQ filter for Practice.
-- `src/routes/_authenticated/mock-test/$testId/index.tsx` and `results.tsx` — save/report buttons, badges, revision-pack banner.
-- `src/routes/_authenticated/mistakes/index.tsx` — save/report/add-to-pack.
-- `src/components/MissionControl.tsx` — Vault tile, updated Revision tile.
-- `src/components/AppSidebar.tsx` — Vault + Revision Packs links.
-- `supabase/functions/generate-test/index.ts` — `sourceMode`, PYQ prompt, extended schema.
+---
 
-### Migrations
-Single migration for the three new tables + `question_bank` / `question_attempts` column additions + indexes + policies + GRANTs.
+## Delivery order & approvals
 
-### New deps
-- `dompurify` (SVG sanitization for future diagrams)
+I'll implement stage by stage and pause for approval between stages (each stage is itself large). Stage 1 lands first: RBAC roles, admin shell, users/roles page, audit log — nothing user-visible outside `/admin`.
 
-Ship order: migration → schema/helpers → save/report components → vault route → PYQ generator → revision packs → integrations.
-
-Approve and I'll build it in that order.
+Reply "go" to start Stage 1, or tell me to re-scope (e.g. skip AI assistant, defer analytics).
