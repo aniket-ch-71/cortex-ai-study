@@ -343,13 +343,29 @@ function LoginForm({ redirect }: { redirect: string }) {
 }
 
 function GoogleButton() {
+  const [loading, setLoading] = useState(false);
   const onClick = async () => {
-    const { error } = await supabase.auth.signInWithOAuth({
-      provider: "google",
-      options: { redirectTo: `${window.location.origin}/dashboard` },
-    });
-    if (error) toast.error(error.message);
+    if (loading) return;
+    setLoading(true);
+    try {
+      const { lovable } = await import("@/integrations/lovable");
+      const result = await lovable.auth.signInWithOAuth("google", {
+        redirect_uri: window.location.origin,
+      });
+      if (result.error) {
+        toast.error(result.error.message || "Google sign-in failed");
+        setLoading(false);
+        return;
+      }
+      if (result.redirected) return; // browser navigating
+      // Session set — go to dashboard
+      window.location.assign("/dashboard");
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Google sign-in failed");
+      setLoading(false);
+    }
   };
+
   return (
     <>
       <div className="relative my-2">
