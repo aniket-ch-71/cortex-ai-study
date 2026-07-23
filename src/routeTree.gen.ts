@@ -40,6 +40,8 @@ import { Route as AuthenticatedAdminAnalyticsRouteImport } from './routes/_authe
 import { Route as AuthenticatedNotesNoteIdIndexRouteImport } from './routes/_authenticated/notes/$noteId/index'
 import { Route as AuthenticatedMockTestTestIdIndexRouteImport } from './routes/_authenticated/mock-test/$testId/index'
 import { Route as AuthenticatedMockTestTestIdResultsRouteImport } from './routes/_authenticated/mock-test/$testId/results'
+import { Route as AuthenticatedAdminQuestionsNewRouteImport } from './routes/_authenticated/admin/questions.new'
+import { Route as AuthenticatedAdminQuestionsIdRouteImport } from './routes/_authenticated/admin/questions.$id'
 
 const OnboardingRoute = OnboardingRouteImport.update({
   id: '/onboarding',
@@ -214,6 +216,18 @@ const AuthenticatedMockTestTestIdResultsRoute =
     path: '/mock-test/$testId/results',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
+const AuthenticatedAdminQuestionsNewRoute =
+  AuthenticatedAdminQuestionsNewRouteImport.update({
+    id: '/new',
+    path: '/new',
+    getParentRoute: () => AuthenticatedAdminQuestionsRoute,
+  } as any)
+const AuthenticatedAdminQuestionsIdRoute =
+  AuthenticatedAdminQuestionsIdRouteImport.update({
+    id: '/$id',
+    path: '/$id',
+    getParentRoute: () => AuthenticatedAdminQuestionsRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -226,7 +240,7 @@ export interface FileRoutesByFullPath {
   '/admin/audit': typeof AuthenticatedAdminAuditRoute
   '/admin/import': typeof AuthenticatedAdminImportRoute
   '/admin/media': typeof AuthenticatedAdminMediaRoute
-  '/admin/questions': typeof AuthenticatedAdminQuestionsRoute
+  '/admin/questions': typeof AuthenticatedAdminQuestionsRouteWithChildren
   '/admin/reports': typeof AuthenticatedAdminReportsRoute
   '/admin/users': typeof AuthenticatedAdminUsersRoute
   '/mock-test/practice': typeof AuthenticatedMockTestPracticeRoute
@@ -243,6 +257,8 @@ export interface FileRoutesByFullPath {
   '/revision-packs/': typeof AuthenticatedRevisionPacksIndexRoute
   '/settings/': typeof AuthenticatedSettingsIndexRoute
   '/vault/': typeof AuthenticatedVaultIndexRoute
+  '/admin/questions/$id': typeof AuthenticatedAdminQuestionsIdRoute
+  '/admin/questions/new': typeof AuthenticatedAdminQuestionsNewRoute
   '/mock-test/$testId/results': typeof AuthenticatedMockTestTestIdResultsRoute
   '/mock-test/$testId/': typeof AuthenticatedMockTestTestIdIndexRoute
   '/notes/$noteId/': typeof AuthenticatedNotesNoteIdIndexRoute
@@ -257,7 +273,7 @@ export interface FileRoutesByTo {
   '/admin/audit': typeof AuthenticatedAdminAuditRoute
   '/admin/import': typeof AuthenticatedAdminImportRoute
   '/admin/media': typeof AuthenticatedAdminMediaRoute
-  '/admin/questions': typeof AuthenticatedAdminQuestionsRoute
+  '/admin/questions': typeof AuthenticatedAdminQuestionsRouteWithChildren
   '/admin/reports': typeof AuthenticatedAdminReportsRoute
   '/admin/users': typeof AuthenticatedAdminUsersRoute
   '/mock-test/practice': typeof AuthenticatedMockTestPracticeRoute
@@ -274,6 +290,8 @@ export interface FileRoutesByTo {
   '/revision-packs': typeof AuthenticatedRevisionPacksIndexRoute
   '/settings': typeof AuthenticatedSettingsIndexRoute
   '/vault': typeof AuthenticatedVaultIndexRoute
+  '/admin/questions/$id': typeof AuthenticatedAdminQuestionsIdRoute
+  '/admin/questions/new': typeof AuthenticatedAdminQuestionsNewRoute
   '/mock-test/$testId/results': typeof AuthenticatedMockTestTestIdResultsRoute
   '/mock-test/$testId': typeof AuthenticatedMockTestTestIdIndexRoute
   '/notes/$noteId': typeof AuthenticatedNotesNoteIdIndexRoute
@@ -291,7 +309,7 @@ export interface FileRoutesById {
   '/_authenticated/admin/audit': typeof AuthenticatedAdminAuditRoute
   '/_authenticated/admin/import': typeof AuthenticatedAdminImportRoute
   '/_authenticated/admin/media': typeof AuthenticatedAdminMediaRoute
-  '/_authenticated/admin/questions': typeof AuthenticatedAdminQuestionsRoute
+  '/_authenticated/admin/questions': typeof AuthenticatedAdminQuestionsRouteWithChildren
   '/_authenticated/admin/reports': typeof AuthenticatedAdminReportsRoute
   '/_authenticated/admin/users': typeof AuthenticatedAdminUsersRoute
   '/_authenticated/mock-test/practice': typeof AuthenticatedMockTestPracticeRoute
@@ -308,6 +326,8 @@ export interface FileRoutesById {
   '/_authenticated/revision-packs/': typeof AuthenticatedRevisionPacksIndexRoute
   '/_authenticated/settings/': typeof AuthenticatedSettingsIndexRoute
   '/_authenticated/vault/': typeof AuthenticatedVaultIndexRoute
+  '/_authenticated/admin/questions/$id': typeof AuthenticatedAdminQuestionsIdRoute
+  '/_authenticated/admin/questions/new': typeof AuthenticatedAdminQuestionsNewRoute
   '/_authenticated/mock-test/$testId/results': typeof AuthenticatedMockTestTestIdResultsRoute
   '/_authenticated/mock-test/$testId/': typeof AuthenticatedMockTestTestIdIndexRoute
   '/_authenticated/notes/$noteId/': typeof AuthenticatedNotesNoteIdIndexRoute
@@ -342,6 +362,8 @@ export interface FileRouteTypes {
     | '/revision-packs/'
     | '/settings/'
     | '/vault/'
+    | '/admin/questions/$id'
+    | '/admin/questions/new'
     | '/mock-test/$testId/results'
     | '/mock-test/$testId/'
     | '/notes/$noteId/'
@@ -373,6 +395,8 @@ export interface FileRouteTypes {
     | '/revision-packs'
     | '/settings'
     | '/vault'
+    | '/admin/questions/$id'
+    | '/admin/questions/new'
     | '/mock-test/$testId/results'
     | '/mock-test/$testId'
     | '/notes/$noteId'
@@ -406,6 +430,8 @@ export interface FileRouteTypes {
     | '/_authenticated/revision-packs/'
     | '/_authenticated/settings/'
     | '/_authenticated/vault/'
+    | '/_authenticated/admin/questions/$id'
+    | '/_authenticated/admin/questions/new'
     | '/_authenticated/mock-test/$testId/results'
     | '/_authenticated/mock-test/$testId/'
     | '/_authenticated/notes/$noteId/'
@@ -637,15 +663,45 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedMockTestTestIdResultsRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/admin/questions/new': {
+      id: '/_authenticated/admin/questions/new'
+      path: '/new'
+      fullPath: '/admin/questions/new'
+      preLoaderRoute: typeof AuthenticatedAdminQuestionsNewRouteImport
+      parentRoute: typeof AuthenticatedAdminQuestionsRoute
+    }
+    '/_authenticated/admin/questions/$id': {
+      id: '/_authenticated/admin/questions/$id'
+      path: '/$id'
+      fullPath: '/admin/questions/$id'
+      preLoaderRoute: typeof AuthenticatedAdminQuestionsIdRouteImport
+      parentRoute: typeof AuthenticatedAdminQuestionsRoute
+    }
   }
 }
+
+interface AuthenticatedAdminQuestionsRouteChildren {
+  AuthenticatedAdminQuestionsIdRoute: typeof AuthenticatedAdminQuestionsIdRoute
+  AuthenticatedAdminQuestionsNewRoute: typeof AuthenticatedAdminQuestionsNewRoute
+}
+
+const AuthenticatedAdminQuestionsRouteChildren: AuthenticatedAdminQuestionsRouteChildren =
+  {
+    AuthenticatedAdminQuestionsIdRoute: AuthenticatedAdminQuestionsIdRoute,
+    AuthenticatedAdminQuestionsNewRoute: AuthenticatedAdminQuestionsNewRoute,
+  }
+
+const AuthenticatedAdminQuestionsRouteWithChildren =
+  AuthenticatedAdminQuestionsRoute._addFileChildren(
+    AuthenticatedAdminQuestionsRouteChildren,
+  )
 
 interface AuthenticatedAdminRouteRouteChildren {
   AuthenticatedAdminAnalyticsRoute: typeof AuthenticatedAdminAnalyticsRoute
   AuthenticatedAdminAuditRoute: typeof AuthenticatedAdminAuditRoute
   AuthenticatedAdminImportRoute: typeof AuthenticatedAdminImportRoute
   AuthenticatedAdminMediaRoute: typeof AuthenticatedAdminMediaRoute
-  AuthenticatedAdminQuestionsRoute: typeof AuthenticatedAdminQuestionsRoute
+  AuthenticatedAdminQuestionsRoute: typeof AuthenticatedAdminQuestionsRouteWithChildren
   AuthenticatedAdminReportsRoute: typeof AuthenticatedAdminReportsRoute
   AuthenticatedAdminUsersRoute: typeof AuthenticatedAdminUsersRoute
   AuthenticatedAdminIndexRoute: typeof AuthenticatedAdminIndexRoute
@@ -657,7 +713,8 @@ const AuthenticatedAdminRouteRouteChildren: AuthenticatedAdminRouteRouteChildren
     AuthenticatedAdminAuditRoute: AuthenticatedAdminAuditRoute,
     AuthenticatedAdminImportRoute: AuthenticatedAdminImportRoute,
     AuthenticatedAdminMediaRoute: AuthenticatedAdminMediaRoute,
-    AuthenticatedAdminQuestionsRoute: AuthenticatedAdminQuestionsRoute,
+    AuthenticatedAdminQuestionsRoute:
+      AuthenticatedAdminQuestionsRouteWithChildren,
     AuthenticatedAdminReportsRoute: AuthenticatedAdminReportsRoute,
     AuthenticatedAdminUsersRoute: AuthenticatedAdminUsersRoute,
     AuthenticatedAdminIndexRoute: AuthenticatedAdminIndexRoute,
@@ -726,13 +783,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
