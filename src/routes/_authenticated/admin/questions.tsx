@@ -74,7 +74,7 @@ import {
 } from "@/lib/admin/questions";
 import { cn } from "@/lib/utils";
 
-const ALL_COLUMNS = [
+const ALL_COLUMNS: { key: ColKey; label: string; always?: boolean }[] = [
   { key: "question", label: "Question", always: true },
   { key: "exam", label: "Exam" },
   { key: "subject", label: "Subject" },
@@ -85,7 +85,8 @@ const ALL_COLUMNS = [
   { key: "status", label: "Status" },
   { key: "version", label: "v" },
   { key: "updated_at", label: "Updated" },
-] as const;
+];
+type ColKeyLocal = ColKey;
 type ColKey = (typeof ALL_COLUMNS)[number]["key"];
 
 type SavedView = { name: string; filters: QuestionFilters; cols: ColKey[] };
