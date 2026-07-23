@@ -552,72 +552,135 @@ export type Database = {
       }
       question_bank: {
         Row: {
+          archived: boolean
+          archived_at: string | null
+          author_id: string | null
+          chapter: string | null
+          concept: string | null
           concept_importance: string | null
           correct_index: number
+          correct_indices: number[] | null
           created_at: string
+          deleted_at: string | null
           diagram_url: string | null
           difficulty: string
+          estimated_time_seconds: number | null
           exam: string
           exam_frequency: string | null
           explanation: string
           id: string
           is_pyq: boolean
           language: string
+          marks: number
+          negative_marks: number
+          numerical_answer: number | null
           options: Json
+          published_at: string | null
           pyq_year: number | null
+          quality_score: number | null
           question: string
           question_hash: string | null
+          question_type: string
+          reviewer_id: string | null
+          solution_image_url: string | null
           source_type: string
+          status: string
           sub_exam: string
+          sub_topic: string | null
           subject: string
           svg_diagram: string | null
+          tags: string[]
           topic: string | null
+          updated_at: string
+          version: number
           weightage: string | null
         }
         Insert: {
+          archived?: boolean
+          archived_at?: string | null
+          author_id?: string | null
+          chapter?: string | null
+          concept?: string | null
           concept_importance?: string | null
           correct_index: number
+          correct_indices?: number[] | null
           created_at?: string
+          deleted_at?: string | null
           diagram_url?: string | null
           difficulty?: string
+          estimated_time_seconds?: number | null
           exam: string
           exam_frequency?: string | null
           explanation?: string
           id?: string
           is_pyq?: boolean
           language?: string
+          marks?: number
+          negative_marks?: number
+          numerical_answer?: number | null
           options: Json
+          published_at?: string | null
           pyq_year?: number | null
+          quality_score?: number | null
           question: string
           question_hash?: string | null
+          question_type?: string
+          reviewer_id?: string | null
+          solution_image_url?: string | null
           source_type?: string
+          status?: string
           sub_exam: string
+          sub_topic?: string | null
           subject: string
           svg_diagram?: string | null
+          tags?: string[]
           topic?: string | null
+          updated_at?: string
+          version?: number
           weightage?: string | null
         }
         Update: {
+          archived?: boolean
+          archived_at?: string | null
+          author_id?: string | null
+          chapter?: string | null
+          concept?: string | null
           concept_importance?: string | null
           correct_index?: number
+          correct_indices?: number[] | null
           created_at?: string
+          deleted_at?: string | null
           diagram_url?: string | null
           difficulty?: string
+          estimated_time_seconds?: number | null
           exam?: string
           exam_frequency?: string | null
           explanation?: string
           id?: string
           is_pyq?: boolean
           language?: string
+          marks?: number
+          negative_marks?: number
+          numerical_answer?: number | null
           options?: Json
+          published_at?: string | null
           pyq_year?: number | null
+          quality_score?: number | null
           question?: string
           question_hash?: string | null
+          question_type?: string
+          reviewer_id?: string | null
+          solution_image_url?: string | null
           source_type?: string
+          status?: string
           sub_exam?: string
+          sub_topic?: string | null
           subject?: string
           svg_diagram?: string | null
+          tags?: string[]
           topic?: string | null
+          updated_at?: string
+          version?: number
           weightage?: string | null
         }
         Relationships: []
@@ -654,6 +717,44 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      question_versions: {
+        Row: {
+          change_note: string | null
+          changed_by: string | null
+          created_at: string
+          id: string
+          question_id: string
+          snapshot: Json
+          version: number
+        }
+        Insert: {
+          change_note?: string | null
+          changed_by?: string | null
+          created_at?: string
+          id?: string
+          question_id: string
+          snapshot: Json
+          version: number
+        }
+        Update: {
+          change_note?: string | null
+          changed_by?: string | null
+          created_at?: string
+          id?: string
+          question_id?: string
+          snapshot?: Json
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "question_versions_question_id_fkey"
+            columns: ["question_id"]
+            isOneToOne: false
+            referencedRelation: "question_bank"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       readiness_snapshots: {
         Row: {
