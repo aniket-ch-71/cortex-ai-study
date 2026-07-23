@@ -74,6 +74,18 @@ import {
 } from "@/lib/admin/questions";
 import { cn } from "@/lib/utils";
 
+type ColKey =
+  | "question"
+  | "exam"
+  | "subject"
+  | "topic"
+  | "question_type"
+  | "difficulty"
+  | "is_pyq"
+  | "status"
+  | "version"
+  | "updated_at";
+
 const ALL_COLUMNS: { key: ColKey; label: string; always?: boolean }[] = [
   { key: "question", label: "Question", always: true },
   { key: "exam", label: "Exam" },
@@ -86,7 +98,6 @@ const ALL_COLUMNS: { key: ColKey; label: string; always?: boolean }[] = [
   { key: "version", label: "v" },
   { key: "updated_at", label: "Updated" },
 ];
-type ColKeyLocal = ColKey;
 type ColKey = (typeof ALL_COLUMNS)[number]["key"];
 
 type SavedView = { name: string; filters: QuestionFilters; cols: ColKey[] };
