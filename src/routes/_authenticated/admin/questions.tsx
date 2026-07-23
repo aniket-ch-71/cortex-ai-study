@@ -98,7 +98,7 @@ const ALL_COLUMNS: { key: ColKey; label: string; always?: boolean }[] = [
   { key: "version", label: "v" },
   { key: "updated_at", label: "Updated" },
 ];
-type ColKey = (typeof ALL_COLUMNS)[number]["key"];
+
 
 type SavedView = { name: string; filters: QuestionFilters; cols: ColKey[] };
 const VIEWS_KEY = "pariksha:admin:qb:views";
