@@ -56,6 +56,198 @@ export type Database = {
         }
         Relationships: []
       }
+      bulk_import_errors: {
+        Row: {
+          code: string
+          created_at: string
+          field: string | null
+          id: number
+          job_id: string
+          message: string
+          raw: Json | null
+          row_index: number
+        }
+        Insert: {
+          code: string
+          created_at?: string
+          field?: string | null
+          id?: number
+          job_id: string
+          message: string
+          raw?: Json | null
+          row_index: number
+        }
+        Update: {
+          code?: string
+          created_at?: string
+          field?: string | null
+          id?: number
+          job_id?: string
+          message?: string
+          raw?: Json | null
+          row_index?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bulk_import_errors_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "bulk_import_jobs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      bulk_import_history: {
+        Row: {
+          action: string
+          created_at: string
+          id: number
+          job_id: string
+          previous_snapshot: Json | null
+          question_id: string | null
+        }
+        Insert: {
+          action: string
+          created_at?: string
+          id?: number
+          job_id: string
+          previous_snapshot?: Json | null
+          question_id?: string | null
+        }
+        Update: {
+          action?: string
+          created_at?: string
+          id?: number
+          job_id?: string
+          previous_snapshot?: Json | null
+          question_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bulk_import_history_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "bulk_import_jobs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      bulk_import_jobs: {
+        Row: {
+          column_map: Json | null
+          created_at: string
+          created_by: string | null
+          current_phase: string | null
+          duplicates: number
+          duration_ms: number | null
+          error_message: string | null
+          finished_at: string | null
+          format: string
+          id: string
+          options: Json
+          progress_pct: number
+          rows_failed: number
+          rows_found: number
+          rows_imported: number
+          rows_invalid: number
+          rows_valid: number
+          source_filename: string
+          source_path: string | null
+          source_size: number
+          started_at: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          column_map?: Json | null
+          created_at?: string
+          created_by?: string | null
+          current_phase?: string | null
+          duplicates?: number
+          duration_ms?: number | null
+          error_message?: string | null
+          finished_at?: string | null
+          format: string
+          id?: string
+          options?: Json
+          progress_pct?: number
+          rows_failed?: number
+          rows_found?: number
+          rows_imported?: number
+          rows_invalid?: number
+          rows_valid?: number
+          source_filename: string
+          source_path?: string | null
+          source_size?: number
+          started_at?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          column_map?: Json | null
+          created_at?: string
+          created_by?: string | null
+          current_phase?: string | null
+          duplicates?: number
+          duration_ms?: number | null
+          error_message?: string | null
+          finished_at?: string | null
+          format?: string
+          id?: string
+          options?: Json
+          progress_pct?: number
+          rows_failed?: number
+          rows_found?: number
+          rows_imported?: number
+          rows_invalid?: number
+          rows_valid?: number
+          source_filename?: string
+          source_path?: string | null
+          source_size?: number
+          started_at?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      bulk_import_logs: {
+        Row: {
+          created_at: string
+          id: number
+          job_id: string
+          level: string
+          message: string
+          meta: Json | null
+          phase: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: number
+          job_id: string
+          level?: string
+          message: string
+          meta?: Json | null
+          phase?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: number
+          job_id?: string
+          level?: string
+          message?: string
+          meta?: Json | null
+          phase?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bulk_import_logs_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "bulk_import_jobs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       current_affairs: {
         Row: {
           date: string
@@ -160,6 +352,152 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      media_library: {
+        Row: {
+          alt: string | null
+          bucket: string
+          checksum: string | null
+          created_at: string
+          deleted_at: string | null
+          filename: string
+          folder: string
+          height: number | null
+          id: string
+          mime: string
+          path: string
+          size_bytes: number
+          tags: string[]
+          thumbnail_path: string | null
+          updated_at: string
+          uploaded_by: string | null
+          version: number
+          width: number | null
+        }
+        Insert: {
+          alt?: string | null
+          bucket?: string
+          checksum?: string | null
+          created_at?: string
+          deleted_at?: string | null
+          filename: string
+          folder?: string
+          height?: number | null
+          id?: string
+          mime: string
+          path: string
+          size_bytes: number
+          tags?: string[]
+          thumbnail_path?: string | null
+          updated_at?: string
+          uploaded_by?: string | null
+          version?: number
+          width?: number | null
+        }
+        Update: {
+          alt?: string | null
+          bucket?: string
+          checksum?: string | null
+          created_at?: string
+          deleted_at?: string | null
+          filename?: string
+          folder?: string
+          height?: number | null
+          id?: string
+          mime?: string
+          path?: string
+          size_bytes?: number
+          tags?: string[]
+          thumbnail_path?: string | null
+          updated_at?: string
+          uploaded_by?: string | null
+          version?: number
+          width?: number | null
+        }
+        Relationships: []
+      }
+      media_usage: {
+        Row: {
+          created_at: string
+          id: string
+          media_id: string
+          option_index: number | null
+          question_id: string
+          usage_kind: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          media_id: string
+          option_index?: number | null
+          question_id: string
+          usage_kind: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          media_id?: string
+          option_index?: number | null
+          question_id?: string
+          usage_kind?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "media_usage_media_id_fkey"
+            columns: ["media_id"]
+            isOneToOne: false
+            referencedRelation: "media_library"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "media_usage_question_id_fkey"
+            columns: ["question_id"]
+            isOneToOne: false
+            referencedRelation: "question_bank"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      media_versions: {
+        Row: {
+          checksum: string | null
+          created_at: string
+          id: string
+          media_id: string
+          path: string
+          size_bytes: number | null
+          uploaded_by: string | null
+          version: number
+        }
+        Insert: {
+          checksum?: string | null
+          created_at?: string
+          id?: string
+          media_id: string
+          path: string
+          size_bytes?: number | null
+          uploaded_by?: string | null
+          version: number
+        }
+        Update: {
+          checksum?: string | null
+          created_at?: string
+          id?: string
+          media_id?: string
+          path?: string
+          size_bytes?: number | null
+          uploaded_by?: string | null
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "media_versions_media_id_fkey"
+            columns: ["media_id"]
+            isOneToOne: false
+            referencedRelation: "media_library"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       mistake_book: {
         Row: {
@@ -1148,6 +1486,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      admin_rollback_import: { Args: { _job_id: string }; Returns: Json }
       bump_daily_usage: {
         Args: { _kind: string; _limit: number; _user_id: string }
         Returns: boolean
