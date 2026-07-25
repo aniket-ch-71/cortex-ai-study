@@ -135,7 +135,7 @@ async function pushErrors(jobId: string, errs: Array<{ row_index: number; field?
     field: e.field ?? null,
     code: e.code,
     message: e.message,
-    raw: (e.raw ?? null) as never,
+    raw: (e.raw ?? null) as unknown,
   }));
   const CHUNK = 500;
   for (let i = 0; i < rows.length; i += CHUNK) {

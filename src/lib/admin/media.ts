@@ -225,7 +225,7 @@ export async function renameMedia(id: string, filename: string, alt?: string, ta
   const patch: Record<string, unknown> = { filename };
   if (alt !== undefined) patch.alt = alt;
   if (tags !== undefined) patch.tags = tags;
-  const { error } = await supabase.from("media_library").update(patch).eq("id", id);
+  const { error } = await supabase.from("media_library").update(patch as never).eq("id", id);
   if (error) throw error;
 }
 
