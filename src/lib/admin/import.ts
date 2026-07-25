@@ -120,7 +120,7 @@ export function detectFormat(name: string): ImportFormat | null {
 }
 
 async function log(jobId: string, message: string, phase?: string, level: ImportLog["level"] = "info", meta?: Record<string, unknown>) {
-  await supabase.from("bulk_import_logs").insert({ job_id: jobId, level, phase: phase ?? null, message, meta: meta ?? null });
+  await supabase.from("bulk_import_logs").insert({ job_id: jobId, level, phase: phase ?? null, message, meta: (meta ?? null) as never });
 }
 
 async function updateJob(jobId: string, patch: Partial<ImportJob>) {
