@@ -17,3 +17,6 @@ verify_jwt = false
 
 [functions.generate-current-affairs]
 verify_jwt = false
+
+[functions.ai-review]
+verify_jwt = false
