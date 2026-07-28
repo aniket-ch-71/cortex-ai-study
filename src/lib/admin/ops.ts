@@ -178,7 +178,7 @@ export async function resolveComment(id: string) {
 /* -------------------- schedule -------------------- */
 
 export async function scheduleQuestion(questionId: string, publishAt: string, timezone: string) {
-  const { error } = await supabase.rpc("schedule_question", {
+  const { error } = await (supabase.rpc as unknown as (fn: string, args: Record<string, unknown>) => Promise<{ error: unknown }>)("schedule_question", {
     _qid: questionId, _publish_at: publishAt, _tz: timezone,
   });
   if (error) throw error;
@@ -211,7 +211,7 @@ export async function listNotifications(limit = 50) {
 
 export async function markNotificationsRead(ids: string[]) {
   if (!ids.length) return 0;
-  const { data, error } = await supabase.rpc("mark_notifications_read", { _ids: ids });
+  const { data, error } = await (supabase.rpc as unknown as (fn: string, args: Record<string, unknown>) => Promise<{ data: unknown; error: unknown }>)("mark_notifications_read", { _ids: ids });
   if (error) throw error;
   return (data as number) ?? 0;
 }
