@@ -138,7 +138,7 @@ export async function submitReview(input: { questionId: string; decision: Review
     reviewer_id: sess.session.user.id,
     decision: input.decision,
     notes: input.notes ?? null,
-    attachments: input.attachments ?? [],
+    attachments: (input.attachments ?? []) as unknown as never,
   });
   if (error) throw error;
 }
