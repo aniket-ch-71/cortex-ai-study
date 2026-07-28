@@ -26,7 +26,7 @@ function Page() {
     setBusy(true);
     try {
       let q = supabase.from("question_bank").select("id, exam, subject, chapter, topic, difficulty, question, options, correct_index, explanation, workflow_state, quality_score, is_pyq, pyq_year, published_at, updated_at").limit(50000);
-      if (state) q = q.eq("workflow_state", state);
+      if (state) q = q.eq("workflow_state", state as never);
       const { data, error } = await q;
       if (error) throw error;
       const rows = data ?? [];
