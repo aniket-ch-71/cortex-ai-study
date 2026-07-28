@@ -248,6 +248,44 @@ export type Database = {
           },
         ]
       }
+      content_schedule: {
+        Row: {
+          created_at: string
+          created_by: string
+          publish_at: string
+          question_id: string
+          status: string
+          timezone: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          publish_at: string
+          question_id: string
+          status?: string
+          timezone?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          publish_at?: string
+          question_id?: string
+          status?: string
+          timezone?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "content_schedule_question_id_fkey"
+            columns: ["question_id"]
+            isOneToOne: true
+            referencedRelation: "question_bank"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       current_affairs: {
         Row: {
           date: string
@@ -726,6 +764,45 @@ export type Database = {
         }
         Relationships: []
       }
+      notifications: {
+        Row: {
+          body: string | null
+          created_at: string
+          entity_id: string | null
+          entity_type: string | null
+          id: string
+          link: string | null
+          read_at: string | null
+          title: string
+          type: Database["public"]["Enums"]["notification_type"]
+          user_id: string
+        }
+        Insert: {
+          body?: string | null
+          created_at?: string
+          entity_id?: string | null
+          entity_type?: string | null
+          id?: string
+          link?: string | null
+          read_at?: string | null
+          title: string
+          type: Database["public"]["Enums"]["notification_type"]
+          user_id: string
+        }
+        Update: {
+          body?: string | null
+          created_at?: string
+          entity_id?: string | null
+          entity_type?: string | null
+          id?: string
+          link?: string | null
+          read_at?: string | null
+          title?: string
+          type?: Database["public"]["Enums"]["notification_type"]
+          user_id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           best_streak: number
@@ -810,6 +887,91 @@ export type Database = {
         }
         Relationships: []
       }
+      question_ai_reviews: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          id: string
+          model: string
+          question_id: string
+          score: number | null
+          verdict: Json
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          model: string
+          question_id: string
+          score?: number | null
+          verdict: Json
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          model?: string
+          question_id?: string
+          score?: number | null
+          verdict?: Json
+        }
+        Relationships: [
+          {
+            foreignKeyName: "question_ai_reviews_question_id_fkey"
+            columns: ["question_id"]
+            isOneToOne: false
+            referencedRelation: "question_bank"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      question_assignments: {
+        Row: {
+          assigned_by: string
+          assigned_to: string
+          created_at: string
+          due_at: string | null
+          id: string
+          notes: string | null
+          priority: Database["public"]["Enums"]["assignment_priority"]
+          question_id: string
+          status: Database["public"]["Enums"]["assignment_status"]
+          updated_at: string
+        }
+        Insert: {
+          assigned_by: string
+          assigned_to: string
+          created_at?: string
+          due_at?: string | null
+          id?: string
+          notes?: string | null
+          priority?: Database["public"]["Enums"]["assignment_priority"]
+          question_id: string
+          status?: Database["public"]["Enums"]["assignment_status"]
+          updated_at?: string
+        }
+        Update: {
+          assigned_by?: string
+          assigned_to?: string
+          created_at?: string
+          due_at?: string | null
+          id?: string
+          notes?: string | null
+          priority?: Database["public"]["Enums"]["assignment_priority"]
+          question_id?: string
+          status?: Database["public"]["Enums"]["assignment_status"]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "question_assignments_question_id_fkey"
+            columns: ["question_id"]
+            isOneToOne: false
+            referencedRelation: "question_bank"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       question_attempts: {
         Row: {
           attempt_id: string | null
@@ -890,8 +1052,11 @@ export type Database = {
       }
       question_bank: {
         Row: {
+          ai_review: Json | null
           archived: boolean
           archived_at: string | null
+          assigned_at: string | null
+          assigned_to: string | null
           author_id: string | null
           chapter: string | null
           concept: string | null
@@ -916,10 +1081,12 @@ export type Database = {
           published_at: string | null
           pyq_year: number | null
           quality_score: number | null
+          quality_score_breakdown: Json | null
           question: string
           question_hash: string | null
           question_type: string
           reviewer_id: string | null
+          scheduled_publish_at: string | null
           solution_image_url: string | null
           source_type: string
           status: string
@@ -932,10 +1099,14 @@ export type Database = {
           updated_at: string
           version: number
           weightage: string | null
+          workflow_state: Database["public"]["Enums"]["workflow_state"]
         }
         Insert: {
+          ai_review?: Json | null
           archived?: boolean
           archived_at?: string | null
+          assigned_at?: string | null
+          assigned_to?: string | null
           author_id?: string | null
           chapter?: string | null
           concept?: string | null
@@ -960,10 +1131,12 @@ export type Database = {
           published_at?: string | null
           pyq_year?: number | null
           quality_score?: number | null
+          quality_score_breakdown?: Json | null
           question: string
           question_hash?: string | null
           question_type?: string
           reviewer_id?: string | null
+          scheduled_publish_at?: string | null
           solution_image_url?: string | null
           source_type?: string
           status?: string
@@ -976,10 +1149,14 @@ export type Database = {
           updated_at?: string
           version?: number
           weightage?: string | null
+          workflow_state?: Database["public"]["Enums"]["workflow_state"]
         }
         Update: {
+          ai_review?: Json | null
           archived?: boolean
           archived_at?: string | null
+          assigned_at?: string | null
+          assigned_to?: string | null
           author_id?: string | null
           chapter?: string | null
           concept?: string | null
@@ -1004,10 +1181,12 @@ export type Database = {
           published_at?: string | null
           pyq_year?: number | null
           quality_score?: number | null
+          quality_score_breakdown?: Json | null
           question?: string
           question_hash?: string | null
           question_type?: string
           reviewer_id?: string | null
+          scheduled_publish_at?: string | null
           solution_image_url?: string | null
           source_type?: string
           status?: string
@@ -1020,8 +1199,63 @@ export type Database = {
           updated_at?: string
           version?: number
           weightage?: string | null
+          workflow_state?: Database["public"]["Enums"]["workflow_state"]
         }
         Relationships: []
+      }
+      question_comments: {
+        Row: {
+          author_id: string
+          body: string
+          created_at: string
+          id: string
+          mentions: string[]
+          parent_id: string | null
+          question_id: string
+          resolved_at: string | null
+          resolved_by: string | null
+          updated_at: string
+        }
+        Insert: {
+          author_id: string
+          body: string
+          created_at?: string
+          id?: string
+          mentions?: string[]
+          parent_id?: string | null
+          question_id: string
+          resolved_at?: string | null
+          resolved_by?: string | null
+          updated_at?: string
+        }
+        Update: {
+          author_id?: string
+          body?: string
+          created_at?: string
+          id?: string
+          mentions?: string[]
+          parent_id?: string | null
+          question_id?: string
+          resolved_at?: string | null
+          resolved_by?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "question_comments_parent_id_fkey"
+            columns: ["parent_id"]
+            isOneToOne: false
+            referencedRelation: "question_comments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "question_comments_question_id_fkey"
+            columns: ["question_id"]
+            isOneToOne: false
+            referencedRelation: "question_bank"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       question_reports: {
         Row: {
@@ -1055,6 +1289,50 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      question_reviews: {
+        Row: {
+          attachments: Json
+          created_at: string
+          decision: Database["public"]["Enums"]["review_decision"]
+          id: string
+          next_state: Database["public"]["Enums"]["workflow_state"] | null
+          notes: string | null
+          prev_state: Database["public"]["Enums"]["workflow_state"] | null
+          question_id: string
+          reviewer_id: string
+        }
+        Insert: {
+          attachments?: Json
+          created_at?: string
+          decision: Database["public"]["Enums"]["review_decision"]
+          id?: string
+          next_state?: Database["public"]["Enums"]["workflow_state"] | null
+          notes?: string | null
+          prev_state?: Database["public"]["Enums"]["workflow_state"] | null
+          question_id: string
+          reviewer_id: string
+        }
+        Update: {
+          attachments?: Json
+          created_at?: string
+          decision?: Database["public"]["Enums"]["review_decision"]
+          id?: string
+          next_state?: Database["public"]["Enums"]["workflow_state"] | null
+          notes?: string | null
+          prev_state?: Database["public"]["Enums"]["workflow_state"] | null
+          question_id?: string
+          reviewer_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "question_reviews_question_id_fkey"
+            columns: ["question_id"]
+            isOneToOne: false
+            referencedRelation: "question_bank"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       question_versions: {
         Row: {
@@ -1487,6 +1765,16 @@ export type Database = {
     }
     Functions: {
       admin_rollback_import: { Args: { _job_id: string }; Returns: Json }
+      assign_question: {
+        Args: {
+          _due: string
+          _notes: string
+          _priority: Database["public"]["Enums"]["assignment_priority"]
+          _qid: string
+          _to_user: string
+        }
+        Returns: string
+      }
       bump_daily_usage: {
         Args: { _kind: string; _limit: number; _user_id: string }
         Returns: boolean
@@ -1507,8 +1795,22 @@ export type Database = {
         Returns: boolean
       }
       is_staff: { Args: { _user_id: string }; Returns: boolean }
+      mark_notifications_read: { Args: { _ids: string[] }; Returns: number }
       public_stats: { Args: never; Returns: Json }
+      publish_due_scheduled: { Args: never; Returns: number }
       redeem_referral: { Args: { _code: string }; Returns: boolean }
+      schedule_question: {
+        Args: { _publish_at: string; _qid: string; _tz: string }
+        Returns: undefined
+      }
+      transition_question_state: {
+        Args: {
+          _note?: string
+          _qid: string
+          _to: Database["public"]["Enums"]["workflow_state"]
+        }
+        Returns: Database["public"]["Enums"]["workflow_state"]
+      }
       username_available: { Args: { uname: string }; Returns: boolean }
     }
     Enums: {
@@ -1519,6 +1821,21 @@ export type Database = {
         | "moderator"
         | "content_creator"
         | "reviewer"
+      assignment_priority: "low" | "normal" | "high" | "urgent"
+      assignment_status:
+        | "open"
+        | "in_progress"
+        | "submitted"
+        | "completed"
+        | "cancelled"
+      notification_type:
+        | "assignment"
+        | "review_requested"
+        | "review_completed"
+        | "published"
+        | "import_finished"
+        | "media_updated"
+        | "mention"
       pack_seed: "mistakes" | "weak" | "confidence" | "due" | "topic" | "mixed"
       report_reason:
         | "wrong_answer"
@@ -1527,7 +1844,18 @@ export type Database = {
         | "duplicate"
         | "outdated"
       report_status: "open" | "reviewed" | "dismissed"
+      review_decision: "approve" | "reject" | "request_changes" | "note"
       vault_tag: "save" | "important" | "revise_later" | "favorite"
+      workflow_state:
+        | "draft"
+        | "ai_review"
+        | "human_review"
+        | "fact_check"
+        | "approved"
+        | "scheduled"
+        | "published"
+        | "archived"
+        | "deprecated"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -1663,6 +1991,23 @@ export const Constants = {
         "content_creator",
         "reviewer",
       ],
+      assignment_priority: ["low", "normal", "high", "urgent"],
+      assignment_status: [
+        "open",
+        "in_progress",
+        "submitted",
+        "completed",
+        "cancelled",
+      ],
+      notification_type: [
+        "assignment",
+        "review_requested",
+        "review_completed",
+        "published",
+        "import_finished",
+        "media_updated",
+        "mention",
+      ],
       pack_seed: ["mistakes", "weak", "confidence", "due", "topic", "mixed"],
       report_reason: [
         "wrong_answer",
@@ -1672,7 +2017,19 @@ export const Constants = {
         "outdated",
       ],
       report_status: ["open", "reviewed", "dismissed"],
+      review_decision: ["approve", "reject", "request_changes", "note"],
       vault_tag: ["save", "important", "revise_later", "favorite"],
+      workflow_state: [
+        "draft",
+        "ai_review",
+        "human_review",
+        "fact_check",
+        "approved",
+        "scheduled",
+        "published",
+        "archived",
+        "deprecated",
+      ],
     },
   },
 } as const
