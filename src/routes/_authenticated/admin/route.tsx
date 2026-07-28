@@ -11,8 +11,13 @@ import {
   Users,
   ScrollText,
   BarChart3,
+  Activity,
+  ClipboardList,
+  Download,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { NotificationBell } from "@/components/admin/NotificationBell";
+
 
 export const Route = createFileRoute("/_authenticated/admin")({
   beforeLoad: async () => {
@@ -25,14 +30,18 @@ export const Route = createFileRoute("/_authenticated/admin")({
 
 const NAV = [
   { to: "/admin", label: "Overview", icon: LayoutDashboard, exact: true },
+  { to: "/admin/health", label: "Content Health", icon: Activity },
   { to: "/admin/questions", label: "Questions", icon: FileQuestion },
+  { to: "/admin/assignments", label: "Assignments", icon: ClipboardList },
   { to: "/admin/media", label: "Media Library", icon: ImageIcon },
   { to: "/admin/reports", label: "Reports", icon: Flag },
   { to: "/admin/import", label: "Bulk Import", icon: Upload },
+  { to: "/admin/export", label: "Export", icon: Download },
   { to: "/admin/analytics", label: "Analytics", icon: BarChart3 },
   { to: "/admin/users", label: "Users & Roles", icon: Users, roles: ["super_admin"] as string[] },
   { to: "/admin/audit", label: "Audit Log", icon: ScrollText, roles: ["admin", "super_admin"] as string[] },
 ];
+
 
 function AdminLayout() {
   const [checking, setChecking] = useState(true);
@@ -84,15 +93,19 @@ function AdminLayout() {
   return (
     <div className="flex min-h-[calc(100dvh-3.5rem)] w-full">
       <aside className="hidden w-60 shrink-0 border-r border-border/60 bg-card/40 p-3 lg:block">
-        <div className="mb-3 flex items-center gap-2 px-2 py-1.5">
-          <span className="grid h-7 w-7 place-items-center rounded-md bg-primary/15 text-primary ring-1 ring-inset ring-primary/30">
-            <Shield className="h-3.5 w-3.5" />
-          </span>
-          <div className="flex flex-col">
-            <span className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">Admin CMS</span>
-            <span className="text-xs font-medium text-foreground">PARIKSHA</span>
+        <div className="mb-3 flex items-center justify-between px-2 py-1.5">
+          <div className="flex items-center gap-2">
+            <span className="grid h-7 w-7 place-items-center rounded-md bg-primary/15 text-primary ring-1 ring-inset ring-primary/30">
+              <Shield className="h-3.5 w-3.5" />
+            </span>
+            <div className="flex flex-col">
+              <span className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">Admin CMS</span>
+              <span className="text-xs font-medium text-foreground">PARIKSHA</span>
+            </div>
           </div>
+          <NotificationBell />
         </div>
+
         <nav className="flex flex-col gap-0.5">
           {NAV.map((item) => {
             if (item.roles && !item.roles.some((r) => roles.includes(r))) return null;
