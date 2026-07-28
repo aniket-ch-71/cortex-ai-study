@@ -89,13 +89,16 @@ export async function listAssignments(opts: { mine?: boolean; status?: Assignmen
 }
 
 export async function assignQuestion(input: { questionId: string; toUserId: string; dueAt?: string | null; priority?: AssignmentPriority; notes?: string | null }) {
-  const { data, error } = await supabase.rpc("assign_question", {
-    _qid: input.questionId,
-    _to_user: input.toUserId,
-    _due: input.dueAt ?? null,
-    _priority: input.priority ?? "normal",
-    _notes: input.notes ?? null,
-  });
+  const { data, error } = await (supabase.rpc as unknown as (fn: string, args: Record<string, unknown>) => Promise<{ data: unknown; error: unknown }>)(
+    "assign_question",
+    {
+      _qid: input.questionId,
+      _to_user: input.toUserId,
+      _due: input.dueAt ?? null,
+      _priority: input.priority ?? "normal",
+      _notes: input.notes ?? null,
+    },
+  );
   if (error) throw error;
   return data as string;
 }
@@ -108,12 +111,14 @@ export async function updateAssignmentStatus(id: string, status: AssignmentStatu
 /* -------------------- workflow -------------------- */
 
 export async function transitionState(questionId: string, to: WorkflowState, note?: string) {
-  const { data, error } = await supabase.rpc("transition_question_state", {
-    _qid: questionId, _to: to, _note: note ?? null,
-  });
+  const { data, error } = await (supabase.rpc as unknown as (fn: string, args: Record<string, unknown>) => Promise<{ data: unknown; error: unknown }>)(
+    "transition_question_state",
+    { _qid: questionId, _to: to, _note: note ?? null },
+  );
   if (error) throw error;
   return data as WorkflowState;
 }
+
 
 /* -------------------- reviews -------------------- */
 
